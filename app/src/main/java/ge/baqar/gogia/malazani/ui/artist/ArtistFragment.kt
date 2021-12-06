@@ -8,12 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -21,9 +16,7 @@ import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import ge.baqar.gogia.malazani.ui.MenuActivity
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -39,6 +32,8 @@ class ArtistFragment : Fragment() {
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
     private var _binding: FragmentArtistBinding? = null
+    private var dataSource: List<AlazaniArtistListItem>? = null
+    private var position = 0
 
     private val binding get() = _binding!!
 
@@ -103,8 +98,10 @@ class ArtistFragment : Fragment() {
         }
         if (state is SongsState) {
             binding.songsProgressbar.visibility = View.GONE
-            binding.songsListView.adapter = SongsAdapter(state.songs) {
-                play(it)
+            binding.songsListView.adapter = SongsAdapter(state.songs) { item, index ->
+                play(item)
+                dataSource = state.songs
+                position = index
             }
             binding.songsListView.visibility = View.VISIBLE
             binding.chantsListView.visibility = View.GONE
@@ -115,26 +112,41 @@ class ArtistFragment : Fragment() {
         }
         if (state is ChantsState) {
             binding.chantsProgressbar.visibility = View.GONE
-            binding.chantsListView.adapter = SongsAdapter(state.chants) {
-                play(it)
+            binding.chantsListView.adapter = SongsAdapter(state.chants) { item, index ->
+                play(item)
+                dataSource = state.chants
+                position = index
             }
         }
     }
 
     fun play(artist: AlazaniArtistListItem) {
-        (activity as MenuActivity).let {
-            val mediaPlayerView = it.findViewById<LinearLayoutCompat>(R.id.mediaPlayerView)
-            val playBtn = it.findViewById<AppCompatImageView>(R.id.playPauseButton)
-            mediaPlayerView?.let {
+        (activity as MenuActivity).let { menuActivity ->
+            menuActivity.binding.playingTrackTitle.text = artist.title
+            menuActivity.binding.mediaPlayerView.let {
                 it.visibility = View.VISIBLE
             }
-            it.findViewById<AppCompatTextView>(R.id.playingTrackTitle).text = artist.title
-            it.audioPlayer.play(viewModel.formatUrl(artist.link))
-            it.audioPlayer.listenPlayer {
-                if (it) {
-                    playBtn.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-                } else {
-                    playBtn.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+            menuActivity.binding.playNextButton.setOnClickListener {
+                if ((position + 1) < dataSource?.size!!) {
+                    ++position
+                    val nextItem = dataSource!![position]
+                    lifecycleScope.launch {
+                        menuActivity.audioPlayer.play(viewModel.formatUrl(nextItem.link))
+                    }
+
+                    menuActivity.binding.playingTrackTitle.text = nextItem.title
+                }
+            }
+            lifecycleScope.launch {
+                menuActivity.audioPlayer.play(viewModel.formatUrl(artist.link))
+                withContext(Dispatchers.Main) {
+                    menuActivity.audioPlayer.listenPlayer {
+                        if (it) {
+                            menuActivity.binding.playPauseButton.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                        } else {
+                            menuActivity.binding.playPauseButton.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+                        }
+                    }
                 }
             }
         }

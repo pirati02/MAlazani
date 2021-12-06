@@ -19,15 +19,15 @@ class AudioPlayerImpl(private var context: Context) : AudioPlayer {
         mediaPlayer = MediaPlayer()
     }
 
-    override fun listenPlayer(callback: (Boolean) -> Unit) {
+    override suspend fun listenPlayer(callback: (Boolean) -> Unit) {
         _callback = callback
     }
 
-    override fun isPlaying(): Boolean {
+    override suspend fun isPlaying(): Boolean {
         return isPlaying
     }
 
-    override fun play(audioData: String) {
+    override suspend fun play(audioData: String) {
         if (isPlaying) release()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
@@ -39,19 +39,19 @@ class AudioPlayerImpl(private var context: Context) : AudioPlayer {
         _callback?.invoke(isPlaying)
     }
 
-    override fun pause() {
+    override suspend fun pause() {
         isPlaying = false
         mediaPlayer?.pause()
         _callback?.invoke(isPlaying)
     }
 
-    override fun resume() {
+    override suspend fun resume() {
         isPlaying = true
         mediaPlayer?.start()
         _callback?.invoke(isPlaying)
     }
 
-    override fun release() {
+    override suspend fun release() {
         isPlaying = false
         mediaPlayer?.release()
         mediaPlayer = null

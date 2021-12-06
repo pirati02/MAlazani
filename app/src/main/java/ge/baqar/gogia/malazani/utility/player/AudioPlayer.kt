@@ -1,10 +1,10 @@
 package ge.baqar.gogia.malazani.utility.player
 
 interface AudioPlayer {
-    fun listenPlayer(callback: (Boolean) -> Unit)
-    fun isPlaying(): Boolean
-    fun release()
-    fun play(audioData: String)
-    fun pause()
-    fun resume()
+    suspend fun listenPlayer(callback: (Boolean) -> Unit)
+    suspend fun isPlaying(): Boolean
+    suspend fun release()
+    suspend fun play(audioData: String)
+    suspend fun pause()
+    suspend fun resume()
 }
