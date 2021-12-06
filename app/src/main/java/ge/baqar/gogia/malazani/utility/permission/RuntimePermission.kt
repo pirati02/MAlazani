@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 
 class RuntimePermissioner {
 
@@ -54,20 +53,11 @@ class RuntimePermissioner {
 
     fun request(activity: Activity) {
         try {
-            val tempArr = arrayOf<String>()
-            allPermissions.forEach {
-                if (ContextCompat.checkSelfPermission(
-                        activity,
-                        it.value
-                    ) == PackageManager.PERMISSION_DENIED
-                ) {
-                    tempArr[it.key] = it.value
-                }
-            }
-            if (tempArr.isNotEmpty())
-                ActivityCompat.requestPermissions(activity, tempArr, requestCode)
-            else
-                ActivityCompat.requestPermissions(activity, allPermissions.map { it.value }.toTypedArray(), requestCode)
+            ActivityCompat.requestPermissions(
+                activity,
+                allPermissions.map { it.value }.toTypedArray(),
+                requestCode
+            )
         } catch (e: Exception) {
             failure?.fail(e)
         }
