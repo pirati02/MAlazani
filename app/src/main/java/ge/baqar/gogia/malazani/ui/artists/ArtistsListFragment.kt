@@ -41,10 +41,12 @@ class ArtistsListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentArtistsBinding.inflate(inflater, container, false)
-        val li = arguments?.get("link").toString().toInt()
-        val url = getString(li)
-        val loadFlow = flowOf(ArtistsRequested(url!!))
-        initializeIntents(loadFlow)
+        if (binding.artistsListView.adapter == null) {
+            val li = arguments?.get("link").toString().toInt()
+            val url = getString(li)
+            val loadFlow = flowOf(ArtistsRequested(url))
+            initializeIntents(loadFlow)
+        }
         return binding.root
     }
 
@@ -66,8 +68,8 @@ class ArtistsListFragment : Fragment() {
             Timber.i(state.error)
         }
 
-        if (state.Artists.count() > 0) {
-            binding.artistsListView.adapter = ArtistsAdapter(state.Artists) {
+        if (state.artists.count() > 0) {
+            binding.artistsListView.adapter = ArtistsAdapter(state.artists) {
                 findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
                     putString("link", it.link)
                     putString("title", it.title)

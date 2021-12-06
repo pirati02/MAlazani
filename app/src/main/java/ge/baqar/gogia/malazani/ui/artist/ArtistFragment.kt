@@ -3,8 +3,13 @@ package ge.baqar.gogia.malazani.ui.artist
 import ArtistAction
 import ArtistChantsRequested
 import ArtistSongsRequested
+import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context.DOWNLOAD_SERVICE
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +29,7 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
+
 @InternalCoroutinesApi
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -34,9 +40,13 @@ class ArtistFragment : Fragment() {
     private var _binding: FragmentArtistBinding? = null
     private var dataSource: List<AlazaniArtistListItem>? = null
     private var position = 0
+    private val downloadManager: DownloadManager by lazy {
+        activity?.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+    }
 
     private val binding get() = _binding!!
 
+    @SuppressLint("UseRequireInsteadOfGet")
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,7 +54,8 @@ class ArtistFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentArtistBinding.inflate(inflater, container, false)
-        binding.tabTitleView.text = arguments?.get("title")?.toString()
+        val title = arguments?.get("title")?.toString()
+        binding.tabTitleView.text = title
         val loadSongsAndChantsAction = flowOf(
             ArtistSongsRequested(arguments?.get("link").toString()),
             ArtistChantsRequested().apply {
@@ -64,7 +75,35 @@ class ArtistFragment : Fragment() {
         binding.tabBackView.setOnClickListener {
             findNavController().navigateUp()
         }
+        binding.downloadAlbumbtn.setOnClickListener {
+            (activity as MenuActivity).let {
+                it.askForPermission {
+                    downloadAlbum(title)
+                }
+            }
+        }
         return binding.root
+    }
+
+    private fun downloadAlbum(title: String?) {
+        val songsDataSource = binding.songsListView.adapter as? SongsAdapter
+        val chantsDataSource = binding.chantsListView.adapter as? SongsAdapter
+        val album = songsDataSource?.dataSource
+        album?.addAll(chantsDataSource?.dataSource!!)
+        album?.map {
+            val downloadUri: Uri =
+                Uri.parse(viewModel.formatUrl(it.link))
+            val request = DownloadManager.Request(downloadUri)
+
+            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+            request.setAllowedOverRoaming(false)
+            request.setTitle("იწერება $title ${it.title}")
+            request.setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                "${title}-${it.title}.mp3"
+            )
+            downloadManager.enqueue(request)
+        }
     }
 
     @FlowPreview

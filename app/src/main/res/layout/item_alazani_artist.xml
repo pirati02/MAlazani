@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="cursive"
         android:padding="14dp"
+        android:background="?attr/selectableItemBackground"
         android:textColor="@color/black"
         android:textSize="15sp" />
 

@@ -9,7 +9,7 @@
         android:id="@+id/mediaPlayerView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/colorAccent"
+        android:background="@color/colorAccentTranslucent"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/nav_view"
         app:layout_constraintEnd_toEndOf="parent"

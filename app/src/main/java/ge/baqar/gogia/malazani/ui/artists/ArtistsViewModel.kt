@@ -43,13 +43,13 @@ class ArtistsViewModel(
                             AlazaniArtistListItem(el.text(), el.attr("href"))
                         }.toMutableList()
 
-                    state.copy(isInProgress = false, Artists = mapped)
+                    state.copy(isInProgress = false, artists = mapped)
                 }
             }
         }
         emit {
             state.copy(isInProgress = false,
-                Artists = state.Artists.apply {})
+                artists = state.artists.apply {})
         }
     }
 
@@ -60,7 +60,7 @@ class ArtistsViewModel(
                 emit {
                     state.copy(
                         isInProgress = false,
-                        Artists = state.Artists,
+                        artists = state.artists,
                         error = null
                     )
                 }

@@ -6,7 +6,7 @@ open class ArtistsResult
 
 data class ArtistsState(
     val isInProgress: Boolean,
-    val Artists: MutableList<AlazaniArtistListItem>,
+    val artists: MutableList<AlazaniArtistListItem>,
     val error: String?
 ) : ArtistsResult() {
 
@@ -14,7 +14,7 @@ data class ArtistsState(
         val DEFAULT = ArtistsState(
             isInProgress = false,
             error = null,
-            Artists = mutableListOf(),
+            artists = mutableListOf(),
 //            newMessage =  null
         )
     }

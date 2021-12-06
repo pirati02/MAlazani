@@ -9,13 +9,14 @@ import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 
 class SongsAdapter(
-    private val dataSource: MutableList<AlazaniArtistListItem>,
+    val dataSource: MutableList<AlazaniArtistListItem>,
     val clicked: (AlazaniArtistListItem, Int) -> Unit
 ) : RecyclerView.Adapter<SongsAdapter.SongViewHolder>() {
     inner class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.artistTitle)
         }
+
         fun bind(artist: AlazaniArtistListItem, position: Int) {
             name.text = artist.title
 

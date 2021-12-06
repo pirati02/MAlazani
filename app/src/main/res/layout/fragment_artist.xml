@@ -9,9 +9,10 @@
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/tabBackView"
         android:layout_width="0dp"
-        android:background="@color/colorAccent"
         android:layout_height="wrap_content"
+        android:background="@color/colorAccentTranslucent"
         android:orientation="horizontal"
+        android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,26 +21,28 @@
             android:id="@+id/tabBackImageView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10dp"
             android:src="@drawable/ic_baseline_keyboard_backspace_24" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tabTitleView"
             android:layout_width="match_parent"
-            android:textStyle="bold"
             android:layout_height="match_parent"
+            android:ellipsize="end"
             android:fontFamily="@font/bpg_nino_mtavruli_bold"
-            android:gravity="center"
-            android:padding="10dp"
+            android:gravity="center|start"
+            android:maxLines="1"
+            android:paddingStart="10dp"
+            android:singleLine="true"
             android:textAllCaps="true"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/artistToolbar"
         android:layout_width="0dp"
-        android:background="@color/colorAccent"
         android:layout_height="wrap_content"
+        android:background="@color/colorAccentTranslucent"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -48,6 +51,7 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/artistSongsTab"
             style="@style/ArtistTabViewStyle"
+            android:background="?attr/selectableItemBackground"
             android:text="@string/songs" />
 
         <View
@@ -60,6 +64,7 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/artistChantsTab"
             style="@style/ArtistTabViewStyle"
+            android:background="?attr/selectableItemBackground"
             android:text="@string/chants" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -117,4 +122,15 @@
             android:layout_height="match_parent"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
     </FrameLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/downloadAlbumbtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:backgroundTint="@color/colorAccent"
+        android:src="@drawable/ic_baseline_arrow_circle_down_24"
+        android:tint="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/tabBackView" />
 </androidx.constraintlayout.widget.ConstraintLayout>
