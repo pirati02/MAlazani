@@ -13,4 +13,6 @@
     <string name="oldRecordingsLink">http://www.alazani.ge/oldest-archives-udzvelesi-chanatserebi-georgian-folklore-geo.html?georgian-folk</string>
     <string name="songs">სიმღერები</string>
     <string name="chants">გალობა</string>
+    <string name="auto_play_off">auto play is off</string>
+    <string name="auto_play_on">auto play is on</string>
 </resources>

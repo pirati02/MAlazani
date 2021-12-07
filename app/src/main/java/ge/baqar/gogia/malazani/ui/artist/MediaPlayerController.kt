@@ -2,6 +2,7 @@ package ge.baqar.gogia.malazani.ui.artist
 
 import android.view.View
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
@@ -112,8 +113,10 @@ class MediaPlayerController(
         binding.playerAutoPlayButton.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
             if (autoPlayEnabled) {
+                Toast.makeText(it.context, R.string.auto_play_on, Toast.LENGTH_SHORT).show()
                 binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_white)
             } else {
+                Toast.makeText(it.context, R.string.auto_play_off, Toast.LENGTH_SHORT).show()
                 binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24)
             }
         }
