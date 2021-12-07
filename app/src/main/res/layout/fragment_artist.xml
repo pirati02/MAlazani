@@ -6,6 +6,10 @@
     android:layout_height="match_parent"
     tools:context=".ui.artists.ArtistsListFragment">
 
+    <include
+        android:id="@+id/tabViewInclude"
+        layout="@layout/view_artist_fragment_tabs" />
+
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/tabBackView"
         android:layout_width="0dp"
@@ -55,6 +59,7 @@
             android:text="@string/songs" />
 
         <View
+            android:id="@+id/tabSeparator"
             android:layout_width="0.5dp"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"

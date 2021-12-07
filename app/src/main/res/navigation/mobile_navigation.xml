@@ -14,16 +14,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_states"
-        android:name="ge.baqar.gogia.malazani.ui.artists.ArtistsListFragment"
-        android:label="@string/states"
-        tools:layout="@layout/fragment_artists" >
-
-        <argument android:name="link" android:defaultValue="@string/statesLink"/>
-    </fragment>
-
-
-    <fragment
         android:id="@+id/navigation_oldRecordings"
         android:name="ge.baqar.gogia.malazani.ui.artists.ArtistsListFragment"
         android:label="@string/oldRecordings"

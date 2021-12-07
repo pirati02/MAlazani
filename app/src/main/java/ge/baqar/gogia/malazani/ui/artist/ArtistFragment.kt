@@ -5,9 +5,7 @@ import ArtistChantsRequested
 import ArtistSongsRequested
 import android.annotation.SuppressLint
 import android.app.DownloadManager
-import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,8 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
-import ge.baqar.gogia.malazani.media.MediaPlaybackService
-import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -141,25 +137,36 @@ class ArtistFragment : Fragment() {
             return
         }
         if (state is SongsState) {
-            binding.songsProgressbar.visibility = View.GONE
-            binding.songsListView.adapter = SongsAdapter(state.songs) { item, index ->
-                (activity as MenuActivity).setDataSource(state.songs)
-                play(index)
+            if (state.songs.size > 0) {
+                binding.songsProgressbar.visibility = View.GONE
+                binding.songsListView.adapter = SongsAdapter(state.songs) { _, index ->
+                    (activity as MenuActivity).setDataSource(state.songs)
+                    play(index)
 
-            }
-            binding.songsListView.visibility = View.VISIBLE
-            binding.chantsListView.visibility = View.GONE
-
-            if (state.songs.size == 0) {
+                }
+                binding.songsListView.visibility = View.VISIBLE
+                binding.chantsListView.visibility = View.GONE
+            } else {
                 binding.chantsListView.visibility = View.VISIBLE
                 binding.songsListView.visibility = View.GONE
+                binding.songsProgressbar.visibility = View.GONE
+                binding.songsListView.visibility = View.GONE
+                binding.artistSongsTab.visibility = View.GONE
+                binding.tabSeparator.visibility = View.GONE
             }
         }
         if (state is ChantsState) {
-            binding.chantsProgressbar.visibility = View.GONE
-            binding.chantsListView.adapter = SongsAdapter(state.chants) { item, index ->
-                (activity as MenuActivity).setDataSource(state.chants)
-                play(index)
+            if (state.chants.size > 0) {
+                binding.chantsProgressbar.visibility = View.GONE
+                binding.chantsListView.adapter = SongsAdapter(state.chants) { _, index ->
+                    (activity as MenuActivity).setDataSource(state.chants)
+                    play(index)
+                }
+            } else {
+                binding.chantsProgressbar.visibility = View.GONE
+                binding.chantsListView.visibility = View.GONE
+                binding.artistChantsTab.visibility = View.GONE
+                binding.tabSeparator.visibility = View.GONE
             }
         }
     }

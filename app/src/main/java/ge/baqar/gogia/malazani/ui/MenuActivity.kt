@@ -46,7 +46,7 @@ class MenuActivity : AppCompatActivity() {
         @RequiresApi(Build.VERSION_CODES.M)
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val boundedService =
-                (service as MediaPlaybackService.LocalBinder).service as MediaPlaybackService
+                (service as MediaPlaybackService.LocalBinder).service
             mediaController = boundedService.mediaPlayerController
             if (mediaController?.binding == null)
                 mediaController?.binding = _binding
@@ -67,7 +67,7 @@ class MenuActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_ensembles,
-                R.id.navigation_states,
+//                R.id.navigation_states,
                 R.id.navigation_oldRecordings
             )
         )
@@ -125,9 +125,10 @@ class MenuActivity : AppCompatActivity() {
         permissioner?.onPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun doBindService() {
         val intent = Intent(this, MediaPlaybackService::class.java)
-        startService(intent)
+        startForegroundService(intent)
         bindService(
             intent,
             mConnection,
@@ -139,7 +140,7 @@ class MenuActivity : AppCompatActivity() {
     private fun doUnbindService() {
         if (mIsBound) {
             val intent = Intent(this, MediaPlaybackService::class.java)
-            stopService(intent)
+//            stopService(intent)
             unbindService(mConnection)
             mIsBound = false
         }

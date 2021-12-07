@@ -7,11 +7,6 @@
         android:title="@string/ensembles" />
 
     <item
-        android:id="@+id/navigation_states"
-        android:icon="@drawable/ic_baseline_burst_mode_24"
-        android:title="@string/states" />
-
-    <item
         android:id="@+id/navigation_oldRecordings"
         android:icon="@drawable/ic_baseline_archive_24"
         android:title="@string/oldRecordings" />

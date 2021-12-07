@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mediaPlayerView"
+    app:layout_constraintBottom_toTopOf="@id/nav_view"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:background="@color/colorAccentTranslucent"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        app:layout_constraintBottom_toTopOf="@id/playerProgressBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/playingTrackTitle"
+            app:layout_constraintEnd_toStartOf="@id/playerViewCloseBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.4"
+            android:fontFamily="@font/bpg_nino_mtavruli_bold"
+            android:gravity="start|center"
+            android:padding="10dp"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playerViewCloseBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/drawable_selector_background"
+            android:padding="10dp"
+            android:src="@drawable/ic_baseline_keyboard_arrow_down_24" />
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/playingTrackTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/playingTrackTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/bpg_nino_mtavruli_bold"
+                android:gravity="start|center"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:textColor="@color/black"
+                android:textSize="13sp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/playingTrackDurationTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/bpg_nino_mtavruli_bold"
+                android:gravity="end|center"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp"
+                android:textColor="@color/black"
+                android:textSize="13sp" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/playerProgressBar"
+        app:layout_constraintBottom_toTopOf="@id/playerControlsView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:progressTint="@color/colorAccent"
+        android:thumbTint="@color/colorAccent" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/playerControlsView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playStopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/drawable_player_btn_background"
+            android:padding="10dp"
+            android:src="@drawable/ic_outline_stop_circle_24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playPauseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/drawable_player_btn_background"
+            android:padding="15dp"
+            android:src="@drawable/ic_baseline_play_circle_outline_24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playPrevButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/drawable_player_btn_background"
+            android:padding="10dp"
+            android:src="@drawable/ic_baseline_fast_rewind_24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playNextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/drawable_player_btn_background"
+            android:padding="10dp"
+            android:src="@drawable/ic_round_fast_forward_24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playerAutoPlayButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:background="@drawable/drawable_player_btn_background"
+            android:padding="10dp"
+            android:src="@drawable/ic_baseline_repeat_24_white" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.constraintlayout.widget.ConstraintLayout>

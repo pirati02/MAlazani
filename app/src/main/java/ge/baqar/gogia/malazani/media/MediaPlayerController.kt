@@ -27,30 +27,30 @@ class MediaPlayerController(
 
     fun play(position: Int) {
         _position = position
-        val artist = dataSource!![position]
-        binding?.playingTrackTitle?.text = artist.title
+        val artist = dataSource!![_position]
 
         initializeViewClickListeners()
-        listenAudioPlayerChanges(artist, position)
-        binding?.mediaPlayerView?.let {
+        listenAudioPlayerChanges(artist)
+        binding?.included?.mediaPlayerView?.let {
             it.visibility = View.VISIBLE
         }
-        binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        binding?.included?.playingTrackTitle?.text = artist.title
+        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
     }
 
-    fun onPrepareListener() {
+    private fun onPrepareListener() {
         val duration = audioPlayer.getDurationString()
-        binding?.playingTrackDurationTime?.text = duration
-        binding?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
+        binding?.included?.playingTrackDurationTime?.text = duration
+        binding?.included?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
     }
 
-    private fun listenAudioPlayerChanges(artist: AlazaniArtistListItem, position: Int) {
+    private fun listenAudioPlayerChanges(artist: AlazaniArtistListItem) {
         viewModel.viewModelScope.launch(Dispatchers.Main) {
             audioPlayer.listenPlayer {
                 if (it) {
-                    binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                 } else {
-                    binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
                 }
             }
         }
@@ -67,21 +67,20 @@ class MediaPlayerController(
                     audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
                 }
 
-                binding?.playingTrackTitle?.text = nextItem.title
-                binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                binding?.included?.playingTrackTitle?.text = nextItem.title
+                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
             }
         }
-
         audioPlayer.updateTimeHandler { progress, time ->
-            binding?.playingTrackTime?.post {
-                binding?.playingTrackTime?.text = time
-                binding?.playerProgressBar?.progress = progress?.toInt()!!
+            binding?.included?.playingTrackTime?.post {
+                binding?.included?.playingTrackTime?.text = time
+                binding?.included?.playerProgressBar?.progress = progress?.toInt()!!
             }
         }
     }
 
     private fun initializeViewClickListeners() {
-        binding?.playerProgressBar?.setOnSeekBarChangeListener(object :
+        binding?.included?.playerProgressBar?.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
 
@@ -96,35 +95,19 @@ class MediaPlayerController(
             }
         })
 
-        binding?.playStopButton?.setOnClickListener {
+        binding?.included?.playStopButton?.setOnClickListener {
             viewModel.viewModelScope.launch {
                 audioPlayer.release()
-                binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
             }
         }
-        binding?.playNextButton?.setOnClickListener {
-            if ((_position + 1) < dataSource?.size!!) {
-                ++_position
-                val nextItem = dataSource!![_position]
-                viewModel.viewModelScope.launch {
-                    audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
-                }
-
-                binding?.playingTrackTitle?.text = nextItem.title
-            }
+        binding?.included?.playNextButton?.setOnClickListener {
+            next()
         }
-        binding?.playPrevButton?.setOnClickListener {
-            if (_position > 0) {
-                --_position
-                val prevItem = dataSource!![_position]
-                viewModel.viewModelScope.launch {
-                    audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
-                }
-
-                binding?.playingTrackTitle?.text = prevItem.title
-            }
+        binding?.included?.playPrevButton?.setOnClickListener {
+            previous()
         }
-        binding?.playPauseButton?.setOnClickListener {
+        binding?.included?.playPauseButton?.setOnClickListener {
             viewModel.viewModelScope.launch {
                 if (audioPlayer.isPlaying()) {
                     audioPlayer.pause()
@@ -133,31 +116,86 @@ class MediaPlayerController(
                 }
             }
         }
-        binding?.playStopButton?.setOnClickListener {
+        binding?.included?.playStopButton?.setOnClickListener {
             viewModel.viewModelScope.launch {
                 audioPlayer.release()
-                binding?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
             }
         }
-        binding?.playerAutoPlayButton?.setOnClickListener {
+        binding?.included?.playerAutoPlayButton?.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
             if (autoPlayEnabled) {
                 Toast.makeText(it.context, R.string.auto_play_on, Toast.LENGTH_SHORT).show()
-                binding?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
+                binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
             } else {
                 Toast.makeText(it.context, R.string.auto_play_off, Toast.LENGTH_SHORT).show()
-                binding?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24)
+                binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24)
             }
         }
-        binding?.playerViewCloseBtn?.setOnClickListener {
+        binding?.included?.playerViewCloseBtn?.setOnClickListener {
             playerControlsAreVisible = !playerControlsAreVisible
             if (playerControlsAreVisible) {
-                binding?.playerControlsView?.visibility = View.VISIBLE
-                binding?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
+                binding?.included?.playerControlsView?.visibility = View.VISIBLE
+                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
             } else {
-                binding?.playerControlsView?.visibility = View.GONE
-                binding?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
+                binding?.included?.playerControlsView?.visibility = View.GONE
+                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
             }
         }
+    }
+
+    fun pause() {
+        viewModel.viewModelScope.launch {
+            audioPlayer.pause()
+        }
+    }
+
+    fun stop() {
+        viewModel.viewModelScope.launch {
+            audioPlayer.release()
+        }
+    }
+
+    fun resume() {
+        viewModel.viewModelScope.launch {
+            audioPlayer.resume()
+        }
+    }
+
+    fun next() {
+        viewModel.viewModelScope.launch {
+            if ((_position + 1) < dataSource?.size!!) {
+                ++_position
+                val nextItem = dataSource!![_position]
+                viewModel.viewModelScope.launch {
+                    audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
+                }
+
+                binding?.included?.playingTrackTitle?.text = nextItem.title
+            }
+        }
+    }
+
+
+    fun previous() {
+        viewModel.viewModelScope.launch {
+            if (_position > 0) {
+                --_position
+                val prevItem = dataSource!![_position]
+                viewModel.viewModelScope.launch {
+                    audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
+                }
+
+                binding?.included?.playingTrackTitle?.text = prevItem.title
+            }
+        }
+    }
+
+    fun getCurrentSong(): AlazaniArtistListItem {
+        return dataSource!![_position]
+    }
+
+    fun isPlaying(): Boolean {
+        return audioPlayer.isPlaying()
     }
 }

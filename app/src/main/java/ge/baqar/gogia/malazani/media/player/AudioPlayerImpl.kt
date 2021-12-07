@@ -1,13 +1,15 @@
 package ge.baqar.gogia.malazani.media.player
 
+import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.CountDownTimer
+import android.os.PowerManager
 import androidx.annotation.RequiresApi
 
 
-class AudioPlayerImpl : AudioPlayer {
+class AudioPlayerImpl(private val context: Context) : AudioPlayer {
     private var updateCallback: ((Long?, String?) -> Unit)? = null
     private var mediaPlayer: MediaPlayer? = null
     private var timer: CountDownTimer? = null
@@ -22,7 +24,7 @@ class AudioPlayerImpl : AudioPlayer {
         mediaPlayerIsPlayingCallback = callback
     }
 
-    override suspend fun isPlaying(): Boolean {
+    override fun isPlaying(): Boolean {
         return isPlaying
     }
 
@@ -32,6 +34,7 @@ class AudioPlayerImpl : AudioPlayer {
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
         isPlaying = true
+        mediaPlayer?.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
         mediaPlayer?.setDataSource(audioData)
         mediaPlayer?.prepareAsync()
