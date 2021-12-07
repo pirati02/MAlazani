@@ -6,13 +6,47 @@
     android:layout_height="match_parent"
     tools:context=".ui.artists.ArtistsListFragment">
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/appNameTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/colorAccentTranslucent"
+        android:fontFamily="@font/bpg_nino_mtavruli_bold"
+        android:gravity="center"
+        android:padding="13dp"
+        android:text="@string/app_name_georgian"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appNameTitle"
+        android:background="@color/colorGray"/>
+
+    <ProgressBar
+        android:id="@+id/artistsProgressbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appNameTitle" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/artistsListView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintEnd_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appNameTitle" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,7 +27,7 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name=".utility.permission.PermissionManagerActivity"/>
+        <service android:name=".media.MediaPlaybackService" android:exported="true" />
     </application>
 
 </manifest>

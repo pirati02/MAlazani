@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">mAlazani</string>
 
+    <string name="app_name_georgian">ალაზანი</string>
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>

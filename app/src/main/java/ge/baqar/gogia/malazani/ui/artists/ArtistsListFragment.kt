@@ -67,6 +67,11 @@ class ArtistsListFragment : Fragment() {
         if (state.error != null) {
             Timber.i(state.error)
         }
+        if (state.isInProgress) {
+            binding.artistsProgressbar.visibility = View.VISIBLE
+            return
+        }
+        binding.artistsProgressbar.visibility = View.GONE
 
         if (state.artists.count() > 0) {
             binding.artistsListView.adapter = ArtistsAdapter(state.artists) {

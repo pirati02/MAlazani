@@ -5,7 +5,9 @@ import ArtistChantsRequested
 import ArtistSongsRequested
 import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +20,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
+import ge.baqar.gogia.malazani.media.MediaPlaybackService
+import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -38,7 +42,6 @@ class ArtistFragment : Fragment() {
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
     private var _binding: FragmentArtistBinding? = null
-    private var mediaPlayerController: MediaPlayerController? = null
     private val downloadManager: DownloadManager by lazy {
         activity?.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
     }
@@ -82,13 +85,7 @@ class ArtistFragment : Fragment() {
             }
         }
         (activity as MenuActivity).let {
-            mediaPlayerController =
-                MediaPlayerController(
-                    it.audioPlayer,
-                    it.binding,
-                    viewModel,
-                    mutableListOf()
-                )
+            it.doBindService()
         }
         return binding.root
     }
@@ -146,7 +143,7 @@ class ArtistFragment : Fragment() {
         if (state is SongsState) {
             binding.songsProgressbar.visibility = View.GONE
             binding.songsListView.adapter = SongsAdapter(state.songs) { item, index ->
-                mediaPlayerController?.dataSource = state.songs
+                (activity as MenuActivity).setDataSource(state.songs)
                 play(index)
 
             }
@@ -155,23 +152,26 @@ class ArtistFragment : Fragment() {
 
             if (state.songs.size == 0) {
                 binding.chantsListView.visibility = View.VISIBLE
+                binding.songsListView.visibility = View.GONE
             }
         }
         if (state is ChantsState) {
             binding.chantsProgressbar.visibility = View.GONE
             binding.chantsListView.adapter = SongsAdapter(state.chants) { item, index ->
-                mediaPlayerController?.dataSource = state.chants
+                (activity as MenuActivity).setDataSource(state.chants)
                 play(index)
             }
         }
     }
 
     fun play(position: Int) {
-            mediaPlayerController?.play(position)
+        (activity as MenuActivity).playMediaPlayback(position)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
+
 }
