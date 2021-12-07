@@ -17,11 +17,11 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import ge.baqar.gogia.malazani.ui.MenuActivity
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -38,8 +38,7 @@ class ArtistFragment : Fragment() {
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
     private var _binding: FragmentArtistBinding? = null
-    private var dataSource: List<AlazaniArtistListItem>? = null
-    private var position = 0
+    private var mediaPlayerController: MediaPlayerController? = null
     private val downloadManager: DownloadManager by lazy {
         activity?.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
     }
@@ -81,6 +80,15 @@ class ArtistFragment : Fragment() {
                     downloadAlbum(title)
                 }
             }
+        }
+        (activity as MenuActivity).let {
+            mediaPlayerController =
+                MediaPlayerController(
+                    it.audioPlayer,
+                    it.binding,
+                    viewModel,
+                    mutableListOf()
+                )
         }
         return binding.root
     }
@@ -138,9 +146,9 @@ class ArtistFragment : Fragment() {
         if (state is SongsState) {
             binding.songsProgressbar.visibility = View.GONE
             binding.songsListView.adapter = SongsAdapter(state.songs) { item, index ->
-                play(item)
-                dataSource = state.songs
-                position = index
+                mediaPlayerController?.dataSource = state.songs
+                play(index)
+
             }
             binding.songsListView.visibility = View.VISIBLE
             binding.chantsListView.visibility = View.GONE
@@ -152,43 +160,14 @@ class ArtistFragment : Fragment() {
         if (state is ChantsState) {
             binding.chantsProgressbar.visibility = View.GONE
             binding.chantsListView.adapter = SongsAdapter(state.chants) { item, index ->
-                play(item)
-                dataSource = state.chants
-                position = index
+                mediaPlayerController?.dataSource = state.chants
+                play(index)
             }
         }
     }
 
-    fun play(artist: AlazaniArtistListItem) {
-        (activity as MenuActivity).let { menuActivity ->
-            menuActivity.binding.playingTrackTitle.text = artist.title
-            menuActivity.binding.mediaPlayerView.let {
-                it.visibility = View.VISIBLE
-            }
-            menuActivity.binding.playNextButton.setOnClickListener {
-                if ((position + 1) < dataSource?.size!!) {
-                    ++position
-                    val nextItem = dataSource!![position]
-                    lifecycleScope.launch {
-                        menuActivity.audioPlayer.play(viewModel.formatUrl(nextItem.link))
-                    }
-
-                    menuActivity.binding.playingTrackTitle.text = nextItem.title
-                }
-            }
-            lifecycleScope.launch {
-                menuActivity.audioPlayer.play(viewModel.formatUrl(artist.link))
-                withContext(Dispatchers.Main) {
-                    menuActivity.audioPlayer.listenPlayer {
-                        if (it) {
-                            menuActivity.binding.playPauseButton.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-                        } else {
-                            menuActivity.binding.playPauseButton.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-                        }
-                    }
-                }
-            }
-        }
+    fun play(position: Int) {
+            mediaPlayerController?.play(position)
     }
 
     override fun onDestroyView() {

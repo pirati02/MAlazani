@@ -8,5 +8,5 @@ import kotlin.math.sin
 
 val utilityModule = module {
     factory { NetworkStatus(get()) }
-    single<AudioPlayer> { AudioPlayerImpl(get()) }
+    single<AudioPlayer> { AudioPlayerImpl() }
 }
