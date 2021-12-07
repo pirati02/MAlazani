@@ -110,13 +110,11 @@ class MediaPlayerController(
             }
         }
         binding.playerAutoPlayButton.setOnClickListener {
-            it.post {
-                autoPlayEnabled = !autoPlayEnabled
-                if (autoPlayEnabled) {
-                    binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_white)
-                } else {
-                    binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24)
-                }
+            autoPlayEnabled = !autoPlayEnabled
+            if (autoPlayEnabled) {
+                binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_white)
+            } else {
+                binding.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24)
             }
         }
     }
