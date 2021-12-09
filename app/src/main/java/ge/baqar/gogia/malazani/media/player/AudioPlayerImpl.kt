@@ -1,7 +1,7 @@
 package ge.baqar.gogia.malazani.media.player
 
 import android.content.Context
-import android.media.AudioManager
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.CountDownTimer
@@ -20,7 +20,7 @@ class AudioPlayerImpl(private val context: Context) : AudioPlayer {
         mediaPlayer = MediaPlayer()
     }
 
-    override suspend fun listenPlayer(callback: (Boolean) -> Unit) {
+    override fun listenPlayer(callback: (Boolean) -> Unit) {
         mediaPlayerIsPlayingCallback = callback
     }
 
@@ -29,13 +29,17 @@ class AudioPlayerImpl(private val context: Context) : AudioPlayer {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun play(audioData: String, callback: () -> Unit) {
+    override fun play(audioData: String, callback: () -> Unit) {
         if (isPlaying) release()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
         isPlaying = true
-        mediaPlayer?.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
-        mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+        mediaPlayer?.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
+        mediaPlayer?.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
         mediaPlayer?.setDataSource(audioData)
         mediaPlayer?.prepareAsync()
         mediaPlayer?.setOnPreparedListener {
@@ -46,13 +50,13 @@ class AudioPlayerImpl(private val context: Context) : AudioPlayer {
         }
     }
 
-    override suspend fun pause() {
+    override fun pause() {
         isPlaying = false
         mediaPlayer?.pause()
         mediaPlayerIsPlayingCallback?.invoke(isPlaying)
     }
 
-    override suspend fun resume() {
+    override fun resume() {
         isPlaying = true
         mediaPlayer?.start()
         mediaPlayerIsPlayingCallback?.invoke(isPlaying)
@@ -63,7 +67,7 @@ class AudioPlayerImpl(private val context: Context) : AudioPlayer {
         updateCallback = callback
     }
 
-    fun startTimer() {
+    private fun startTimer() {
         timer = object : CountDownTimer(getDuration(), 1000.toLong()) {
             override fun onTick(p0: Long) {
                 val currentDuration = mediaPlayer?.currentPosition?.toLong()
@@ -108,7 +112,7 @@ class AudioPlayerImpl(private val context: Context) : AudioPlayer {
         return buf.toString()
     }
 
-    override suspend fun release() {
+    override fun release() {
         isPlaying = false
         mediaPlayer?.release()
         timer?.cancel()

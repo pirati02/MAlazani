@@ -12,20 +12,3 @@ val networkModule = module {
 fun provideVolleyQueue(context: Context): RequestQueue {
     return Volley.newRequestQueue(context)
 }
-
-private val alazaniUrl: String = "http://www.alazani.ge"
-//
-//fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-//    return Retrofit.Builder()
-//        .baseUrl(alazaniUrl)
-//        .client(okHttpClient)
-//        .addConverterFactory(ScalarsConverterFactory.create())
-//        .build()
-//}
-//
-//fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-//    return OkHttpClient().newBuilder().addInterceptor(authInterceptor).build()
-//}
-//
-//fun providAlazaniApi(retrofit: Retrofit): AlazaniService =
-//    retrofit.create(AlazaniService::class.java)

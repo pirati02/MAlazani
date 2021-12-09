@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -31,6 +32,7 @@ class ArtistsListFragment : Fragment() {
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistsViewModel by inject()
     private var _binding: FragmentArtistsBinding? = null
+    private var _view: View? = null
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
@@ -38,14 +40,18 @@ class ArtistsListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentArtistsBinding.inflate(inflater, container, false)
-        if (_binding?.artistsListView?.adapter == null) {
-            val li = arguments?.get("link").toString().toInt()
-            val url = getString(li)
-            val loadFlow = flowOf(ArtistsRequested(url))
-            initializeIntents(loadFlow)
+        if (_view == null) {
+            _binding = FragmentArtistsBinding.inflate(inflater, container, false)
+            if (_binding?.artistsListView?.adapter == null) {
+                val li = arguments?.get("link").toString().toInt()
+                val url = getString(li)
+                val loadFlow = flowOf(ArtistsRequested(url))
+                initializeIntents(loadFlow)
+            }
+            _view = _binding?.root
+            return _view!!
         }
-        return _binding?.root!!
+        return _view!!
     }
 
 
@@ -63,7 +69,10 @@ class ArtistsListFragment : Fragment() {
 
     private fun render(state: ArtistsState) {
         if (state.error != null) {
-            Timber.i(state.error)
+            val errorId = resources.getIdentifier(state.error, "string", context?.packageName)
+            val error = getString(errorId)
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            Timber.i(error)
         }
         if (state.isInProgress) {
             _binding?.artistsProgressbar?.visibility = View.VISIBLE

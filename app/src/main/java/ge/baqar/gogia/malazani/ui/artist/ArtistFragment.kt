@@ -13,6 +13,7 @@ import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -54,7 +55,7 @@ class ArtistFragment : Fragment() {
     ): View {
         _binding = FragmentArtistBinding.inflate(inflater, container, false)
         val title = arguments?.get("title")?.toString()
-        binding.tabTitleView.text = title
+        binding.tabViewInclude.tabTitleView.text = title
         val loadSongsAndChantsAction = flowOf(
             ArtistSongsRequested(arguments?.get("link").toString()),
             ArtistChantsRequested().apply {
@@ -71,7 +72,7 @@ class ArtistFragment : Fragment() {
             binding.chantsListView.visibility = View.VISIBLE
             binding.songsListView.visibility = View.GONE
         }
-        binding.tabBackView.setOnClickListener {
+        binding.tabViewInclude.tabBackImageView.setOnClickListener {
             findNavController().navigateUp()
         }
         binding.downloadAlbumbtn.setOnClickListener {
@@ -81,9 +82,7 @@ class ArtistFragment : Fragment() {
                 }
             }
         }
-        (activity as MenuActivity).let {
-            it.doBindService()
-        }
+        (activity as MenuActivity).doBindService()
         return binding.root
     }
 
@@ -134,7 +133,10 @@ class ArtistFragment : Fragment() {
             return
         }
         if (state.error != null) {
-            Timber.i(state.error)
+            val errorId = resources.getIdentifier(state.error, "string", context?.packageName)
+            val error = getString(errorId)
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            Timber.i(error)
             return
         }
         if (state is SongsState) {
@@ -170,7 +172,7 @@ class ArtistFragment : Fragment() {
         }
     }
 
-    fun play(position: Int, songs: MutableList<AlazaniArtistListItem>) {
+    private fun play(position: Int, songs: MutableList<AlazaniArtistListItem>) {
         (activity as MenuActivity).playMediaPlayback(position, songs)
     }
 
@@ -178,6 +180,4 @@ class ArtistFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
-
 }

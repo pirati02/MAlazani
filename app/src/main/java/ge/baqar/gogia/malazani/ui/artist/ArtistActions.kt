@@ -1,7 +1,4 @@
-import ge.baqar.gogia.malazani.poko.AlazaniArtist
-
-//Actions
-sealed class ArtistAction()
+sealed class ArtistAction
 class ArtistSongsRequested(val link: String) : ArtistAction()
 class ArtistChantsRequested : ArtistAction() {
     var link: String? = null

@@ -8,8 +8,10 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -36,7 +38,7 @@ class MenuActivity : AppCompatActivity() {
     private var mIsBound: Boolean = false
     private var permissioner: RuntimePermissioner? = null
 
-    private val REQUEST_CODE = 1994
+    private val requestCode = 1994
     private var permissionCallback: (() -> Unit)? = null
     private var mediaController: MediaPlayerController? = null
 
@@ -48,8 +50,14 @@ class MenuActivity : AppCompatActivity() {
             val boundedService =
                 (service as MediaPlaybackService.LocalBinder).service
             mediaController = boundedService.mediaPlayerController
+
             if (mediaController?.binding == null)
                 mediaController?.binding = _binding
+
+            if (mediaController?.isPlaying() == true) {
+                mediaController?.binding = _binding
+                mediaController?.updatePlayer()
+            }
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
@@ -57,6 +65,7 @@ class MenuActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -75,7 +84,7 @@ class MenuActivity : AppCompatActivity() {
         _binding.navView.setupWithNavController(navController)
 
         permissioner = RuntimePermissioner.builder()
-            ?.requestCode(REQUEST_CODE)
+            ?.requestCode(requestCode)
             ?.permission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             ?.callBack(object : OnGrantPermissions {
                 override fun get(grantedPermissions: List<String>) {
@@ -91,6 +100,8 @@ class MenuActivity : AppCompatActivity() {
 
                 }
             })
+
+        doBindService()
     }
 
     override fun onDestroy() {

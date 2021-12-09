@@ -9,7 +9,6 @@ import com.android.volley.toolbox.StringRequest
 import ge.baqar.gogia.malazani.arch.ReactiveResult
 import ge.baqar.gogia.malazani.arch.asError
 import ge.baqar.gogia.malazani.arch.asSuccess
-import ge.baqar.gogia.malazani.poko.ConnectionError
 import ge.baqar.gogia.malazani.utility.NetworkStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -17,12 +16,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOf
-import timber.log.Timber
-import java.io.IOException
 
 
 @ExperimentalCoroutinesApi
-class AlazaniRepositoryImpl(
+class AlazaniRepository(
     private var networkStatus: NetworkStatus,
     private var queue: RequestQueue
 ) {
@@ -41,7 +38,7 @@ class AlazaniRepositoryImpl(
                 }
                 return@coroutineScope flow
             } else {
-                return@coroutineScope flowOf(VolleyError("Local storage not implemented").asError)
+                return@coroutineScope flowOf(VolleyError("network_is_off").asError)
             }
         }
     }

@@ -21,14 +21,14 @@ import org.koin.android.ext.android.inject
 @ExperimentalCoroutinesApi
 @InternalCoroutinesApi
 @FlowPreview
-public class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
+class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     inner class LocalBinder : Binder() {
         val service: MediaPlaybackService
             get() = this@MediaPlaybackService
     }
 
     private var notificationManager: NotificationManager? = null
-    private val NOTIFICATION: Int = ge.baqar.gogia.malazani.R.string.app_name
+    private val notificationId: Int = 1024
     val mediaPlayerController: MediaPlayerController by inject()
 
     override fun onCreate() {
@@ -36,7 +36,7 @@ public class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
+    override fun onBind(p0: Intent?): IBinder {
         return LocalBinder()
     }
 
@@ -77,7 +77,7 @@ public class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("RemoteViewLayout")
+    @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
     private fun showNotification(update: Boolean = false) {
         val contentIntent = PendingIntent.getActivity(
             this, 0,
@@ -100,17 +100,17 @@ public class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
         initRemoteViewClicks(notificationLayoutExpanded)
 
-        val CHANNEL_ID = "HEADS_UP_NOTIFICATIONS"
+        val channelId = "HEADS_UP_NOTIFICATIONS"
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Alazani",
+            channelId,
+            getString(R.string.app_name),
             NotificationManager.IMPORTANCE_HIGH
         )
         channel.enableVibration(false)
 
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        val notification: NotificationCompat.Builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(ge.baqar.gogia.malazani.R.mipmap.ic_launcher)
+        val notification: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setCustomContentView(notificationLayout)
             .setCustomBigContentView(notificationLayoutExpanded)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -120,12 +120,13 @@ public class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             .setVibrate(longArrayOf(-1))
 
         if (update) {
-            notificationManager?.notify(NOTIFICATION, notification.build());
+            notificationManager?.notify(notificationId, notification.build())
         } else {
-            startForeground(NOTIFICATION, notification.build())
+            startForeground(notificationId, notification.build())
         }
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private fun initRemoteViewClicks(notificationLayoutExpanded: RemoteViews) {
         notificationLayoutExpanded.setOnClickPendingIntent(
             R.id.playStopButton, PendingIntent.getService(

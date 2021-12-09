@@ -28,8 +28,12 @@ data class ChantsState(
     override val error: String?
 ) : ArtistState(isInProgress, error) {
     companion object {
-        fun DATA_LOADED(chants: MutableList<AlazaniArtistListItem>): ArtistState {
+        fun dataLoaded(chants: MutableList<AlazaniArtistListItem>): ArtistState {
             return ChantsState(isInProgress = false, chants, null)
+        }
+
+        fun error(message: String?): ChantsState {
+            return ChantsState(isInProgress = false, mutableListOf(), message)
         }
     }
 }
@@ -40,8 +44,12 @@ data class SongsState(
     override val error: String?
 ) : ArtistState(isInProgress, error) {
     companion object {
-        fun DATA_LOADED(songs: MutableList<AlazaniArtistListItem>): SongsState {
+        fun dataLoaded(songs: MutableList<AlazaniArtistListItem>): SongsState {
             return SongsState(isInProgress = false, songs, null)
+        }
+
+        fun error(message: String?): SongsState {
+            return SongsState(isInProgress = false, mutableListOf(), message)
         }
     }
 }

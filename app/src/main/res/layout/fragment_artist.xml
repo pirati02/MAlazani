@@ -11,36 +11,6 @@
         layout="@layout/view_artist_fragment_tabs" />
 
     <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/tabBackView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/tabBackImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_baseline_keyboard_backspace_24" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tabTitleView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fontFamily="@font/bpg_nino_mtavruli_bold"
-            android:gravity="start|center"
-            android:singleLine="true"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:padding="13dp"
-            android:textColor="@color/black"
-            android:textSize="20sp"/>
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/artistToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -48,7 +18,7 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tabBackView">
+        app:layout_constraintTop_toBottomOf="@id/tabViewInclude">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/artistSongsTab"
@@ -135,5 +105,5 @@
         android:src="@drawable/ic_baseline_arrow_circle_down_24"
         android:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/tabBackView" />
+        app:layout_constraintEnd_toEndOf="@+id/tabViewInclude" />
 </androidx.constraintlayout.widget.ConstraintLayout>

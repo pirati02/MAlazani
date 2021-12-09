@@ -5,9 +5,10 @@ import ArtistsLoaded
 import ArtistsRequested
 import android.os.Build
 import androidx.annotation.RequiresApi
+import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.AlazaniRepositoryImpl
+import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -18,7 +19,7 @@ import org.jsoup.Jsoup
 @InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class ArtistsViewModel(
-    private val alazaniRepository: AlazaniRepositoryImpl?
+    private val alazaniRepository: AlazaniRepository?
 ) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
 
     constructor() : this(null) {
@@ -46,10 +47,9 @@ class ArtistsViewModel(
                     state.copy(isInProgress = false, artists = mapped)
                 }
             }
-        }
-        emit {
-            state.copy(isInProgress = false,
-                artists = state.artists.apply {})
+            if (result is FailedResult) {
+                emit { state.copy(isInProgress = false, error = result.value.message) }
+            }
         }
     }
 

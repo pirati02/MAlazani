@@ -1,5 +1,6 @@
 package ge.baqar.gogia.malazani.media
 
+import android.annotation.SuppressLint
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
@@ -25,6 +26,7 @@ class MediaPlayerController(
     private var autoPlayEnabled = true
     private var playerControlsAreVisible = true
 
+    @SuppressLint("LongLogTag")
     fun play(position: Int) {
         _position = position
         val artist = dataSource!![_position]
@@ -45,13 +47,11 @@ class MediaPlayerController(
     }
 
     private fun listenAudioPlayerChanges(artist: AlazaniArtistListItem) {
-        viewModel.viewModelScope.launch(Dispatchers.Main) {
-            audioPlayer.listenPlayer {
-                if (it) {
-                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-                } else {
-                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-                }
+        audioPlayer.listenPlayer {
+            if (it) {
+                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+            } else {
+                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
             }
         }
         viewModel.viewModelScope.launch {
@@ -66,16 +66,13 @@ class MediaPlayerController(
                 viewModel.viewModelScope.launch {
                     audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
                 }
-
                 binding?.included?.playingTrackTitle?.text = nextItem.title
                 binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
             }
         }
         audioPlayer.updateTimeHandler { progress, time ->
-            binding?.included?.playingTrackTime?.post {
-                binding?.included?.playingTrackTime?.text = time
-                binding?.included?.playerProgressBar?.progress = progress?.toInt()!!
-            }
+            binding?.included?.playingTrackTime?.text = time
+            binding?.included?.playerProgressBar?.progress = progress?.toInt()!!
         }
     }
 
@@ -91,15 +88,15 @@ class MediaPlayerController(
             }
 
             override fun onStopTrackingTouch(p0: SeekBar?) {
-                audioPlayer.playOn(p0?.progress)
+                viewModel.viewModelScope.launch {
+                    audioPlayer.playOn(p0?.progress)
+                }
             }
         })
 
         binding?.included?.playStopButton?.setOnClickListener {
-            viewModel.viewModelScope.launch {
-                audioPlayer.release()
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            }
+            audioPlayer.release()
+            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
         }
         binding?.included?.playNextButton?.setOnClickListener {
             next()
@@ -108,19 +105,15 @@ class MediaPlayerController(
             previous()
         }
         binding?.included?.playPauseButton?.setOnClickListener {
-            viewModel.viewModelScope.launch {
-                if (audioPlayer.isPlaying()) {
-                    audioPlayer.pause()
-                } else {
-                    audioPlayer.resume()
-                }
+            if (audioPlayer.isPlaying()) {
+                audioPlayer.pause()
+            } else {
+                audioPlayer.resume()
             }
         }
         binding?.included?.playStopButton?.setOnClickListener {
-            viewModel.viewModelScope.launch {
-                audioPlayer.release()
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            }
+            audioPlayer.release()
+            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
         }
         binding?.included?.playerAutoPlayButton?.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
@@ -145,49 +138,37 @@ class MediaPlayerController(
     }
 
     fun pause() {
-        viewModel.viewModelScope.launch {
-            audioPlayer.pause()
-        }
+        audioPlayer.pause()
     }
 
     fun stop() {
-        viewModel.viewModelScope.launch {
-            audioPlayer.release()
-        }
+        audioPlayer.release()
     }
 
     fun resume() {
-        viewModel.viewModelScope.launch {
-            audioPlayer.resume()
-        }
+        audioPlayer.resume()
     }
 
     fun next() {
-        viewModel.viewModelScope.launch {
-            if ((_position + 1) < dataSource?.size!!) {
-                ++_position
-                val nextItem = dataSource!![_position]
-                viewModel.viewModelScope.launch {
-                    audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
-                }
-
-                binding?.included?.playingTrackTitle?.text = nextItem.title
+        if ((_position + 1) < dataSource?.size!!) {
+            ++_position
+            val nextItem = dataSource!![_position]
+            viewModel.viewModelScope.launch {
+                audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
             }
+            binding?.included?.playingTrackTitle?.text = nextItem.title
         }
     }
 
 
     fun previous() {
-        viewModel.viewModelScope.launch {
-            if (_position > 0) {
-                --_position
-                val prevItem = dataSource!![_position]
-                viewModel.viewModelScope.launch {
-                    audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
-                }
-
-                binding?.included?.playingTrackTitle?.text = prevItem.title
+        if (_position > 0) {
+            --_position
+            val prevItem = dataSource!![_position]
+            viewModel.viewModelScope.launch {
+                audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
             }
+            binding?.included?.playingTrackTitle?.text = prevItem.title
         }
     }
 
@@ -197,5 +178,16 @@ class MediaPlayerController(
 
     fun isPlaying(): Boolean {
         return audioPlayer.isPlaying()
+    }
+
+    fun updatePlayer() {
+        val artist = dataSource!![--_position]
+        initializeViewClickListeners()
+        binding?.included?.mediaPlayerView?.let {
+            it.visibility = View.VISIBLE
+        }
+        binding?.included?.playingTrackTitle?.text = artist.title
+        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        onPrepareListener()
     }
 }

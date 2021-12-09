@@ -2,11 +2,8 @@
     <string name="app_name">mAlazani</string>
 
     <string name="app_name_georgian">ალაზანი</string>
-    <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
     <string name="ensembles">ანსამბლები</string>
-    <string name="artistDetails">Artist Details</string>
+    <string name="artistDetails">ანსამბლის დეტალები</string>
     <string name="states">კუთხეები</string>
     <string name="oldRecordings">ძველი ჩანაწერები</string>
     <string name="ensemblesLink">http://www.alazani.ge/folk-ensambles-folkloruli-ansamblebi-geo.html?georgian-folk</string>
@@ -14,6 +11,7 @@
     <string name="oldRecordingsLink">http://www.alazani.ge/oldest-archives-udzvelesi-chanatserebi-georgian-folklore-geo.html?georgian-folk</string>
     <string name="songs">სიმღერები</string>
     <string name="chants">გალობა</string>
-    <string name="auto_play_off">auto play is off</string>
-    <string name="auto_play_on">auto play is on</string>
+    <string name="auto_play_off">აუტომატური დაკვრა გამორთულია</string>
+    <string name="auto_play_on">აუტომატური დაკვრა ჩართულია</string>
+    <string name="network_is_off">ინტერნეტთან კავშირის პრობლემა</string>
 </resources>

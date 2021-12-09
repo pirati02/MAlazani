@@ -5,9 +5,10 @@ import ArtistChantsRequested
 import ArtistSongsRequested
 import android.os.Build
 import androidx.annotation.RequiresApi
+import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.AlazaniRepositoryImpl
+import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -18,7 +19,7 @@ import org.jsoup.Jsoup
 @InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class ArtistViewModel(
-    private val alazaniRepository: AlazaniRepositoryImpl?
+    private val alazaniRepository: AlazaniRepository?
 ) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
 
     constructor() : this(null) {
@@ -39,6 +40,7 @@ class ArtistViewModel(
                     parsed.getElementsByAttributeValue("width", 500.toString()).toList()
 
                 val songs = elements
+                    .asSequence()
                     .filter { it.childNodes().count() == 1 }
                     .map {
                         val element = it.getElementsByTag("a")
@@ -54,7 +56,12 @@ class ArtistViewModel(
                     .toMutableList()
 
                 emit {
-                    SongsState.DATA_LOADED(songs)
+                    SongsState.dataLoaded(songs)
+                }
+            }
+            if (result is FailedResult) {
+                emit {
+                    ChantsState.error(result.value.message)
                 }
             }
         }
@@ -77,6 +84,7 @@ class ArtistViewModel(
                     parsed.getElementsByAttributeValue("width", 500.toString()).toList()
 
                 val chants = elements
+                    .asSequence()
                     .filter { it.childNodes().count() == 1 }
                     .map {
                         val element = it.getElementsByTag("a")
@@ -90,7 +98,12 @@ class ArtistViewModel(
                         AlazaniArtistListItem(firstChild.text(), firstChild.attr("href"))
                     }.toMutableList()
                 emit {
-                    ChantsState.DATA_LOADED(chants)
+                    ChantsState.dataLoaded(chants)
+                }
+            }
+            if (result is FailedResult) {
+                emit {
+                    ChantsState.error(result.value.message)
                 }
             }
         }
