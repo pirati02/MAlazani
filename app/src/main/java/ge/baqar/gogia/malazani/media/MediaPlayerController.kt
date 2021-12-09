@@ -1,9 +1,11 @@
 package ge.baqar.gogia.malazani.media
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
@@ -14,6 +16,7 @@ import kotlinx.coroutines.*
 
 @InternalCoroutinesApi
 @ExperimentalCoroutinesApi
+@RequiresApi(Build.VERSION_CODES.O)
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
     private val audioPlayer: AudioPlayer
@@ -28,16 +31,18 @@ class MediaPlayerController(
 
     @SuppressLint("LongLogTag")
     fun play(position: Int) {
-        _position = position
-        val artist = dataSource!![_position]
+        dataSource?.let {
+            _position = position
+            val artist = dataSource!![_position]
 
-        initializeViewClickListeners()
-        listenAudioPlayerChanges(artist)
-        binding?.included?.mediaPlayerView?.let {
-            it.visibility = View.VISIBLE
+            initializeViewClickListeners()
+            listenAudioPlayerChanges(artist)
+            binding?.included?.mediaPlayerView?.let {
+                it.visibility = View.VISIBLE
+            }
+            binding?.included?.playingTrackTitle?.text = artist.title
+            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
         }
-        binding?.included?.playingTrackTitle?.text = artist.title
-        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
     }
 
     private fun onPrepareListener() {
@@ -172,8 +177,8 @@ class MediaPlayerController(
         }
     }
 
-    fun getCurrentSong(): AlazaniArtistListItem {
-        return dataSource!![_position]
+    fun getCurrentSong(): AlazaniArtistListItem? {
+        return if (dataSource == null) null else dataSource!![_position]
     }
 
     fun isPlaying(): Boolean {
@@ -181,13 +186,15 @@ class MediaPlayerController(
     }
 
     fun updatePlayer() {
-        val artist = dataSource!![--_position]
-        initializeViewClickListeners()
-        binding?.included?.mediaPlayerView?.let {
-            it.visibility = View.VISIBLE
+        dataSource?.let{
+            val artist = dataSource!![_position]
+            initializeViewClickListeners()
+            binding?.included?.mediaPlayerView?.let {
+                it.visibility = View.VISIBLE
+            }
+            binding?.included?.playingTrackTitle?.text = artist.title
+            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+            onPrepareListener()
         }
-        binding?.included?.playingTrackTitle?.text = artist.title
-        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-        onPrepareListener()
     }
 }

@@ -85,44 +85,45 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             0
         )
         val currentSong = mediaPlayerController.getCurrentSong()
+        currentSong?.let {
+            val notificationLayout = RemoteViews(packageName, R.layout.view_notification_small)
+            val notificationLayoutExpanded = RemoteViews(packageName, R.layout.view_notification_large)
 
-        val notificationLayout = RemoteViews(packageName, R.layout.view_notification_small)
-        val notificationLayoutExpanded = RemoteViews(packageName, R.layout.view_notification_large)
+            notificationLayout.setTextViewText(R.id.notification_title, currentSong.title)
+            notificationLayoutExpanded.setTextViewText(R.id.notification_title, currentSong.title)
 
-        notificationLayout.setTextViewText(R.id.notification_title, currentSong.title)
-        notificationLayoutExpanded.setTextViewText(R.id.notification_title, currentSong.title)
+            notificationLayout.setOnClickPendingIntent(R.id.notification_view_small, contentIntent)
+            notificationLayoutExpanded.setOnClickPendingIntent(
+                R.id.notification_view_small,
+                contentIntent
+            )
 
-        notificationLayout.setOnClickPendingIntent(R.id.notification_view_small, contentIntent)
-        notificationLayoutExpanded.setOnClickPendingIntent(
-            R.id.notification_view_small,
-            contentIntent
-        )
+            initRemoteViewClicks(notificationLayoutExpanded)
 
-        initRemoteViewClicks(notificationLayoutExpanded)
+            val channelId = "HEADS_UP_NOTIFICATIONS"
+            val channel = NotificationChannel(
+                channelId,
+                getString(R.string.app_name),
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            channel.enableVibration(false)
 
-        val channelId = "HEADS_UP_NOTIFICATIONS"
-        val channel = NotificationChannel(
-            channelId,
-            getString(R.string.app_name),
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        channel.enableVibration(false)
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            val notification: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setCustomContentView(notificationLayout)
+                .setCustomBigContentView(notificationLayoutExpanded)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setColor(getColor(R.color.colorAccentLighter))
+                .setColorized(true)
+                .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
+                .setVibrate(longArrayOf(-1))
 
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        val notification: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setCustomContentView(notificationLayout)
-            .setCustomBigContentView(notificationLayoutExpanded)
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setColor(getColor(R.color.colorAccentLighter))
-            .setColorized(true)
-            .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
-            .setVibrate(longArrayOf(-1))
-
-        if (update) {
-            notificationManager?.notify(notificationId, notification.build())
-        } else {
-            startForeground(notificationId, notification.build())
+            if (update) {
+                notificationManager?.notify(notificationId, notification.build())
+            } else {
+                startForeground(notificationId, notification.build())
+            }
         }
     }
 
