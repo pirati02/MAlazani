@@ -32,8 +32,6 @@ class ArtistsListFragment : Fragment() {
     private val viewModel: ArtistsViewModel by inject()
     private var _binding: FragmentArtistsBinding? = null
 
-    private val binding get() = _binding!!
-
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,13 +39,13 @@ class ArtistsListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentArtistsBinding.inflate(inflater, container, false)
-        if (binding.artistsListView.adapter == null) {
+        if (_binding?.artistsListView?.adapter == null) {
             val li = arguments?.get("link").toString().toInt()
             val url = getString(li)
             val loadFlow = flowOf(ArtistsRequested(url))
             initializeIntents(loadFlow)
         }
-        return binding.root
+        return _binding?.root!!
     }
 
 
@@ -68,13 +66,13 @@ class ArtistsListFragment : Fragment() {
             Timber.i(state.error)
         }
         if (state.isInProgress) {
-            binding.artistsProgressbar.visibility = View.VISIBLE
+            _binding?.artistsProgressbar?.visibility = View.VISIBLE
             return
         }
-        binding.artistsProgressbar.visibility = View.GONE
+        _binding?.artistsProgressbar?.visibility = View.GONE
 
         if (state.artists.count() > 0) {
-            binding.artistsListView.adapter = ArtistsAdapter(state.artists) {
+            _binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
                 findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
                     putString("link", it.link)
                     putString("title", it.title)

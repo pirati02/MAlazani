@@ -98,12 +98,8 @@ class MenuActivity : AppCompatActivity() {
         doUnbindService()
     }
 
-
-    fun setDataSource(songs: MutableList<AlazaniArtistListItem>) {
+    fun playMediaPlayback(position: Int, songs: MutableList<AlazaniArtistListItem>) {
         mediaController?.dataSource = songs
-    }
-
-    fun playMediaPlayback(position: Int) {
         val intent = Intent(this, MediaPlaybackService::class.java).apply {
             action = MediaPlaybackService.PLAY_MEDIA
             putExtra("position", position)
@@ -140,7 +136,7 @@ class MenuActivity : AppCompatActivity() {
     private fun doUnbindService() {
         if (mIsBound) {
             val intent = Intent(this, MediaPlaybackService::class.java)
-//            stopService(intent)
+            stopService(intent)
             unbindService(mConnection)
             mIsBound = false
         }

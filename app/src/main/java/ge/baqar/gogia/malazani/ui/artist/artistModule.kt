@@ -12,6 +12,5 @@ import org.koin.dsl.module
 val artistModule = module {
     //viewModel
     factory { ArtistViewModel(get()) }
-    factory { MediaPlayerController(get(), get()) }
 }
 

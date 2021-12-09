@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
+import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -45,7 +46,7 @@ class ArtistFragment : Fragment() {
     private val binding get() = _binding!!
 
     @SuppressLint("UseRequireInsteadOfGet")
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -140,8 +141,7 @@ class ArtistFragment : Fragment() {
             if (state.songs.size > 0) {
                 binding.songsProgressbar.visibility = View.GONE
                 binding.songsListView.adapter = SongsAdapter(state.songs) { _, index ->
-                    (activity as MenuActivity).setDataSource(state.songs)
-                    play(index)
+                    play(index, state.songs)
 
                 }
                 binding.songsListView.visibility = View.VISIBLE
@@ -159,8 +159,7 @@ class ArtistFragment : Fragment() {
             if (state.chants.size > 0) {
                 binding.chantsProgressbar.visibility = View.GONE
                 binding.chantsListView.adapter = SongsAdapter(state.chants) { _, index ->
-                    (activity as MenuActivity).setDataSource(state.chants)
-                    play(index)
+                    play(index, state.chants)
                 }
             } else {
                 binding.chantsProgressbar.visibility = View.GONE
@@ -171,8 +170,8 @@ class ArtistFragment : Fragment() {
         }
     }
 
-    fun play(position: Int) {
-        (activity as MenuActivity).playMediaPlayback(position)
+    fun play(position: Int, songs: MutableList<AlazaniArtistListItem>) {
+        (activity as MenuActivity).playMediaPlayback(position, songs)
     }
 
     override fun onDestroyView() {
