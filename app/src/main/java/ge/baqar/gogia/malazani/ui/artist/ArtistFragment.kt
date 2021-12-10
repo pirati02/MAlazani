@@ -31,10 +31,10 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-
 @InternalCoroutinesApi
 @FlowPreview
 @ExperimentalCoroutinesApi
+@RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
 
     @ExperimentalCoroutinesApi
@@ -76,13 +76,8 @@ class ArtistFragment : Fragment() {
             findNavController().navigateUp()
         }
         binding.downloadAlbumbtn.setOnClickListener {
-            (activity as MenuActivity).let {
-                it.askForPermission {
-                    downloadAlbum(title)
-                }
-            }
+            downloadAlbum(title)
         }
-        (activity as MenuActivity).doBindService()
         return binding.root
     }
 
@@ -119,7 +114,6 @@ class ArtistFragment : Fragment() {
             .launchIn(lifecycleScope)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun render(state: ArtistState) {
         if (state.isInProgress) {
             if (state is SongsState) {

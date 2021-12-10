@@ -51,7 +51,7 @@ class AudioPlayer(private val context: Context) {
     }
 
     fun resume() {
-        mediaPlayer?.isPlaying()
+        mediaPlayer?.start()
         mediaPlayerIsPlayingCallback?.invoke(isPlaying())
     }
 

@@ -25,6 +25,7 @@ import org.koin.android.ext.android.inject
 @ExperimentalCoroutinesApi
 @InternalCoroutinesApi
 @FlowPreview
+@RequiresApi(Build.VERSION_CODES.O)
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     private var notificationManager: NotificationManager? = null
@@ -49,6 +50,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        MediaPlaybackServiceManager.isRunning = true
         when (intent?.action) {
             PLAY_MEDIA -> {
                 val position = intent.getIntExtra("position", 0)
@@ -57,11 +59,11 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             }
             RESUME_MEDIA -> {
                 mediaPlayerController.resume()
-                showNotification(true)
+                showNotification()
             }
             PAUSE_MEDIA -> {
                 mediaPlayerController.pause()
-                showNotification(true)
+                showNotification()
             }
             STOP_MEDIA -> {
                 mediaPlayerController.stop()
@@ -74,6 +76,11 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             NEXT_MEDIA -> {
                 mediaPlayerController.next()
                 showNotification()
+            }
+            null -> {
+                if (mediaPlayerController.isPlaying()) {
+                    showNotification()
+                }
             }
         }
         return START_NOT_STICKY
@@ -91,7 +98,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
-    private fun showNotification(update: Boolean = false) {
+    private fun showNotification() {
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java),
@@ -134,11 +141,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                     .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
                     .setVibrate(longArrayOf(-1))
 
-            if (update) {
-                notificationManager?.notify(notificationId, notification.build())
-            } else {
-                startForeground(notificationId, notification.build())
-            }
+            startForeground(notificationId, notification.build())
         }
     }
 

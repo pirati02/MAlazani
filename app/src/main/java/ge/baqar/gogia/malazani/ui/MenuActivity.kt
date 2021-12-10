@@ -1,6 +1,5 @@
 package ge.baqar.gogia.malazani.ui
 
-import android.Manifest
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -13,14 +12,12 @@ import androidx.navigation.ui.setupWithNavController
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
+import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
 import ge.baqar.gogia.malazani.poko.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.ServiceCreatedEvent
-import ge.baqar.gogia.malazani.utility.permission.OnDenyPermissions
-import ge.baqar.gogia.malazani.utility.permission.OnGrantPermissions
-import ge.baqar.gogia.malazani.utility.permission.OnPermissionsFailure
-import ge.baqar.gogia.malazani.utility.permission.RuntimePermissioner
+import ge.baqar.gogia.malazani.utility.ServiceUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -32,14 +29,22 @@ import org.greenrobot.eventbus.ThreadMode
 @InternalCoroutinesApi
 @FlowPreview
 @ExperimentalCoroutinesApi
+@RequiresApi(Build.VERSION_CODES.O)
 class MenuActivity : AppCompatActivity() {
 
+    private var tempDataSource: MutableList<AlazaniArtistListItem>? = null
+    private var tempPosition: Int? = null
+    private var _playbackRequest: Boolean = false
+    private var _playMediaPlaybackAction: ((MutableList<AlazaniArtistListItem>, Int) -> Unit)? =
+        { songs, position ->
+            mediaController?.dataSource = songs
+            val intent = Intent(this, MediaPlaybackService::class.java).apply {
+                action = MediaPlaybackService.PLAY_MEDIA
+                putExtra("position", position)
+            }
+            startForegroundService(intent)
+        }
     private lateinit var _binding: ActivityMenuBinding
-    private var mIsBound: Boolean = false
-    private var permissioner: RuntimePermissioner? = null
-
-    private val requestCode = 1994
-    private var permissionCallback: (() -> Unit)? = null
     private var mediaController: MediaPlayerController? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -60,25 +65,8 @@ class MenuActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         _binding.navView.setupWithNavController(navController)
 
-        permissioner = RuntimePermissioner.builder()
-            ?.requestCode(requestCode)
-            ?.permission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            ?.callBack(object : OnGrantPermissions {
-                override fun get(grantedPermissions: List<String>) {
-                    permissionCallback?.invoke()
-                }
-
-            }, object : OnDenyPermissions {
-                override fun get(deniedPermissions: List<String>) {
-
-                }
-            }, object : OnPermissionsFailure {
-                override fun fail(e: Exception) {
-
-                }
-            })
-
-        doBindService()
+        if (MediaPlaybackServiceManager.isRunning)
+            doBindService()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -89,6 +77,16 @@ class MenuActivity : AppCompatActivity() {
         if (mediaController?.binding == null)
             mediaController?.binding = _binding
 
+        if (_playbackRequest) {
+            mediaController?.binding = _binding
+            _playMediaPlaybackAction?.invoke(
+                tempDataSource!!,
+                tempPosition!!
+            )
+            tempDataSource = null
+            tempPosition = null
+            _playbackRequest = false
+        }
         if (mediaController?.isPlaying() == true) {
             mediaController?.binding = _binding
             mediaController?.updatePlayer()
@@ -116,43 +114,26 @@ class MenuActivity : AppCompatActivity() {
         doUnbindService()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun playMediaPlayback(position: Int, songs: MutableList<AlazaniArtistListItem>) {
-        mediaController?.dataSource = songs
-        val intent = Intent(this, MediaPlaybackService::class.java).apply {
-            action = MediaPlaybackService.PLAY_MEDIA
-            putExtra("position", position)
+        if (mediaController != null) {
+            _playMediaPlaybackAction?.invoke(songs, position)
+        } else {
+            tempDataSource = songs
+            tempPosition = position
+            _playbackRequest = true
+            doBindService()
         }
-        startService(intent)
-    }
-
-    fun askForPermission(callback: () -> Unit) {
-        permissionCallback = callback
-        permissioner?.request(this)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        permissioner?.onPermissionsResult(requestCode, permissions, grantResults)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun doBindService() {
-        if (!mIsBound) {
-            val intent = Intent(this, MediaPlaybackService::class.java)
-            startForegroundService(intent)
-            mIsBound = true
-        }
+        val intent = Intent(this, MediaPlaybackService::class.java)
+        startForegroundService(intent)
     }
 
     private fun doUnbindService() {
-        if (mIsBound) {
-            val intent = Intent(this, MediaPlaybackService::class.java)
-            stopService(intent)
-            mIsBound = false
-        }
+        val intent = Intent(this, MediaPlaybackService::class.java)
+        stopService(intent)
     }
 }

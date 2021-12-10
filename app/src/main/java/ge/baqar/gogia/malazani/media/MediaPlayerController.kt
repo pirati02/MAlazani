@@ -24,16 +24,22 @@ class MediaPlayerController(
 
     var binding: ActivityMenuBinding? = null
     var dataSource: MutableList<AlazaniArtistListItem>? = null
+    var position = 0
+        get() {
+            return field
+        }
+        private set(value) {
+            field = value
+        }
 
-    private var _position = 0
     private var autoPlayEnabled = true
     private var playerControlsAreVisible = true
 
     @SuppressLint("LongLogTag")
     fun play(position: Int) {
         dataSource?.let {
-            _position = position
-            val artist = dataSource!![_position]
+            this.position = position
+            val artist = dataSource!![this.position]
 
             initializeViewClickListeners()
             listenAudioPlayerChanges(artist)
@@ -65,9 +71,9 @@ class MediaPlayerController(
         audioPlayer.completed {
             if (!autoPlayEnabled) return@completed
 
-            if ((_position + 1) < dataSource?.size!!) {
-                ++_position
-                val nextItem = dataSource!![_position]
+            if ((position + 1) < dataSource?.size!!) {
+                ++position
+                val nextItem = dataSource!![position]
                 viewModel.viewModelScope.launch {
                     audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
                 }
@@ -111,9 +117,9 @@ class MediaPlayerController(
         }
         binding?.included?.playPauseButton?.setOnClickListener {
             if (audioPlayer.isPlaying()) {
-                audioPlayer.pause()
+                pause()
             } else {
-                audioPlayer.resume()
+                resume()
             }
         }
         binding?.included?.playStopButton?.setOnClickListener {
@@ -155,9 +161,9 @@ class MediaPlayerController(
     }
 
     fun next() {
-        if ((_position + 1) < dataSource?.size!!) {
-            ++_position
-            val nextItem = dataSource!![_position]
+        if ((position + 1) < dataSource?.size!!) {
+            ++position
+            val nextItem = dataSource!![position]
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
             }
@@ -167,9 +173,9 @@ class MediaPlayerController(
 
 
     fun previous() {
-        if (_position > 0) {
-            --_position
-            val prevItem = dataSource!![_position]
+        if (position > 0) {
+            --position
+            val prevItem = dataSource!![position]
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
             }
@@ -178,7 +184,7 @@ class MediaPlayerController(
     }
 
     fun getCurrentSong(): AlazaniArtistListItem? {
-        return if (dataSource == null) null else dataSource!![_position]
+        return if (dataSource == null) null else dataSource!![position]
     }
 
     fun isPlaying(): Boolean {
@@ -186,8 +192,8 @@ class MediaPlayerController(
     }
 
     fun updatePlayer() {
-        dataSource?.let{
-            val artist = dataSource!![_position]
+        dataSource?.let {
+            val artist = dataSource!![position]
             initializeViewClickListeners()
             binding?.included?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
