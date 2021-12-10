@@ -1,17 +1,11 @@
 package ge.baqar.gogia.malazani.ui
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -21,6 +15,8 @@ import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.RequestMediaControllerInstance
+import ge.baqar.gogia.malazani.poko.ServiceCreatedEvent
 import ge.baqar.gogia.malazani.utility.permission.OnDenyPermissions
 import ge.baqar.gogia.malazani.utility.permission.OnGrantPermissions
 import ge.baqar.gogia.malazani.utility.permission.OnPermissionsFailure
@@ -28,6 +24,10 @@ import ge.baqar.gogia.malazani.utility.permission.RuntimePermissioner
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+
 
 @InternalCoroutinesApi
 @FlowPreview
@@ -41,29 +41,6 @@ class MenuActivity : AppCompatActivity() {
     private val requestCode = 1994
     private var permissionCallback: (() -> Unit)? = null
     private var mediaController: MediaPlayerController? = null
-
-    @FlowPreview
-    @ExperimentalCoroutinesApi
-    private val mConnection: ServiceConnection = object : ServiceConnection {
-        @RequiresApi(Build.VERSION_CODES.M)
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            val boundedService =
-                (service as MediaPlaybackService.LocalBinder).service
-            mediaController = boundedService.mediaPlayerController
-
-            if (mediaController?.binding == null)
-                mediaController?.binding = _binding
-
-            if (mediaController?.isPlaying() == true) {
-                mediaController?.binding = _binding
-                mediaController?.updatePlayer()
-            }
-        }
-
-        override fun onServiceDisconnected(className: ComponentName) {
-
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,6 +81,36 @@ class MenuActivity : AppCompatActivity() {
         doBindService()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: MediaPlayerController) {
+        mediaController = event
+
+        if (mediaController?.binding == null)
+            mediaController?.binding = _binding
+
+        if (mediaController?.isPlaying() == true) {
+            mediaController?.binding = _binding
+            mediaController?.updatePlayer()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun serviceCreated(event: ServiceCreatedEvent) {
+        EventBus.getDefault().post(RequestMediaControllerInstance())
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         doUnbindService()
@@ -134,21 +141,17 @@ class MenuActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun doBindService() {
-        val intent = Intent(this, MediaPlaybackService::class.java)
-        startForegroundService(intent)
-        bindService(
-            intent,
-            mConnection,
-            Context.BIND_AUTO_CREATE
-        )
-        mIsBound = true
+        if (!mIsBound) {
+            val intent = Intent(this, MediaPlaybackService::class.java)
+            startForegroundService(intent)
+            mIsBound = true
+        }
     }
 
     private fun doUnbindService() {
         if (mIsBound) {
             val intent = Intent(this, MediaPlaybackService::class.java)
             stopService(intent)
-            unbindService(mConnection)
             mIsBound = false
         }
     }

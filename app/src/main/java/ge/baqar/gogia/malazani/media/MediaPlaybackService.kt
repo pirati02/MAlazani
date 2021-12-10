@@ -4,17 +4,21 @@ import android.annotation.SuppressLint
 import android.app.*
 import android.content.Intent
 import android.media.MediaPlayer
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import ge.baqar.gogia.malazani.R
+import ge.baqar.gogia.malazani.poko.RequestMediaControllerInstance
+import ge.baqar.gogia.malazani.poko.ServiceCreatedEvent
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 
 
@@ -22,22 +26,21 @@ import org.koin.android.ext.android.inject
 @InternalCoroutinesApi
 @FlowPreview
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
-    inner class LocalBinder : Binder() {
-        val service: MediaPlaybackService
-            get() = this@MediaPlaybackService
-    }
 
     private var notificationManager: NotificationManager? = null
     private val notificationId: Int = 1024
-    val mediaPlayerController: MediaPlayerController by inject()
+    private val mediaPlayerController: MediaPlayerController by inject()
 
     override fun onCreate() {
         super.onCreate()
+        EventBus.getDefault().register(this)
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        EventBus.getDefault().post(ServiceCreatedEvent())
     }
 
-    override fun onBind(p0: Intent?): IBinder {
-        return LocalBinder()
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
     }
 
     override fun onPrepared(p0: MediaPlayer?) {
@@ -76,6 +79,16 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         return START_NOT_STICKY
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun onMessageEvent(event: RequestMediaControllerInstance?) {
+        EventBus.getDefault().post(mediaPlayerController)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
     private fun showNotification(update: Boolean = false) {
@@ -87,7 +100,8 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         val currentSong = mediaPlayerController.getCurrentSong()
         currentSong?.let {
             val notificationLayout = RemoteViews(packageName, R.layout.view_notification_small)
-            val notificationLayoutExpanded = RemoteViews(packageName, R.layout.view_notification_large)
+            val notificationLayoutExpanded =
+                RemoteViews(packageName, R.layout.view_notification_large)
 
             notificationLayout.setTextViewText(R.id.notification_title, currentSong.title)
             notificationLayoutExpanded.setTextViewText(R.id.notification_title, currentSong.title)
@@ -109,15 +123,16 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             channel.enableVibration(false)
 
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-            val notification: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setCustomContentView(notificationLayout)
-                .setCustomBigContentView(notificationLayoutExpanded)
-                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                .setColor(getColor(R.color.colorAccentLighter))
-                .setColorized(true)
-                .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
-                .setVibrate(longArrayOf(-1))
+            val notification: NotificationCompat.Builder =
+                NotificationCompat.Builder(this, channelId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setCustomContentView(notificationLayout)
+                    .setCustomBigContentView(notificationLayoutExpanded)
+                    .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                    .setColor(getColor(R.color.colorAccentLighter))
+                    .setColorized(true)
+                    .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
+                    .setVibrate(longArrayOf(-1))
 
             if (update) {
                 notificationManager?.notify(notificationId, notification.build())
