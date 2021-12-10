@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorAccentLighter"
@@ -21,37 +22,37 @@
         <ImageView
             android:id="@+id/playStopButton"
             android:layout_width="wrap_content"
+            android:layout_marginRight="10dp"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
-            android:background="@color/white"
-            android:padding="10dp"
-            android:src="@drawable/ic_outline_stop_circle_24" />
+            android:padding="15dp"
+            android:src="@drawable/ic_outline_stop_circle_24_white" />
+
 
         <ImageView
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
             android:id="@+id/playPauseButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
-            android:background="@color/white"
-            android:padding="15dp"
-            android:src="@drawable/ic_baseline_pause_circle_outline_24" />
+            android:padding="10dp"
+            android:src="@drawable/ic_baseline_pause_circle_outline_24_white" />
 
         <ImageView
             android:id="@+id/playPrevButton"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
-            android:background="@color/white"
             android:padding="10dp"
-            android:src="@drawable/ic_baseline_fast_rewind_24" />
+            android:src="@drawable/ic_baseline_fast_rewind_24_white" />
 
         <ImageView
+            android:layout_marginLeft="10dp"
             android:id="@+id/playNextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
-            android:background="@color/white"
-            android:padding="10dp"
-            android:src="@drawable/ic_round_fast_forward_24" />
+            android:padding="15dp"
+            android:src="@drawable/ic_round_fast_forward_24_white" />
+
     </LinearLayout>
 </LinearLayout>

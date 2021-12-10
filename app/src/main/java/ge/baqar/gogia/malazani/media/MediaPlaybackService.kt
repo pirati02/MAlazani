@@ -55,14 +55,14 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             PLAY_MEDIA -> {
                 val position = intent.getIntExtra("position", 0)
                 mediaPlayerController.play(position)
-                showNotification()
+                showNotification(true)
             }
-            RESUME_MEDIA -> {
-                mediaPlayerController.resume()
-                showNotification()
-            }
-            PAUSE_MEDIA -> {
-                mediaPlayerController.pause()
+            PAUSE_OR_MEDIA -> {
+                if (mediaPlayerController.isPlaying())
+                    mediaPlayerController.pause()
+                else
+                    mediaPlayerController.resume()
+
                 showNotification()
             }
             STOP_MEDIA -> {
@@ -98,7 +98,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
-    private fun showNotification() {
+    private fun showNotification(isInitialization: Boolean = false) {
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java),
@@ -119,13 +119,13 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 contentIntent
             )
 
-            initRemoteViewClicks(notificationLayoutExpanded)
+            initRemoteViewClicks(notificationLayoutExpanded, isInitialization)
 
             val channelId = "HEADS_UP_NOTIFICATIONS"
             val channel = NotificationChannel(
                 channelId,
                 getString(R.string.app_name),
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_NONE
             )
             channel.enableVibration(false)
 
@@ -138,7 +138,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                     .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                     .setColor(getColor(R.color.colorAccentLighter))
                     .setColorized(true)
-                    .setDefaults(Notification.DEFAULT_LIGHTS or Notification.DEFAULT_SOUND)
+                    .setDefaults(Notification.DEFAULT_LIGHTS)
                     .setVibrate(longArrayOf(-1))
 
             startForeground(notificationId, notification.build())
@@ -146,7 +146,10 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private fun initRemoteViewClicks(notificationLayoutExpanded: RemoteViews) {
+    private fun initRemoteViewClicks(
+        notificationLayoutExpanded: RemoteViews,
+        isInitialization: Boolean = false
+    ) {
         notificationLayoutExpanded.setOnClickPendingIntent(
             R.id.playStopButton, PendingIntent.getService(
                 this, 0,
@@ -156,23 +159,25 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 0
             )
         )
-        val isPlaying = mediaPlayerController.isPlaying()
-        if (isPlaying) {
+
+        if (mediaPlayerController.isPlaying() || isInitialization) {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_pause_circle_outline_24
+                R.drawable.ic_baseline_pause_circle_outline_24_white
             )
         } else {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_play_circle_outline_24
+                R.drawable.ic_baseline_play_circle_outline_24_white
             )
         }
+
         notificationLayoutExpanded.setOnClickPendingIntent(
-            R.id.playPauseButton, PendingIntent.getService(
+            R.id.playPauseButton,
+            PendingIntent.getService(
                 this, 0,
                 Intent(this, MediaPlaybackService::class.java).apply {
-                    action = if (isPlaying) PAUSE_MEDIA else RESUME_MEDIA
+                    action = PAUSE_OR_MEDIA
                 },
                 0
             )
@@ -199,8 +204,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     companion object {
         const val PLAY_MEDIA = "PLAY_MEDIA"
-        const val RESUME_MEDIA = "RESUME_MEDIA"
-        const val PAUSE_MEDIA = "PAUSE_MEDIA"
+        const val PAUSE_OR_MEDIA = "PAUSE_OR_MEDIA"
         const val STOP_MEDIA = "STOP_MEDIA"
         const val PREV_MEDIA = "PREV_MEDIA"
         const val NEXT_MEDIA = "NEXT_MEDIA"
