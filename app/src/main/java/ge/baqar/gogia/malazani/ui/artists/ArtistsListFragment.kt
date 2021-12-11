@@ -64,7 +64,7 @@ class ArtistsListFragment : Fragment() {
         EventBus.getDefault().unregister(this)
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun openArtistFragment(event: OpenArtistFragment) {
         findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
             putParcelable("ensemble", event.ensemble)

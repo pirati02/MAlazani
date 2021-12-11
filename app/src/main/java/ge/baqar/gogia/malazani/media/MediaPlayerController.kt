@@ -149,7 +149,7 @@ class MediaPlayerController(
             }
         }
         binding?.included?.playerPlaylistButton?.setOnClickListener {
-            EventBus.getDefault().postSticky(OpenArtistFragment(playListEnsemble!!))
+            EventBus.getDefault().post(OpenArtistFragment(playListEnsemble!!))
         }
     }
 
