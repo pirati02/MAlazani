@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -14,10 +15,10 @@ import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
-import ge.baqar.gogia.malazani.poko.RequestMediaControllerInstance
-import ge.baqar.gogia.malazani.poko.ServiceCreatedEvent
-import ge.baqar.gogia.malazani.utility.ServiceUtils
+import ge.baqar.gogia.malazani.media.RequestMediaControllerInstance
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
+import ge.baqar.gogia.malazani.poko.Song
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -32,20 +33,24 @@ import org.greenrobot.eventbus.ThreadMode
 @RequiresApi(Build.VERSION_CODES.O)
 class MenuActivity : AppCompatActivity() {
 
-    private var tempDataSource: MutableList<AlazaniArtistListItem>? = null
+    private var tempEnsemble: Ensemble? = null
+    private var tempDataSource: MutableList<Song>? = null
     private var tempPosition: Int? = null
+
     private var _playbackRequest: Boolean = false
-    private var _playMediaPlaybackAction: ((MutableList<AlazaniArtistListItem>, Int) -> Unit)? =
-        { songs, position ->
-            mediaController?.dataSource = songs
+    private var _playMediaPlaybackAction: ((MutableList<Song>, Int, Ensemble) -> Unit)? =
+        { songs, position, ensemble ->
+            mediaPlayerController?.playList = songs
+            mediaPlayerController?.playListEnsemble = ensemble
+            mediaPlayerController?.setInitialPosition(position)
             val intent = Intent(this, MediaPlaybackService::class.java).apply {
                 action = MediaPlaybackService.PLAY_MEDIA
-                putExtra("position", position)
             }
             startForegroundService(intent)
         }
     private lateinit var _binding: ActivityMenuBinding
-    private var mediaController: MediaPlayerController? = null
+    private lateinit var navController: NavController
+    var mediaPlayerController: MediaPlayerController? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,11 +59,10 @@ class MenuActivity : AppCompatActivity() {
         _binding = ActivityMenuBinding.inflate(layoutInflater)
         setContentView(_binding.root)
         supportActionBar?.hide()
-        val navController = findNavController(R.id.nav_host_fragment_activity_menu)
+        navController = findNavController(R.id.nav_host_fragment_activity_menu)
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_ensembles,
-//                R.id.navigation_states,
                 R.id.navigation_oldRecordings
             )
         )
@@ -69,27 +73,45 @@ class MenuActivity : AppCompatActivity() {
             doBindService()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: MediaPlayerController) {
-        mediaController = event
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
 
-        if (mediaController?.binding == null)
-            mediaController?.binding = _binding
+    override fun onDestroy() {
+        super.onDestroy()
+        if (!MediaPlaybackServiceManager.isRunning)
+            doUnbindService()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    fun onMessageEvent(event: MediaPlayerController) {
+        mediaPlayerController = event
+
+        if (mediaPlayerController?.binding == null)
+            mediaPlayerController?.binding = _binding
 
         if (_playbackRequest) {
-            mediaController?.binding = _binding
+            mediaPlayerController?.binding = _binding
             _playMediaPlaybackAction?.invoke(
                 tempDataSource!!,
-                tempPosition!!
+                tempPosition!!,
+                tempEnsemble!!
             )
             tempDataSource = null
             tempPosition = null
             _playbackRequest = false
+            return
         }
-        if (mediaController?.isPlaying() == true) {
-            mediaController?.binding = _binding
-            mediaController?.updatePlayer()
+        if (mediaPlayerController?.isPlaying() == true) {
+            mediaPlayerController?.binding = _binding
+            mediaPlayerController?.updatePlayer()
         }
     }
 
@@ -99,28 +121,14 @@ class MenuActivity : AppCompatActivity() {
         EventBus.getDefault().post(RequestMediaControllerInstance())
     }
 
-    override fun onStart() {
-        super.onStart()
-        EventBus.getDefault().register(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        EventBus.getDefault().unregister(this)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        doUnbindService()
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
-    fun playMediaPlayback(position: Int, songs: MutableList<AlazaniArtistListItem>) {
-        if (mediaController != null) {
-            _playMediaPlaybackAction?.invoke(songs, position)
+    fun playMediaPlayback(position: Int, songs: MutableList<Song>, ensemble: Ensemble) {
+        if (mediaPlayerController != null) {
+            _playMediaPlaybackAction?.invoke(songs, position, ensemble)
         } else {
             tempDataSource = songs
             tempPosition = position
+            tempEnsemble = ensemble
             _playbackRequest = true
             doBindService()
         }
@@ -130,6 +138,9 @@ class MenuActivity : AppCompatActivity() {
     fun doBindService() {
         val intent = Intent(this, MediaPlaybackService::class.java)
         startForegroundService(intent)
+
+        if (mediaPlayerController == null)
+            EventBus.getDefault().postSticky(RequestMediaControllerInstance())
     }
 
     private fun doUnbindService() {

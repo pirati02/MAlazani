@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/notification_view_large"
     android:background="@color/colorAccentLighter"
     android:orientation="vertical">
 
@@ -11,6 +12,7 @@
         style="@style/TextAppearance.Compat.Notification.Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
         android:padding="10dp"
         android:textSize="15sp" />
 

@@ -3,23 +3,22 @@ package ge.baqar.gogia.malazani.ui.artists
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.poko.Song
 
 class ArtistsAdapter(
-    private val dataSource: MutableList<AlazaniArtistListItem>,
-    val clicked: (AlazaniArtistListItem) -> Unit
+    private val dataSource: MutableList<Ensemble>,
+    val clicked: (Ensemble) -> Unit
 ) : RecyclerView.Adapter<ArtistsAdapter.EnsembleViewHolder>() {
     inner class EnsembleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.artistTitle)
         }
-        var position: Int? = null
 
-        fun bind(artist: AlazaniArtistListItem) {
+        fun bind(artist: Ensemble) {
             name.text = artist.title
 
             itemView.setOnClickListener {

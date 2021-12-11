@@ -9,7 +9,7 @@ import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Ensemble
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -21,10 +21,6 @@ import org.jsoup.Jsoup
 class ArtistsViewModel(
     private val alazaniRepository: AlazaniRepository?
 ) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
-
-    constructor() : this(null) {
-
-    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun loadArtists(link: String) = update {
@@ -41,7 +37,7 @@ class ArtistsViewModel(
                         .filter { it.childNodes().count() == 1 }
                         .map {
                             val el = it.getElementsByTag("a")
-                            AlazaniArtistListItem(el.text(), el.attr("href"))
+                            Ensemble(el.text(), el.attr("href"))
                         }.toMutableList()
 
                     state.copy(isInProgress = false, artists = mapped)

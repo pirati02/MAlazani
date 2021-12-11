@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
+import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -21,6 +22,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
@@ -41,6 +45,7 @@ class ArtistsListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         if (_view == null) {
+            EventBus.getDefault().register(this)
             _binding = FragmentArtistsBinding.inflate(inflater, container, false)
             if (_binding?.artistsListView?.adapter == null) {
                 val li = arguments?.get("link").toString().toInt()
@@ -54,6 +59,17 @@ class ArtistsListFragment : Fragment() {
         return _view!!
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    fun openArtistFragment(event: OpenArtistFragment) {
+        findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
+            putParcelable("ensemble", event.ensemble)
+        })
+    }
 
     @FlowPreview
     @RequiresApi(Build.VERSION_CODES.M)
@@ -82,10 +98,7 @@ class ArtistsListFragment : Fragment() {
 
         if (state.artists.count() > 0) {
             _binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
-                findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
-                    putString("link", it.link)
-                    putString("title", it.title)
-                })
+                openArtistFragment(OpenArtistFragment(it))
             }
         }
     }

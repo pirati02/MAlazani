@@ -1,6 +1,6 @@
 package ge.baqar.gogia.malazani.ui.artist
 
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Song
 
 open class ArtistResult
 
@@ -24,11 +24,11 @@ open class ArtistState(
 
 data class ChantsState(
     override val isInProgress: Boolean,
-    val chants: MutableList<AlazaniArtistListItem>,
+    val chants: MutableList<Song>,
     override val error: String?
 ) : ArtistState(isInProgress, error) {
     companion object {
-        fun dataLoaded(chants: MutableList<AlazaniArtistListItem>): ArtistState {
+        fun dataLoaded(chants: MutableList<Song>): ArtistState {
             return ChantsState(isInProgress = false, chants, null)
         }
 
@@ -40,11 +40,11 @@ data class ChantsState(
 
 data class SongsState(
     override val isInProgress: Boolean,
-    val songs: MutableList<AlazaniArtistListItem>,
+    val songs: MutableList<Song>,
     override val error: String?
 ) : ArtistState(isInProgress, error) {
     companion object {
-        fun dataLoaded(songs: MutableList<AlazaniArtistListItem>): SongsState {
+        fun dataLoaded(songs: MutableList<Song>): SongsState {
             return SongsState(isInProgress = false, songs, null)
         }
 

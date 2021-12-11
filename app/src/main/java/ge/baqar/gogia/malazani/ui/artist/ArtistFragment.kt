@@ -19,7 +19,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -36,6 +37,8 @@ import timber.log.Timber
 @ExperimentalCoroutinesApi
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
+
+    private var _ensemble: Ensemble? = null
 
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
@@ -54,12 +57,12 @@ class ArtistFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentArtistBinding.inflate(inflater, container, false)
-        val title = arguments?.get("title")?.toString()
-        binding.tabViewInclude.tabTitleView.text = title
+        _ensemble = arguments?.getParcelable("ensemble")
+        binding.tabViewInclude.tabTitleView.text = _ensemble?.title
         val loadSongsAndChantsAction = flowOf(
-            ArtistSongsRequested(arguments?.get("link").toString()),
+            ArtistSongsRequested(_ensemble?.link!!),
             ArtistChantsRequested().apply {
-                link = arguments?.get("link").toString()
+                link = _ensemble?.link!!
             })
         initializeIntents(loadSongsAndChantsAction)
 
@@ -76,12 +79,12 @@ class ArtistFragment : Fragment() {
             findNavController().navigateUp()
         }
         binding.downloadAlbumbtn.setOnClickListener {
-            downloadAlbum(title)
+            downloadAlbum()
         }
         return binding.root
     }
 
-    private fun downloadAlbum(title: String?) {
+    private fun downloadAlbum() {
         val songsDataSource = binding.songsListView.adapter as? SongsAdapter
         val chantsDataSource = binding.chantsListView.adapter as? SongsAdapter
         val album = songsDataSource?.dataSource
@@ -93,17 +96,17 @@ class ArtistFragment : Fragment() {
 
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
             request.setAllowedOverRoaming(false)
-            request.setTitle("იწერება $title ${it.title}")
+            request.setTitle("იწერება ${_ensemble?.link} ${it.title}")
             request.setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_DOWNLOADS,
-                "${title}-${it.title}.mp3"
+                "${Environment.DIRECTORY_DOWNLOADS}/${_ensemble?.title}/",
+                "${_ensemble?.link}-${it.title}.mp3"
             )
             downloadManager.enqueue(request)
         }
     }
 
     @FlowPreview
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.O)
     fun initializeIntents(inputs: Flow<ArtistAction>) {
         viewModel.intents(inputs)
             .onEach { output ->
@@ -166,8 +169,8 @@ class ArtistFragment : Fragment() {
         }
     }
 
-    private fun play(position: Int, songs: MutableList<AlazaniArtistListItem>) {
-        (activity as MenuActivity).playMediaPlayback(position, songs)
+    private fun play(position: Int, songs: MutableList<Song>) {
+        (activity as MenuActivity).playMediaPlayback(position, songs, _ensemble!!)
     }
 
     override fun onDestroyView() {

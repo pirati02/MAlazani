@@ -9,7 +9,7 @@ import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Song
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -51,7 +51,7 @@ class ArtistViewModel(
                     }
                     .map { element ->
                         val firstChild = element.first()
-                        AlazaniArtistListItem(firstChild.text(), firstChild.attr("href"))
+                        Song(firstChild.text(), firstChild.attr("href"))
                     }
                     .toMutableList()
 
@@ -95,7 +95,7 @@ class ArtistViewModel(
                     }
                     .map { element ->
                         val firstChild = element.first()
-                        AlazaniArtistListItem(firstChild.text(), firstChild.attr("href"))
+                        Song(firstChild.text(), firstChild.attr("href"))
                     }.toMutableList()
                 emit {
                     ChantsState.dataLoaded(chants)

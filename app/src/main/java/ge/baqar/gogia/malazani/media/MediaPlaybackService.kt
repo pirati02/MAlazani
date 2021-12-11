@@ -10,8 +10,8 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.RequestMediaControllerInstance
-import ge.baqar.gogia.malazani.poko.ServiceCreatedEvent
+import ge.baqar.gogia.malazani.poko.events.ArtistChanged
+import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -51,31 +51,44 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         MediaPlaybackServiceManager.isRunning = true
-        when (intent?.action) {
+        handleAction(intent?.action)
+        return START_NOT_STICKY
+    }
+
+    @Subscribe
+    fun songChanged(event: ArtistChanged) {
+        handleAction(event.action, false)
+    }
+
+    private fun handleAction(action: String?, useMediaController: Boolean = true) {
+        when (action) {
             PLAY_MEDIA -> {
-                val position = intent.getIntExtra("position", 0)
-                mediaPlayerController.play(position)
+                mediaPlayerController.play()
                 showNotification(true)
             }
             PAUSE_OR_MEDIA -> {
-                if (mediaPlayerController.isPlaying())
-                    mediaPlayerController.pause()
-                else
-                    mediaPlayerController.resume()
-
+                if (useMediaController) {
+                    if (mediaPlayerController.isPlaying())
+                        mediaPlayerController.pause()
+                    else
+                        mediaPlayerController.resume()
+                }
                 showNotification()
             }
             STOP_MEDIA -> {
-                mediaPlayerController.stop()
+                if (useMediaController)
+                    mediaPlayerController.stop()
                 stopForeground(true)
             }
             PREV_MEDIA -> {
-                mediaPlayerController.previous()
-                showNotification()
+                if (useMediaController)
+                    mediaPlayerController.previous()
+                showNotification(true)
             }
             NEXT_MEDIA -> {
-                mediaPlayerController.next()
-                showNotification()
+                if (useMediaController)
+                    mediaPlayerController.next()
+                showNotification(true)
             }
             null -> {
                 if (mediaPlayerController.isPlaying()) {
@@ -83,7 +96,6 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 }
             }
         }
-        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -91,14 +103,14 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         EventBus.getDefault().unregister(this)
     }
 
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    @Subscribe(threadMode = ThreadMode.BACKGROUND, sticky = true)
     fun onMessageEvent(event: RequestMediaControllerInstance?) {
-        EventBus.getDefault().post(mediaPlayerController)
+        EventBus.getDefault().postSticky(mediaPlayerController)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
-    private fun showNotification(isInitialization: Boolean = false) {
+    private fun showNotification(showResumeIcon: Boolean = false) {
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java),
@@ -111,21 +123,27 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 RemoteViews(packageName, R.layout.view_notification_large)
 
             notificationLayout.setTextViewText(R.id.notification_title, currentSong.title)
-            notificationLayoutExpanded.setTextViewText(R.id.notification_title, currentSong.title)
+            notificationLayoutExpanded.setTextViewText(
+                R.id.notification_title,
+                currentSong.title
+            )
 
-            notificationLayout.setOnClickPendingIntent(R.id.notification_view_small, contentIntent)
+            notificationLayout.setOnClickPendingIntent(
+                R.id.notification_view_small,
+                contentIntent
+            )
             notificationLayoutExpanded.setOnClickPendingIntent(
                 R.id.notification_view_small,
                 contentIntent
             )
 
-            initRemoteViewClicks(notificationLayoutExpanded, isInitialization)
+            initRemoteViewClicks(notificationLayoutExpanded, contentIntent, showResumeIcon)
 
             val channelId = "HEADS_UP_NOTIFICATIONS"
             val channel = NotificationChannel(
                 channelId,
                 getString(R.string.app_name),
-                NotificationManager.IMPORTANCE_NONE
+                NotificationManager.IMPORTANCE_HIGH
             )
             channel.enableVibration(false)
 
@@ -148,8 +166,14 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     @SuppressLint("UnspecifiedImmutableFlag")
     private fun initRemoteViewClicks(
         notificationLayoutExpanded: RemoteViews,
-        isInitialization: Boolean = false
+        contentIntent: PendingIntent,
+        showResumeIcon: Boolean = false
     ) {
+
+        notificationLayoutExpanded.setOnClickPendingIntent(
+            R.id.notification_view_large,
+            contentIntent
+        )
         notificationLayoutExpanded.setOnClickPendingIntent(
             R.id.playStopButton, PendingIntent.getService(
                 this, 0,
@@ -160,7 +184,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             )
         )
 
-        if (mediaPlayerController.isPlaying() || isInitialization) {
+        if (mediaPlayerController.isPlaying() || showResumeIcon) {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
                 R.drawable.ic_baseline_pause_circle_outline_24_white

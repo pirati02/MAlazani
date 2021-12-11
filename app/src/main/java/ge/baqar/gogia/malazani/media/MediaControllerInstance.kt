@@ -1,3 +1,3 @@
-package ge.baqar.gogia.malazani.poko
+package ge.baqar.gogia.malazani.media
 
 class RequestMediaControllerInstance()

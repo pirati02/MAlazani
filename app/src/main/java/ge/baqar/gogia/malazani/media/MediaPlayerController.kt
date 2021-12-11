@@ -9,10 +9,18 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.events.ArtistChanged
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import kotlinx.coroutines.*
+import org.greenrobot.eventbus.EventBus
 
 @InternalCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -21,25 +29,19 @@ class MediaPlayerController(
     private val viewModel: ArtistViewModel,
     private val audioPlayer: AudioPlayer
 ) {
-
     var binding: ActivityMenuBinding? = null
-    var dataSource: MutableList<AlazaniArtistListItem>? = null
+    var playListEnsemble: Ensemble? = null
+    var playList: MutableList<Song>? = null
     var position = 0
-        get() {
-            return field
-        }
-        private set(value) {
-            field = value
-        }
+        private set
 
     private var autoPlayEnabled = true
     private var playerControlsAreVisible = true
 
     @SuppressLint("LongLogTag")
-    fun play(position: Int) {
-        dataSource?.let {
-            this.position = position
-            val artist = dataSource!![this.position]
+    fun play() {
+        playList?.let {
+            val artist = playList!![this.position]
 
             initializeViewClickListeners()
             listenAudioPlayerChanges(artist)
@@ -57,7 +59,7 @@ class MediaPlayerController(
         binding?.included?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
     }
 
-    private fun listenAudioPlayerChanges(artist: AlazaniArtistListItem) {
+    private fun listenAudioPlayerChanges(artist: Song) {
         audioPlayer.listenPlayer {
             if (it) {
                 binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
@@ -71,11 +73,12 @@ class MediaPlayerController(
         audioPlayer.completed {
             if (!autoPlayEnabled) return@completed
 
-            if ((position + 1) < dataSource?.size!!) {
+            if ((position + 1) < playList?.size!!) {
                 ++position
-                val nextItem = dataSource!![position]
+                val nextItem = playList!![position]
                 viewModel.viewModelScope.launch {
                     audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
+                    EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                 }
                 binding?.included?.playingTrackTitle?.text = nextItem.title
                 binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
@@ -123,8 +126,7 @@ class MediaPlayerController(
             }
         }
         binding?.included?.playStopButton?.setOnClickListener {
-            audioPlayer.release()
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+            stop()
         }
         binding?.included?.playerAutoPlayButton?.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
@@ -146,26 +148,39 @@ class MediaPlayerController(
                 binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
             }
         }
+        binding?.included?.playerPlaylistButton?.setOnClickListener {
+            EventBus.getDefault().postSticky(OpenArtistFragment(playListEnsemble!!))
+        }
     }
 
     fun pause() {
         audioPlayer.pause()
+        EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
     }
 
     fun stop() {
         audioPlayer.release()
+        EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
+        binding?.included?.playingTrackTime?.text = null
+        binding?.included?.playerProgressBar?.progress = 0
+        binding?.included?.playingTrackDurationTime?.text = null
+        binding?.included?.mediaPlayerView?.let {
+            it.visibility = View.GONE
+        }
     }
 
     fun resume() {
         audioPlayer.resume()
+        EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
     }
 
     fun next() {
-        if ((position + 1) < dataSource?.size!!) {
+        if ((position + 1) < playList?.size!!) {
             ++position
-            val nextItem = dataSource!![position]
+            val nextItem = playList!![position]
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
+                EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = nextItem.title
         }
@@ -175,16 +190,17 @@ class MediaPlayerController(
     fun previous() {
         if (position > 0) {
             --position
-            val prevItem = dataSource!![position]
+            val prevItem = playList!![position]
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
+                EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = prevItem.title
         }
     }
 
-    fun getCurrentSong(): AlazaniArtistListItem? {
-        return if (dataSource == null) null else dataSource!![position]
+    fun getCurrentSong(): Song? {
+        return if (playList == null) null else playList!![position]
     }
 
     fun isPlaying(): Boolean {
@@ -192,8 +208,8 @@ class MediaPlayerController(
     }
 
     fun updatePlayer() {
-        dataSource?.let {
-            val artist = dataSource!![position]
+        playList?.let {
+            val artist = playList!![position]
             initializeViewClickListeners()
             binding?.included?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
@@ -202,5 +218,9 @@ class MediaPlayerController(
             binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
             onPrepareListener()
         }
+    }
+
+    fun setInitialPosition(position: Int) {
+        this.position = position
     }
 }

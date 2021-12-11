@@ -1,12 +1,13 @@
 package ge.baqar.gogia.malazani.ui.artists
 
-import ge.baqar.gogia.malazani.poko.AlazaniArtistListItem
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.poko.Song
 
 open class ArtistsResult
 
 data class ArtistsState(
     val isInProgress: Boolean,
-    val artists: MutableList<AlazaniArtistListItem>,
+    val artists: MutableList<Ensemble>,
     val error: String?
 ) : ArtistsResult() {
 
