@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">mAlazani</string>
+    <string name="app_name">mFolk</string>
 
-    <string name="app_name_georgian">ალაზანი</string>
+    <string name="app_name_georgian">ფოლკორი</string>
     <string name="ensembles">ანსამბლები</string>
     <string name="artistDetails">ანსამბლის დეტალები</string>
     <string name="states">კუთხეები</string>
