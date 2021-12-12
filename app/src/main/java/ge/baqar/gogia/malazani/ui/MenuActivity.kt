@@ -17,8 +17,8 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.malazani.media.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -46,7 +46,11 @@ class MenuActivity : AppCompatActivity() {
             val intent = Intent(this, MediaPlaybackService::class.java).apply {
                 action = MediaPlaybackService.PLAY_MEDIA
             }
-            startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent);
+            }
         }
     private lateinit var _binding: ActivityMenuBinding
     private lateinit var navController: NavController
@@ -137,7 +141,11 @@ class MenuActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun doBindService() {
         val intent = Intent(this, MediaPlaybackService::class.java)
-        startForegroundService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent);
+        }
 
         if (mediaPlayerController == null)
             EventBus.getDefault().postSticky(RequestMediaControllerInstance())

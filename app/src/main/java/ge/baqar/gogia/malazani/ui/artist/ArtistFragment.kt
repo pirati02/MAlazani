@@ -98,7 +98,7 @@ class ArtistFragment : Fragment() {
             request.setAllowedOverRoaming(false)
             request.setTitle("იწერება ${_ensemble?.link} ${it.title}")
             request.setDestinationInExternalPublicDir(
-                "${Environment.DIRECTORY_DOWNLOADS}/${_ensemble?.title}/",
+                Environment.DIRECTORY_DOWNLOADS,
                 "${_ensemble?.link}-${it.title}.mp3"
             )
             downloadManager.enqueue(request)

@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.events.ArtistChanged
 import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
@@ -139,24 +140,28 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
             initRemoteViewClicks(notificationLayoutExpanded, contentIntent, showResumeIcon)
 
-            val channelId = "HEADS_UP_NOTIFICATIONS"
-            val channel = NotificationChannel(
-                channelId,
-                getString(R.string.app_name),
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            channel.enableVibration(false)
-
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-            val notification: NotificationCompat.Builder =
-                NotificationCompat.Builder(this, channelId)
+            val notificationBuilder : NotificationCompat.Builder
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channelId = "HEADS_UP_NOTIFICATIONS"
+                val channel = NotificationChannel(
+                    channelId,
+                    getString(R.string.app_name),
+                    NotificationManager.IMPORTANCE_LOW
+                )
+                channel.enableVibration(false)
+                notificationBuilder = NotificationCompat.Builder(this, channelId)
+                notificationManager?.createNotificationChannel(channel)
+            } else {
+                notificationBuilder = NotificationCompat.Builder(this)
+            }
+            val notification: NotificationCompat.Builder = notificationBuilder
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setCustomContentView(notificationLayout)
                     .setCustomBigContentView(notificationLayoutExpanded)
                     .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                    .setColor(getColor(R.color.colorAccentLighter))
-                    .setColorized(true)
                     .setDefaults(Notification.DEFAULT_LIGHTS)
+                    .setColorized(true)
+                    .setColor(ContextCompat.getColor(this, R.color.colorAccentLighter))
                     .setVibrate(longArrayOf(-1))
 
             startForeground(notificationId, notification.build())
