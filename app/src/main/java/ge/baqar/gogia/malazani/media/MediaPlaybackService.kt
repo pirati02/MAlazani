@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.events.ArtistChanged
+import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,7 +52,6 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        MediaPlaybackServiceManager.isRunning = true
         handleAction(intent?.action)
         return START_NOT_STICKY
     }
@@ -62,6 +62,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     }
 
     private fun handleAction(action: String?, useMediaController: Boolean = true) {
+        MediaPlaybackServiceManager.isRunning = true
         when (action) {
             PLAY_MEDIA -> {
                 mediaPlayerController.play()
@@ -69,14 +70,19 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             }
             PAUSE_OR_MEDIA -> {
                 if (useMediaController) {
-                    if (mediaPlayerController.isPlaying())
+                    if (mediaPlayerController.isPlaying()) {
                         mediaPlayerController.pause()
-                    else
+                        MediaPlaybackServiceManager.isRunning = false
+                    } else
                         mediaPlayerController.resume()
                 }
+
+                if (!mediaPlayerController.isPlaying())
+                    MediaPlaybackServiceManager.isRunning = false
                 showNotification()
             }
             STOP_MEDIA -> {
+                MediaPlaybackServiceManager.isRunning = false
                 if (useMediaController)
                     mediaPlayerController.stop()
                 stopForeground(true)
@@ -140,7 +146,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
             initRemoteViewClicks(notificationLayoutExpanded, contentIntent, showResumeIcon)
 
-            val notificationBuilder : NotificationCompat.Builder
+            val notificationBuilder: NotificationCompat.Builder
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channelId = "HEADS_UP_NOTIFICATIONS"
                 val channel = NotificationChannel(
@@ -155,14 +161,16 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 notificationBuilder = NotificationCompat.Builder(this)
             }
             val notification: NotificationCompat.Builder = notificationBuilder
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setCustomContentView(notificationLayout)
-                    .setCustomBigContentView(notificationLayoutExpanded)
-                    .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                    .setDefaults(Notification.DEFAULT_LIGHTS)
-                    .setColorized(true)
-                    .setColor(ContextCompat.getColor(this, R.color.colorAccentLighter))
-                    .setVibrate(longArrayOf(-1))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setCustomContentView(notificationLayout)
+                .setCustomBigContentView(notificationLayoutExpanded)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setDefaults(Notification.DEFAULT_LIGHTS)
+                .setColorized(true)
+                .setAutoCancel(true)
+                .setColor(ContextCompat.getColor(this, R.color.colorAccentLighter))
+                .setVibrate(longArrayOf(-1))
+
 
             startForeground(notificationId, notification.build())
         }

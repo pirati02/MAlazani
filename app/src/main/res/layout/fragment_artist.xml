@@ -23,19 +23,21 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/artistSongsTab"
             style="@style/ArtistTabViewStyle"
+            android:textColor="@color/black"
             android:background="?attr/selectableItemBackground"
             android:text="@string/songs" />
 
         <View
             android:id="@+id/tabSeparator"
-            android:layout_width="0.5dp"
+            android:layout_width="1dp"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
-            android:background="@color/colorGray" />
+            android:background="@color/colorGrayDark" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/artistChantsTab"
+            android:textColor="@color/black"
             style="@style/ArtistTabViewStyle"
             android:background="?attr/selectableItemBackground"
             android:text="@string/chants" />
@@ -47,7 +49,7 @@
         android:layout_height="1dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:background="@color/colorGray"
+        android:background="@color/colorGrayDark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/artistToolbar" />

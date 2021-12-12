@@ -15,7 +15,7 @@ import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.media.RequestMediaControllerInstance
+import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
@@ -97,12 +97,9 @@ class MenuActivity : AppCompatActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     fun onMessageEvent(event: MediaPlayerController) {
         mediaPlayerController = event
-
-        if (mediaPlayerController?.binding == null)
-            mediaPlayerController?.binding = _binding
+        mediaPlayerController?.binding = _binding
 
         if (_playbackRequest) {
-            mediaPlayerController?.binding = _binding
             _playMediaPlaybackAction?.invoke(
                 tempDataSource!!,
                 tempPosition!!,
@@ -114,7 +111,6 @@ class MenuActivity : AppCompatActivity() {
             return
         }
         if (mediaPlayerController?.isPlaying() == true) {
-            mediaPlayerController?.binding = _binding
             mediaPlayerController?.updatePlayer()
         }
     }

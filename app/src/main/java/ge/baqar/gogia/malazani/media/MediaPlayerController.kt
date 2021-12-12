@@ -1,6 +1,9 @@
 package ge.baqar.gogia.malazani.media
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.os.Build
 import android.view.View
 import android.widget.SeekBar
@@ -14,9 +17,9 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MED
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
-import ge.baqar.gogia.malazani.poko.events.ArtistChanged
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.events.ArtistChanged
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import kotlinx.coroutines.*
@@ -27,14 +30,18 @@ import org.greenrobot.eventbus.EventBus
 @RequiresApi(Build.VERSION_CODES.O)
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    context: Context
 ) {
     var binding: ActivityMenuBinding? = null
     var playListEnsemble: Ensemble? = null
     var playList: MutableList<Song>? = null
+    private val preferences: SharedPreferences =
+        context.getSharedPreferences(context.packageName, MODE_PRIVATE)
     var position = 0
         private set
 
+    private val autoPlayEnabledKey = "autoPlayEnabled"
     private var autoPlayEnabled = true
     private var playerControlsAreVisible = true
 
@@ -48,8 +55,18 @@ class MediaPlayerController(
             binding?.included?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
             }
+            checkAutoPlayEnabled()
             binding?.included?.playingTrackTitle?.text = artist.title
             binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        }
+    }
+
+    private fun checkAutoPlayEnabled() {
+        autoPlayEnabled = preferences.getBoolean(autoPlayEnabledKey, false)
+        if (autoPlayEnabled) {
+            binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
+        } else {
+            binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24)
         }
     }
 
@@ -130,6 +147,11 @@ class MediaPlayerController(
         }
         binding?.included?.playerAutoPlayButton?.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
+
+            preferences.edit()
+                .putBoolean(autoPlayEnabledKey, autoPlayEnabled)
+                .apply()
+
             if (autoPlayEnabled) {
                 Toast.makeText(it.context, R.string.auto_play_on, Toast.LENGTH_SHORT).show()
                 binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
@@ -178,6 +200,7 @@ class MediaPlayerController(
         if ((position + 1) < playList?.size!!) {
             ++position
             val nextItem = playList!![position]
+            updateUI(nextItem)
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
@@ -191,6 +214,7 @@ class MediaPlayerController(
         if (position > 0) {
             --position
             val prevItem = playList!![position]
+            updateUI(prevItem)
             viewModel.viewModelScope.launch {
                 audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
@@ -209,15 +233,20 @@ class MediaPlayerController(
 
     fun updatePlayer() {
         playList?.let {
-            val artist = playList!![position]
-            initializeViewClickListeners()
-            binding?.included?.mediaPlayerView?.let {
-                it.visibility = View.VISIBLE
-            }
-            binding?.included?.playingTrackTitle?.text = artist.title
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-            onPrepareListener()
+            val song = playList!![position]
+            updateUI(song)
         }
+    }
+
+    private fun updateUI(artist: Song) {
+        initializeViewClickListeners()
+        binding?.included?.mediaPlayerView?.let {
+            it.visibility = View.VISIBLE
+        }
+        checkAutoPlayEnabled ()
+        binding?.included?.playingTrackTitle?.text = artist.title
+        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        onPrepareListener()
     }
 
     fun setInitialPosition(position: Int) {
