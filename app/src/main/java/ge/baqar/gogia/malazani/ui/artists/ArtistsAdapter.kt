@@ -7,7 +7,6 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
 
 class ArtistsAdapter(
     private val dataSource: MutableList<Ensemble>,
@@ -18,18 +17,18 @@ class ArtistsAdapter(
             itemView.findViewById(R.id.artistTitle)
         }
 
-        fun bind(artist: Ensemble) {
-            name.text = artist.title
+        fun bind(ensemble: Ensemble) {
+            name.text = ensemble.title
 
             itemView.setOnClickListener {
-                clicked.invoke(artist)
+                clicked.invoke(ensemble)
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EnsembleViewHolder {
         return EnsembleViewHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.item_alazani_artist, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.item_artist, parent, false)
         )
     }
 

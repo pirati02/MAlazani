@@ -21,6 +21,8 @@ import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
+import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -29,6 +31,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
@@ -38,6 +43,7 @@ import timber.log.Timber
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
 
+    private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
     @ExperimentalCoroutinesApi
@@ -48,6 +54,16 @@ class ArtistFragment : Fragment() {
     }
 
     private val binding get() = _binding!!
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
 
     @SuppressLint("UseRequireInsteadOfGet")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -60,10 +76,11 @@ class ArtistFragment : Fragment() {
         _ensemble = arguments?.getParcelable("ensemble")
         binding.tabViewInclude.tabTitleView.text = _ensemble?.title
         val loadSongsAndChantsAction = flowOf(
-            ArtistSongsRequested(_ensemble?.link!!),
             ArtistChantsRequested().apply {
-                link = _ensemble?.link!!
-            })
+                ensemble = _ensemble?.copy()
+            },
+            ArtistSongsRequested(_ensemble?.copy()!!)
+        )
         initializeIntents(loadSongsAndChantsAction)
 
         binding.artistSongsTab.setOnClickListener {
@@ -81,7 +98,13 @@ class ArtistFragment : Fragment() {
         binding.downloadAlbumbtn.setOnClickListener {
             downloadAlbum()
         }
+        EventBus.getDefault().post(GetCurrentSong)
         return binding.root
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun currentPlayingSong(event: CurrentPlayingSong) {
+        _currentSong = event.song
     }
 
     private fun downloadAlbum() {
@@ -117,6 +140,7 @@ class ArtistFragment : Fragment() {
             .launchIn(lifecycleScope)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun render(state: ArtistState) {
         if (state.isInProgress) {
             if (state is SongsState) {
@@ -139,9 +163,15 @@ class ArtistFragment : Fragment() {
         if (state is SongsState) {
             if (state.songs.size > 0) {
                 binding.songsProgressbar.visibility = View.GONE
+                state.songs.firstOrNull {
+                    it == _currentSong
+                }?.apply {
+                    isPlaying = true
+                }
                 binding.songsListView.adapter = SongsAdapter(state.songs) { _, index ->
+                    applyNotPlayingState()
+                    notifyDataSetChanged()
                     play(index, state.songs)
-
                 }
                 binding.songsListView.visibility = View.VISIBLE
                 binding.chantsListView.visibility = View.GONE
@@ -156,8 +186,15 @@ class ArtistFragment : Fragment() {
         }
         if (state is ChantsState) {
             if (state.chants.size > 0) {
+                state.chants.firstOrNull {
+                    it == _currentSong
+                }?.apply {
+                    isPlaying = true
+                }
                 binding.chantsProgressbar.visibility = View.GONE
                 binding.chantsListView.adapter = SongsAdapter(state.chants) { _, index ->
+                    applyNotPlayingState()
+                    notifyDataSetChanged()
                     play(index, state.chants)
                 }
             } else {

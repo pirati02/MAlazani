@@ -1,8 +1,12 @@
+import ge.baqar.gogia.malazani.poko.Ensemble
+
 sealed class ArtistAction
-class ArtistSongsRequested(val link: String) : ArtistAction()
-class ArtistChantsRequested : ArtistAction() {
-    var link: String? = null
+class ArtistSongsRequested(val ensemble: Ensemble) : ArtistAction()
+class ArtistChantsRequested  : ArtistAction() {
+    var ensemble: Ensemble? = null
         set(value) {
-            field = value?.replace("xalxuri-simgerebi", "saeklesio-sagaloblebi")
+            field = value?.apply {
+                link = link.replace("xalxuri-simgerebi", "saeklesio-sagaloblebi")
+            }
         }
 }

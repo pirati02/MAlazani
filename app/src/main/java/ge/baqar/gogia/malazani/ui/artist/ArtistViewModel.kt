@@ -9,7 +9,9 @@ import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
+import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.SongType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -22,17 +24,13 @@ class ArtistViewModel(
     private val alazaniRepository: AlazaniRepository?
 ) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
 
-    constructor() : this(null) {
-
-    }
-
     @RequiresApi(Build.VERSION_CODES.M)
-    fun loadArtistDetails(link: String) = update {
+    fun loadArtistSongs(ensemble: Ensemble) = update {
         emit {
             ArtistState.IS_LOADING
         }
 
-        alazaniRepository?.artists(formatUrl(link))?.collect { result ->
+        alazaniRepository?.artists(formatUrl(ensemble.link))?.collect { result ->
             if (result is SucceedResult) {
 
                 val parsed = Jsoup.parse(result.value)
@@ -51,7 +49,12 @@ class ArtistViewModel(
                     }
                     .map { element ->
                         val firstChild = element.first()
-                        Song(firstChild.text(), firstChild.attr("href"))
+                        Song(
+                            firstChild.text(),
+                            firstChild.attr("href"),
+                            SongType.Song,
+                            ensemble.title
+                        )
                     }
                     .toMutableList()
 
@@ -61,7 +64,7 @@ class ArtistViewModel(
             }
             if (result is FailedResult) {
                 emit {
-                    ChantsState.error(result.value.message)
+                    SongsState.error(result.value.message)
                 }
             }
         }
@@ -70,13 +73,13 @@ class ArtistViewModel(
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun loadArtistChants(
-        link: String
+        ensemble: Ensemble
     ) = update {
         emit {
             ArtistState.IS_LOADING
         }
 
-        alazaniRepository?.artists(formatUrl(link))?.collect { result ->
+        alazaniRepository?.artists(formatUrl(ensemble.link))?.collect { result ->
             if (result is SucceedResult) {
 
                 val parsed = Jsoup.parse(result.value)
@@ -95,7 +98,12 @@ class ArtistViewModel(
                     }
                     .map { element ->
                         val firstChild = element.first()
-                        Song(firstChild.text(), firstChild.attr("href"))
+                        Song(
+                            firstChild.text(),
+                            firstChild.attr("href"),
+                            SongType.Chant,
+                            ensemble.title
+                        )
                     }.toMutableList()
                 emit {
                     ChantsState.dataLoaded(chants)
@@ -121,10 +129,10 @@ class ArtistViewModel(
     override fun ArtistAction.process(): Flow<() -> ArtistResult> {
         return when (this) {
             is ArtistSongsRequested -> {
-                loadArtistDetails(link)
+                loadArtistSongs(ensemble)
             }
             is ArtistChantsRequested -> {
-                loadArtistChants(link!!)
+                loadArtistChants(ensemble!!)
             }
             else -> update {
 

@@ -88,7 +88,15 @@ class MediaPlayerController(
             audioPlayer.play(viewModel.formatUrl(artist.link)) { onPrepareListener() }
         }
         audioPlayer.completed {
-            if (!autoPlayEnabled) return@completed
+            if (!autoPlayEnabled){
+                binding?.included?.playingTrackTime?.text = null
+                binding?.included?.playerProgressBar?.progress = 0
+                binding?.included?.playingTrackDurationTime?.text = null
+                binding?.included?.mediaPlayerView?.let {
+                    it.visibility = View.GONE
+                }
+                return@completed
+            }
 
             if ((position + 1) < playList?.size!!) {
                 ++position

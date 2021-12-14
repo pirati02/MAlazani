@@ -38,6 +38,11 @@ class ArtistsListFragment : Fragment() {
     private var _binding: FragmentArtistsBinding? = null
     private var _view: View? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        EventBus.getDefault().register(this)
+    }
+
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,7 +50,6 @@ class ArtistsListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         if (_view == null) {
-            EventBus.getDefault().register(this)
             _binding = FragmentArtistsBinding.inflate(inflater, container, false)
             if (_binding?.artistsListView?.adapter == null) {
                 val li = arguments?.get("link").toString().toInt()

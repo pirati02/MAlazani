@@ -11,9 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.events.ArtistChanged
-import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
-import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
+import ge.baqar.gogia.malazani.poko.events.*
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -108,6 +106,11 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     override fun onDestroy() {
         super.onDestroy()
         EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun getCurrentSong(event: GetCurrentSong){
+        EventBus.getDefault().post(CurrentPlayingSong(mediaPlayerController.getCurrentSong()))
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND, sticky = true)
