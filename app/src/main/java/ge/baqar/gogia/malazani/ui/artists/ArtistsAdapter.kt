@@ -18,7 +18,7 @@ class ArtistsAdapter(
         }
 
         fun bind(ensemble: Ensemble) {
-            name.text = ensemble.title
+            name.text = ensemble.name
 
             itemView.setOnClickListener {
                 clicked.invoke(ensemble)

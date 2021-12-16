@@ -89,11 +89,13 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 if (useMediaController)
                     mediaPlayerController.previous()
                 showNotification(true)
+                EventBus.getDefault().post(CurrentPlayingSong(mediaPlayerController.getCurrentSong()))
             }
             NEXT_MEDIA -> {
                 if (useMediaController)
                     mediaPlayerController.next()
                 showNotification(true)
+                EventBus.getDefault().post(CurrentPlayingSong(mediaPlayerController.getCurrentSong()))
             }
             null -> {
                 if (mediaPlayerController.isPlaying()) {
@@ -132,10 +134,10 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
             val notificationLayoutExpanded =
                 RemoteViews(packageName, R.layout.view_notification_large)
 
-            notificationLayout.setTextViewText(R.id.notification_title, currentSong.title)
+            notificationLayout.setTextViewText(R.id.notification_title, currentSong.name)
             notificationLayoutExpanded.setTextViewText(
                 R.id.notification_title,
-                currentSong.title
+                currentSong.name
             )
 
             notificationLayout.setOnClickPendingIntent(

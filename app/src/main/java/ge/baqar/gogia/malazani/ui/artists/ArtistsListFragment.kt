@@ -1,7 +1,8 @@
 package ge.baqar.gogia.malazani.ui.artists
 
 import ArtistsAction
-import ArtistsRequested
+import EnsemblesRequested
+import OldRecordingsRequested
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -52,9 +53,12 @@ class ArtistsListFragment : Fragment() {
         if (_view == null) {
             _binding = FragmentArtistsBinding.inflate(inflater, container, false)
             if (_binding?.artistsListView?.adapter == null) {
-                val li = arguments?.get("link").toString().toInt()
-                val url = getString(li)
-                val loadFlow = flowOf(ArtistsRequested(url))
+                val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
+                    EnsemblesRequested()
+                } else {
+                    OldRecordingsRequested()
+                }
+                val loadFlow = flowOf(action)
                 initializeIntents(loadFlow)
             }
             _view = _binding?.root

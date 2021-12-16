@@ -3,6 +3,7 @@ package ge.baqar.gogia.malazani
 import android.app.Application
 import ge.baqar.gogia.malazani.http.networkModule
 import ge.baqar.gogia.malazani.media.mediaModule
+import ge.baqar.gogia.malazani.storage.storageModule
 import ge.baqar.gogia.malazani.ui.artists.artistsModule
 import ge.baqar.gogia.malazani.ui.artist.artistModule
 import ge.baqar.gogia.malazani.utility.utilityModule
@@ -33,6 +34,7 @@ class AlazaniApp : Application() {
                     utilityModule,
                     mediaModule,
                     networkModule,
+                    storageModule,
                     artistsModule,
                     artistModule
                 )

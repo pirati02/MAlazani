@@ -1,7 +1,6 @@
 package ge.baqar.gogia.malazani.ui.artist
 
 import ArtistAction
-import ArtistChantsRequested
 import ArtistSongsRequested
 import android.annotation.SuppressLint
 import android.app.DownloadManager
@@ -21,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.SongType
 import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
 import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
 import ge.baqar.gogia.malazani.ui.MenuActivity
@@ -74,11 +74,8 @@ class ArtistFragment : Fragment() {
     ): View {
         _binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
-        binding.tabViewInclude.tabTitleView.text = _ensemble?.title
+        binding.tabViewInclude.tabTitleView.text = _ensemble?.name
         val loadSongsAndChantsAction = flowOf(
-            ArtistChantsRequested().apply {
-                ensemble = _ensemble?.copy()
-            },
             ArtistSongsRequested(_ensemble?.copy()!!)
         )
         initializeIntents(loadSongsAndChantsAction)
@@ -105,6 +102,19 @@ class ArtistFragment : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun currentPlayingSong(event: CurrentPlayingSong) {
         _currentSong = event.song
+        if (_currentSong?.songType == SongType.Song){
+            (binding.songsListView.adapter as SongsAdapter).apply {
+                applyNotPlayingState()
+                dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
+                notifyDataSetChanged()
+            }
+        } else{
+            (binding.chantsListView.adapter as SongsAdapter).apply {
+                applyNotPlayingState()
+                dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
+                notifyDataSetChanged()
+            }
+        }
     }
 
     private fun downloadAlbum() {
@@ -114,15 +124,15 @@ class ArtistFragment : Fragment() {
         album?.addAll(chantsDataSource?.dataSource!!)
         album?.map {
             val downloadUri: Uri =
-                Uri.parse(viewModel.formatUrl(it.link))
+                Uri.parse(it.path)
             val request = DownloadManager.Request(downloadUri)
 
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
             request.setAllowedOverRoaming(false)
-            request.setTitle("იწერება ${_ensemble?.link} ${it.title}")
+            request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
             request.setDestinationInExternalPublicDir(
                 Environment.DIRECTORY_DOWNLOADS,
-                "${_ensemble?.link}-${it.title}.mp3"
+                "${_ensemble?.name}-${it.name}.mp3"
             )
             downloadManager.enqueue(request)
         }
@@ -168,10 +178,9 @@ class ArtistFragment : Fragment() {
                 }?.apply {
                     isPlaying = true
                 }
-                binding.songsListView.adapter = SongsAdapter(state.songs) { _, index ->
-                    applyNotPlayingState()
-                    notifyDataSetChanged()
+                binding.songsListView.adapter = SongsAdapter(state.songs) { song, index ->
                     play(index, state.songs)
+                    currentPlayingSong(CurrentPlayingSong(song))
                 }
                 binding.songsListView.visibility = View.VISIBLE
                 binding.chantsListView.visibility = View.GONE
@@ -192,10 +201,9 @@ class ArtistFragment : Fragment() {
                     isPlaying = true
                 }
                 binding.chantsProgressbar.visibility = View.GONE
-                binding.chantsListView.adapter = SongsAdapter(state.chants) { _, index ->
-                    applyNotPlayingState()
-                    notifyDataSetChanged()
+                binding.chantsListView.adapter = SongsAdapter(state.chants) { song, index ->
                     play(index, state.chants)
+                    currentPlayingSong(CurrentPlayingSong(song))
                 }
             } else {
                 binding.chantsProgressbar.visibility = View.GONE

@@ -56,7 +56,7 @@ class MediaPlayerController(
                 it.visibility = View.VISIBLE
             }
             checkAutoPlayEnabled()
-            binding?.included?.playingTrackTitle?.text = artist.title
+            binding?.included?.playingTrackTitle?.text = artist.name
             binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
         }
     }
@@ -85,13 +85,15 @@ class MediaPlayerController(
             }
         }
         viewModel.viewModelScope.launch {
-            audioPlayer.play(viewModel.formatUrl(artist.link)) { onPrepareListener() }
+            audioPlayer.play(artist.path) { onPrepareListener() }
         }
         audioPlayer.completed {
+            binding?.included?.playingTrackTime?.text = null
+            binding?.included?.playerProgressBar?.progress = 0
+            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+            binding?.included?.playingTrackDurationTime?.text = null
+
             if (!autoPlayEnabled){
-                binding?.included?.playingTrackTime?.text = null
-                binding?.included?.playerProgressBar?.progress = 0
-                binding?.included?.playingTrackDurationTime?.text = null
                 binding?.included?.mediaPlayerView?.let {
                     it.visibility = View.GONE
                 }
@@ -102,10 +104,10 @@ class MediaPlayerController(
                 ++position
                 val nextItem = playList!![position]
                 viewModel.viewModelScope.launch {
-                    audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
+                    audioPlayer.play(nextItem.path) { onPrepareListener() }
                     EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                 }
-                binding?.included?.playingTrackTitle?.text = nextItem.title
+                binding?.included?.playingTrackTitle?.text = nextItem.name
                 binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
             }
         }
@@ -210,10 +212,10 @@ class MediaPlayerController(
             val nextItem = playList!![position]
             updateUI(nextItem)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(viewModel.formatUrl(nextItem.link)) { onPrepareListener() }
+                audioPlayer.play(nextItem.path) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = nextItem.title
+            binding?.included?.playingTrackTitle?.text = nextItem.name
         }
     }
 
@@ -224,10 +226,10 @@ class MediaPlayerController(
             val prevItem = playList!![position]
             updateUI(prevItem)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(viewModel.formatUrl(prevItem.link)) { onPrepareListener() }
+                audioPlayer.play(prevItem.path) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = prevItem.title
+            binding?.included?.playingTrackTitle?.text = prevItem.name
         }
     }
 
@@ -252,7 +254,7 @@ class MediaPlayerController(
             it.visibility = View.VISIBLE
         }
         checkAutoPlayEnabled ()
-        binding?.included?.playingTrackTitle?.text = artist.title
+        binding?.included?.playingTrackTitle?.text = artist.name
         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
         onPrepareListener()
     }

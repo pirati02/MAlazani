@@ -2,19 +2,18 @@ package ge.baqar.gogia.malazani.ui.artists
 
 import ArtistsAction
 import ArtistsLoaded
-import ArtistsRequested
+import EnsemblesRequested
+import OldRecordingsRequested
 import android.os.Build
 import androidx.annotation.RequiresApi
 import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
-import ge.baqar.gogia.malazani.poko.Ensemble
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import org.jsoup.Jsoup
 
 @InternalCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -23,28 +22,36 @@ class ArtistsViewModel(
 ) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
 
     @RequiresApi(Build.VERSION_CODES.M)
-    fun loadArtists(link: String) = update {
+    fun ensembles() = update {
         emit {
             state.copy(isInProgress = true)
         }
-        alazaniRepository?.artists(link)?.collect { result ->
+        alazaniRepository?.ensembles()?.collect { result ->
             if (result is SucceedResult) {
                 emit {
-                    val parsed = Jsoup.parse(result.value)
-                    val elements =
-                        parsed.getElementsByAttributeValue("width", 600.toString()).toList()
-                    val mapped = elements
-                        .filter { it.childNodes().count() == 1 }
-                        .map {
-                            val el = it.getElementsByTag("a")
-                            Ensemble(el.text(), el.attr("href"))
-                        }.toMutableList()
-
-                    state.copy(isInProgress = false, artists = mapped)
+                    result.value.sortBy { it.name }
+                    state.copy(isInProgress = false, artists = result.value)
                 }
             }
             if (result is FailedResult) {
-                emit { state.copy(isInProgress = false, error = result.value.message) }
+                emit { state.copy(isInProgress = false, error = result.value) }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun oldRecordings() = update {
+        emit {
+            state.copy(isInProgress = true)
+        }
+        alazaniRepository?.oldRecordings()?.collect { result ->
+            if (result is SucceedResult) {
+                emit {
+                    state.copy(isInProgress = false, artists = result.value)
+                }
+            }
+            if (result is FailedResult) {
+                emit { state.copy(isInProgress = false, error = result.value) }
             }
         }
     }
@@ -61,8 +68,11 @@ class ArtistsViewModel(
                     )
                 }
             }
-            is ArtistsRequested -> {
-                loadArtists(link)
+            is EnsemblesRequested -> {
+                ensembles()
+            }
+            is OldRecordingsRequested -> {
+                oldRecordings()
             }
             else -> update {
 

@@ -19,7 +19,7 @@ class SongsAdapter(
         }
 
         fun bind(ensemble: Song, position: Int) {
-            name.text = ensemble.title
+            name.text = ensemble.name
             if (ensemble.isPlaying) {
                 itemView.setBackgroundColor(
                     ContextCompat.getColor(

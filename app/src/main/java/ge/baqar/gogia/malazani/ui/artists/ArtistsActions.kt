@@ -4,4 +4,5 @@ import ge.baqar.gogia.malazani.poko.Ensemble
 sealed class ArtistsAction()
 object EmptyAction : ArtistsAction()
 data class ArtistsLoaded(val Artists: MutableList<Ensemble>) : ArtistsAction()
-class ArtistsRequested(val link: String) : ArtistsAction()
+class EnsemblesRequested() : ArtistsAction()
+class OldRecordingsRequested() : ArtistsAction()

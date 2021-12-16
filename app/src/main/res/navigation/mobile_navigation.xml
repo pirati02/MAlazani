@@ -10,7 +10,7 @@
         android:name="ge.baqar.gogia.malazani.ui.artists.ArtistsListFragment"
         android:label="@string/ensembles"
         tools:layout="@layout/fragment_artists">
-        <argument android:name="link" android:defaultValue="@string/ensemblesLink"/>
+        <argument android:name="artistType" android:defaultValue="1"/>
     </fragment>
 
     <fragment
@@ -19,7 +19,7 @@
         android:label="@string/oldRecordings"
         tools:layout="@layout/fragment_artists" >
 
-        <argument android:name="link" android:defaultValue="@string/oldRecordingsLink"/>
+        <argument android:name="artistType" android:defaultValue="2"/>
     </fragment>
 
     <fragment
