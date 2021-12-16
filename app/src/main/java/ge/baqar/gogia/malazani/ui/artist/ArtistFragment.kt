@@ -48,12 +48,10 @@ class ArtistFragment : Fragment() {
 
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
-    private var _binding: FragmentArtistBinding? = null
+    private var binding: FragmentArtistBinding? = null
     private val downloadManager: DownloadManager by lazy {
         activity?.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
     }
-
-    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,44 +70,47 @@ class ArtistFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentArtistBinding.inflate(inflater, container, false)
+        binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
-        binding.tabViewInclude.tabTitleView.text = _ensemble?.name
+        binding?.tabViewInclude?.tabTitleView?.text = _ensemble?.name
         val loadSongsAndChantsAction = flowOf(
             ArtistSongsRequested(_ensemble?.copy()!!)
         )
         initializeIntents(loadSongsAndChantsAction)
+        initializeClickListeners()
+        EventBus.getDefault().post(GetCurrentSong)
+        return binding?.root!!
+    }
 
-        binding.artistSongsTab.setOnClickListener {
-            binding.songsListView.visibility = View.VISIBLE
-            binding.chantsListView.visibility = View.GONE
+    private fun initializeClickListeners(){
+        binding?.artistSongsTab?.setOnClickListener {
+            binding?.songsListView?.visibility = View.VISIBLE
+            binding?.chantsListView?.visibility = View.GONE
         }
 
-        binding.artistChantsTab.setOnClickListener {
-            binding.chantsListView.visibility = View.VISIBLE
-            binding.songsListView.visibility = View.GONE
+        binding?.artistChantsTab?.setOnClickListener {
+            binding?.chantsListView?.visibility = View.VISIBLE
+            binding?.songsListView?.visibility = View.GONE
         }
-        binding.tabViewInclude.tabBackImageView.setOnClickListener {
+        binding?.tabViewInclude?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()
         }
-        binding.downloadAlbumbtn.setOnClickListener {
+        binding?.downloadAlbumbtn?.setOnClickListener {
             downloadAlbum()
         }
-        EventBus.getDefault().post(GetCurrentSong)
-        return binding.root
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun currentPlayingSong(event: CurrentPlayingSong) {
         _currentSong = event.song
         if (_currentSong?.songType == SongType.Song){
-            (binding.songsListView.adapter as SongsAdapter).apply {
+            (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                 applyNotPlayingState()
                 dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
                 notifyDataSetChanged()
             }
         } else{
-            (binding.chantsListView.adapter as SongsAdapter).apply {
+            (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                 applyNotPlayingState()
                 dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
                 notifyDataSetChanged()
@@ -118,8 +119,8 @@ class ArtistFragment : Fragment() {
     }
 
     private fun downloadAlbum() {
-        val songsDataSource = binding.songsListView.adapter as? SongsAdapter
-        val chantsDataSource = binding.chantsListView.adapter as? SongsAdapter
+        val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
+        val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
         val album = songsDataSource?.dataSource
         album?.addAll(chantsDataSource?.dataSource!!)
         album?.map {
@@ -154,12 +155,12 @@ class ArtistFragment : Fragment() {
     private fun render(state: ArtistState) {
         if (state.isInProgress) {
             if (state is SongsState) {
-                binding.songsListView.visibility = View.GONE
-                binding.songsProgressbar.visibility = View.VISIBLE
+                binding?.songsListView?.visibility = View.GONE
+                binding?.songsProgressbar?.visibility = View.VISIBLE
             }
             if (state is ChantsState) {
-                binding.chantsListView.visibility = View.GONE
-                binding.chantsProgressbar.visibility = View.VISIBLE
+                binding?.chantsListView?.visibility = View.GONE
+                binding?.chantsProgressbar?.visibility = View.VISIBLE
             }
             return
         }
@@ -172,25 +173,25 @@ class ArtistFragment : Fragment() {
         }
         if (state is SongsState) {
             if (state.songs.size > 0) {
-                binding.songsProgressbar.visibility = View.GONE
+                binding?.songsProgressbar?.visibility = View.GONE
                 state.songs.firstOrNull {
                     it == _currentSong
                 }?.apply {
                     isPlaying = true
                 }
-                binding.songsListView.adapter = SongsAdapter(state.songs) { song, index ->
+                binding?.songsListView?.adapter = SongsAdapter(state.songs) { song, index ->
                     play(index, state.songs)
                     currentPlayingSong(CurrentPlayingSong(song))
                 }
-                binding.songsListView.visibility = View.VISIBLE
-                binding.chantsListView.visibility = View.GONE
+                binding?.songsListView?.visibility = View.VISIBLE
+                binding?.chantsListView?.visibility = View.GONE
             } else {
-                binding.chantsListView.visibility = View.VISIBLE
-                binding.songsListView.visibility = View.GONE
-                binding.songsProgressbar.visibility = View.GONE
-                binding.songsListView.visibility = View.GONE
-                binding.artistSongsTab.visibility = View.GONE
-                binding.tabSeparator.visibility = View.GONE
+                binding?.chantsListView?.visibility = View.VISIBLE
+                binding?.songsListView?.visibility = View.GONE
+                binding?.songsProgressbar?.visibility = View.GONE
+                binding?.songsListView?.visibility = View.GONE
+                binding?.artistSongsTab?.visibility = View.GONE
+                binding?.tabSeparator?.visibility = View.GONE
             }
         }
         if (state is ChantsState) {
@@ -200,16 +201,16 @@ class ArtistFragment : Fragment() {
                 }?.apply {
                     isPlaying = true
                 }
-                binding.chantsProgressbar.visibility = View.GONE
-                binding.chantsListView.adapter = SongsAdapter(state.chants) { song, index ->
+                binding?.chantsProgressbar?.visibility = View.GONE
+                binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
                     play(index, state.chants)
                     currentPlayingSong(CurrentPlayingSong(song))
                 }
             } else {
-                binding.chantsProgressbar.visibility = View.GONE
-                binding.chantsListView.visibility = View.GONE
-                binding.artistChantsTab.visibility = View.GONE
-                binding.tabSeparator.visibility = View.GONE
+                binding?.chantsProgressbar?.visibility = View.GONE
+                binding?.chantsListView?.visibility = View.GONE
+                binding?.artistChantsTab?.visibility = View.GONE
+                binding?.tabSeparator?.visibility = View.GONE
             }
         }
     }
@@ -220,6 +221,6 @@ class ArtistFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        binding = null
     }
 }
