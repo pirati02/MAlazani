@@ -72,7 +72,7 @@ class ArtistFragment : Fragment() {
     ): View {
         binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
-        binding?.tabViewInclude?.tabTitleView?.text = _ensemble?.name
+        binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
         val loadSongsAndChantsAction = flowOf(
             ArtistSongsRequested(_ensemble?.copy()!!)
         )
@@ -83,16 +83,16 @@ class ArtistFragment : Fragment() {
     }
 
     private fun initializeClickListeners(){
-        binding?.artistSongsTab?.setOnClickListener {
+        binding?.tabViewInclude?.artistSongsTab?.setOnClickListener {
             binding?.songsListView?.visibility = View.VISIBLE
             binding?.chantsListView?.visibility = View.GONE
         }
 
-        binding?.artistChantsTab?.setOnClickListener {
+        binding?.tabViewInclude?.artistChantsTab?.setOnClickListener {
             binding?.chantsListView?.visibility = View.VISIBLE
             binding?.songsListView?.visibility = View.GONE
         }
-        binding?.tabViewInclude?.tabBackImageView?.setOnClickListener {
+        binding?.toolbarInclude?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()
         }
         binding?.downloadAlbumbtn?.setOnClickListener {
@@ -101,19 +101,21 @@ class ArtistFragment : Fragment() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun currentPlayingSong(event: CurrentPlayingSong) {
-        _currentSong = event.song
-        if (_currentSong?.songType == SongType.Song){
-            (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
-                applyNotPlayingState()
-                dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
-                notifyDataSetChanged()
-            }
-        } else{
-            (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
-                applyNotPlayingState()
-                dataSource.firstOrNull { it.id == event.song?.id }?.isPlaying = true
-                notifyDataSetChanged()
+    fun currentPlayingSong(event: CurrentPlayingSong?) {
+        _currentSong = event?.song
+        _currentSong?.let {
+            if (_currentSong?.songType == SongType.Song){
+                (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
+                    applyNotPlayingState()
+                    dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    notifyDataSetChanged()
+                }
+            } else{
+                (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
+                    applyNotPlayingState()
+                    dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    notifyDataSetChanged()
+                }
             }
         }
     }
@@ -190,8 +192,8 @@ class ArtistFragment : Fragment() {
                 binding?.songsListView?.visibility = View.GONE
                 binding?.songsProgressbar?.visibility = View.GONE
                 binding?.songsListView?.visibility = View.GONE
-                binding?.artistSongsTab?.visibility = View.GONE
-                binding?.tabSeparator?.visibility = View.GONE
+                binding?.tabViewInclude?.artistSongsTab?.visibility = View.GONE
+                binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
             }
         }
         if (state is ChantsState) {
@@ -209,8 +211,8 @@ class ArtistFragment : Fragment() {
             } else {
                 binding?.chantsProgressbar?.visibility = View.GONE
                 binding?.chantsListView?.visibility = View.GONE
-                binding?.artistChantsTab?.visibility = View.GONE
-                binding?.tabSeparator?.visibility = View.GONE
+                binding?.tabViewInclude?.artistChantsTab?.visibility = View.GONE
+                binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
             }
         }
     }

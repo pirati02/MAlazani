@@ -6,28 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.artists.ArtistsListFragment">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/appNameTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/colorAccentTranslucent"
-        android:fontFamily="@font/bpg_nino_mtavruli_bold"
-        android:gravity="center"
-        android:padding="13dp"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        android:text="@string/app_name_georgian"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/appNameTitle"
-        android:background="@color/colorGrayDark"/>
+    <include android:id="@+id/include" layout="@layout/view_fragment_artists_toolbar"/>
 
     <ProgressBar
         android:id="@+id/artistsProgressbar"
@@ -38,7 +17,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/appNameTitle" />
+        app:layout_constraintTop_toBottomOf="@id/include" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/artistsListView"
@@ -48,5 +27,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appNameTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/include" />
 </androidx.constraintlayout.widget.ConstraintLayout>

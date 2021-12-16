@@ -7,41 +7,12 @@
     tools:context=".ui.artists.ArtistsListFragment">
 
     <include
+        android:id="@+id/toolbarInclude"
+        layout="@layout/view_fragment_artist_toolbar" />
+
+    <include
         android:id="@+id/tabViewInclude"
-        layout="@layout/view_artist_fragment_tabs" />
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/artistToolbar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/colorAccentTranslucent"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tabViewInclude">
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/artistSongsTab"
-            style="@style/ArtistTabViewStyle"
-            android:textColor="@color/black"
-            android:background="?attr/selectableItemBackground"
-            android:text="@string/songs" />
-
-        <View
-            android:id="@+id/tabSeparator"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:background="@color/colorGrayDark" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/artistChantsTab"
-            android:textColor="@color/black"
-            style="@style/ArtistTabViewStyle"
-            android:background="?attr/selectableItemBackground"
-            android:text="@string/chants" />
-    </androidx.appcompat.widget.LinearLayoutCompat>
+        layout="@layout/view_fragment_artist_tabs" />
 
     <View
         android:id="@+id/tabViewSeparator"
@@ -52,7 +23,7 @@
         android:background="@color/colorGrayDark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/artistToolbar" />
+        app:layout_constraintTop_toBottomOf="@id/tabViewInclude" />
 
     <FrameLayout
         android:id="@+id/chantsListViewContainer"
@@ -107,5 +78,5 @@
         android:src="@drawable/ic_baseline_arrow_circle_down_24"
         android:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/tabViewInclude" />
+        app:layout_constraintEnd_toEndOf="@+id/toolbarInclude" />
 </androidx.constraintlayout.widget.ConstraintLayout>

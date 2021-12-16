@@ -36,7 +36,7 @@ class ArtistsListFragment : Fragment() {
 
     @ExperimentalCoroutinesApi
     private val viewModel: ArtistsViewModel by inject()
-    private var _binding: FragmentArtistsBinding? = null
+    private var binding: FragmentArtistsBinding? = null
     private var _view: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,8 +51,8 @@ class ArtistsListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         if (_view == null) {
-            _binding = FragmentArtistsBinding.inflate(inflater, container, false)
-            if (_binding?.artistsListView?.adapter == null) {
+            binding = FragmentArtistsBinding.inflate(inflater, container, false)
+            if (binding?.artistsListView?.adapter == null) {
                 val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
                     EnsemblesRequested()
                 } else {
@@ -61,7 +61,10 @@ class ArtistsListFragment : Fragment() {
                 val loadFlow = flowOf(action)
                 initializeIntents(loadFlow)
             }
-            _view = _binding?.root
+            _view = binding?.root
+            binding?.include?.settingsBtn?.setOnClickListener {
+                findNavController().navigate(R.id.navigation_settings)
+            }
             return _view!!
         }
         return _view!!
@@ -99,13 +102,13 @@ class ArtistsListFragment : Fragment() {
             Timber.i(error)
         }
         if (state.isInProgress) {
-            _binding?.artistsProgressbar?.visibility = View.VISIBLE
+            binding?.artistsProgressbar?.visibility = View.VISIBLE
             return
         }
-        _binding?.artistsProgressbar?.visibility = View.GONE
+        binding?.artistsProgressbar?.visibility = View.GONE
 
         if (state.artists.count() > 0) {
-            _binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
+            binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
                 openArtistFragment(OpenArtistFragment(it))
             }
         }
@@ -113,6 +116,6 @@ class ArtistsListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        binding = null
     }
 }
