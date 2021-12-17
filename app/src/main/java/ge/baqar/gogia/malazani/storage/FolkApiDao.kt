@@ -3,14 +3,18 @@ package ge.baqar.gogia.malazani.storage
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import ge.baqar.gogia.malazani.poko.database.Song
+import ge.baqar.gogia.malazani.poko.database.DbEnsemble
+import ge.baqar.gogia.malazani.poko.database.DbSong
 
 @Dao
 interface FolkApiDao {
 
     @Query("SELECT * FROM Song WHERE ensemble_id = :ensembleId")
-    fun sonbsByEnsembleId(ensembleId: IntArray): List<Song>
+    suspend fun songsByEnsembleId(ensembleId: IntArray): List<DbSong>
 
     @Insert
-    fun insertSongs(vararg users: Song)
+    suspend fun saveSongs(songs: MutableList<DbSong>?)
+
+    @Insert
+    suspend fun saveEnsemble(ensemble: DbEnsemble?)
 }

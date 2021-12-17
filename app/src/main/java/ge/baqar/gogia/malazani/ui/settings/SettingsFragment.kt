@@ -1,7 +1,5 @@
 package ge.baqar.gogia.malazani.ui.settings
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,14 +10,13 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentSettingsBinding
 import ge.baqar.gogia.malazani.poko.StorageOption
+import ge.baqar.gogia.malazani.storage.prefs.FolkAppPreferences
+import org.koin.android.ext.android.inject
 
 class SettingsFragment : Fragment() {
-    private val preferences: SharedPreferences by lazy {
-        context?.getSharedPreferences(context?.packageName, Context.MODE_PRIVATE)!!
-    }
-    private val storageOptionKey = "storageOption"
-    private var binding: FragmentSettingsBinding? = null
 
+    private val folkAppPreferences: FolkAppPreferences by inject()
+    private var binding: FragmentSettingsBinding? = null
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
@@ -28,14 +25,7 @@ class SettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentSettingsBinding.inflate(inflater, container, false)
-        val preferredStorageOption = preferences.getString(
-            storageOptionKey,
-            StorageOption.ApplicationCache.toString()
-        )
-        val storageOption = StorageOption.valueOf(
-            preferredStorageOption ?: StorageOption.ApplianceStorage.toString()
-        )
-
+        val storageOption = folkAppPreferences.getStorageOption()
         if (storageOption == StorageOption.ApplicationCache) {
             binding?.applicationCacheBtn?.isChecked = true
         } else {
@@ -43,14 +33,10 @@ class SettingsFragment : Fragment() {
         }
 
         binding?.applicationCacheBtn?.setOnClickListener {
-            preferences.edit()
-                ?.putString(storageOptionKey, StorageOption.ApplicationCache.toString())
-                ?.apply()
+            folkAppPreferences.updateStorageOption(StorageOption.ApplicationCache)
         }
         binding?.applianceStorageBtn?.setOnClickListener {
-            preferences.edit()
-                ?.putString(storageOptionKey, StorageOption.ApplianceStorage.toString())
-                ?.apply()
+            folkAppPreferences.updateStorageOption(StorageOption.ApplianceStorage)
         }
         binding?.included?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()

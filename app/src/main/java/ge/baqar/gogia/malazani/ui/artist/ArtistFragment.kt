@@ -1,7 +1,5 @@
 package ge.baqar.gogia.malazani.ui.artist
 
-import ArtistAction
-import ArtistSongsRequested
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context.DOWNLOAD_SERVICE
@@ -23,34 +21,32 @@ import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.SongType
 import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
 import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
+import ge.baqar.gogia.malazani.storage.prefs.FolkAppPreferences
 import ge.baqar.gogia.malazani.ui.MenuActivity
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
+import reactivecircus.flowbinding.android.view.clicks
 import timber.log.Timber
 
-@InternalCoroutinesApi
-@FlowPreview
-@ExperimentalCoroutinesApi
+
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
 
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
-    @ExperimentalCoroutinesApi
     private val viewModel: ArtistViewModel by inject()
+    private val folkAppPreferences: FolkAppPreferences by inject()
     private var binding: FragmentArtistBinding? = null
     private val downloadManager: DownloadManager by lazy {
         activity?.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+    }
+    private val downloadRequestIds = mutableListOf<Long>()
+    private val isDownloading by lazy {
+        downloadRequestIds.size > 0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,16 +69,37 @@ class ArtistFragment : Fragment() {
         binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
+
         val loadSongsAndChantsAction = flowOf(
-            ArtistSongsRequested(_ensemble?.copy()!!)
+            ArtistSongsRequested(_ensemble?.copy()!!),
         )
-        initializeIntents(loadSongsAndChantsAction)
+        initializeIntents(inputs(loadSongsAndChantsAction))
+
         initializeClickListeners()
         EventBus.getDefault().post(GetCurrentSong)
         return binding?.root!!
     }
 
-    private fun initializeClickListeners(){
+    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun inputs(vararg actions: Flow<ArtistSongsRequested>): Flow<ArtistAction> = merge(
+        binding?.downloadAlbumbtn?.clicks()
+            ?.debounce(100)
+            ?.filter { _ensemble != null }
+            ?.map {
+                val storageOption = folkAppPreferences.getStorageOption()
+
+                val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
+                val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
+                val album = songsDataSource?.dataSource
+                album?.addAll(chantsDataSource?.dataSource!!)
+
+                ArtistSongsDownloadRequested(_ensemble!!, album, storageOption)
+            }!!,
+        *actions
+    )
+
+    private fun initializeClickListeners() {
         binding?.tabViewInclude?.artistSongsTab?.setOnClickListener {
             binding?.songsListView?.visibility = View.VISIBLE
             binding?.chantsListView?.visibility = View.GONE
@@ -95,16 +112,13 @@ class ArtistFragment : Fragment() {
         binding?.toolbarInclude?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()
         }
-        binding?.downloadAlbumbtn?.setOnClickListener {
-            downloadAlbum()
-        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun currentPlayingSong(event: CurrentPlayingSong?) {
         _currentSong = event?.song
         _currentSong?.let {
-            if (_currentSong?.songType == SongType.Song){
+            if (_currentSong?.songType == SongType.Song) {
                 (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
                     dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
@@ -112,7 +126,7 @@ class ArtistFragment : Fragment() {
                 (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
                 }
-            } else{
+            } else {
                 (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
                     dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
@@ -124,28 +138,23 @@ class ArtistFragment : Fragment() {
         }
     }
 
-    private fun downloadAlbum() {
-        val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
-        val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
-        val album = songsDataSource?.dataSource
-        album?.addAll(chantsDataSource?.dataSource!!)
-        album?.map {
+    private fun downloadAlbumExternal(ensemble: Ensemble, songs: MutableList<Song>?) {
+        songs?.forEach {
             val downloadUri: Uri =
                 Uri.parse(it.path)
             val request = DownloadManager.Request(downloadUri)
 
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
             request.setAllowedOverRoaming(false)
-            request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
+            request.setTitle("იწერება ${ensemble.name} ${it.name}")
             request.setDestinationInExternalPublicDir(
                 Environment.DIRECTORY_DOWNLOADS,
-                "${_ensemble?.name}-${it.name}.mp3"
+                "${ensemble.name}-${it.name}.mp3"
             )
-            downloadManager.enqueue(request)
+            downloadRequestIds.add(downloadManager.enqueue(request))
         }
     }
 
-    @FlowPreview
     @RequiresApi(Build.VERSION_CODES.O)
     fun initializeIntents(inputs: Flow<ArtistAction>) {
         viewModel.intents(inputs)
@@ -210,6 +219,9 @@ class ArtistFragment : Fragment() {
                 binding?.tabViewInclude?.artistChantsTab?.visibility = View.GONE
                 binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
             }
+        }
+        if (state is DownloadExternalState) {
+            downloadAlbumExternal(state.ensemble, state.songs)
         }
     }
 

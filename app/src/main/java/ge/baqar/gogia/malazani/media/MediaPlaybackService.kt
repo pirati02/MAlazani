@@ -13,18 +13,12 @@ import androidx.core.content.ContextCompat
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.events.*
 import ge.baqar.gogia.malazani.ui.MenuActivity
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 
 
-@ExperimentalCoroutinesApi
-@InternalCoroutinesApi
-@FlowPreview
 @RequiresApi(Build.VERSION_CODES.O)
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 

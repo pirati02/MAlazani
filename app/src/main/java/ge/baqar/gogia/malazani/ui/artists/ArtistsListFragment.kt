@@ -1,8 +1,5 @@
 package ge.baqar.gogia.malazani.ui.artists
 
-import ArtistsAction
-import EnsemblesRequested
-import OldRecordingsRequested
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,9 +13,6 @@ import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -29,12 +23,8 @@ import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-@InternalCoroutinesApi
-@FlowPreview
-@ExperimentalCoroutinesApi
 class ArtistsListFragment : Fragment() {
 
-    @ExperimentalCoroutinesApi
     private val viewModel: ArtistsViewModel by inject()
     private var binding: FragmentArtistsBinding? = null
     private var _view: View? = null
@@ -82,7 +72,6 @@ class ArtistsListFragment : Fragment() {
         })
     }
 
-    @FlowPreview
     @RequiresApi(Build.VERSION_CODES.M)
     fun initializeIntents(inputs: Flow<ArtistsAction>) {
         viewModel.intents(inputs)

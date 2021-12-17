@@ -6,11 +6,9 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.annotation.RequiresApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 class NetworkStatus(private val application: Application) {
 
-    @ExperimentalCoroutinesApi
     @RequiresApi(Build.VERSION_CODES.M)
     fun isOnline(): Boolean {
 //        val context: Context = application.applicationContext!!

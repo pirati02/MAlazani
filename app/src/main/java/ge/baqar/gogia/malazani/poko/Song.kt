@@ -1,5 +1,7 @@
 package ge.baqar.gogia.malazani.poko
 
+import com.google.gson.annotations.SerializedName
+
 data class Song(
     val id: String,
     val name: String,
@@ -23,7 +25,9 @@ data class Song(
     }
 }
 
-enum class SongType {
-    Song,
-    Chant
+enum class SongType(val index: Int) {
+    @SerializedName("0")
+    Song(0),
+    @SerializedName("1")
+    Chant(1)
 }

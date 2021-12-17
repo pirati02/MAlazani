@@ -1,9 +1,6 @@
 package ge.baqar.gogia.malazani.media
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.os.Build
 import android.view.View
 import android.widget.SeekBar
@@ -21,28 +18,23 @@ import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.events.ArtistChanged
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
+import ge.baqar.gogia.malazani.storage.prefs.FolkAppPreferences
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 
-@InternalCoroutinesApi
-@ExperimentalCoroutinesApi
 @RequiresApi(Build.VERSION_CODES.O)
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
-    private val audioPlayer: AudioPlayer,
-    context: Context
+    private val folkAppPreferences: FolkAppPreferences,
+    private val audioPlayer: AudioPlayer
 ) {
     var binding: ActivityMenuBinding? = null
     var playListEnsemble: Ensemble? = null
     var playList: MutableList<Song>? = null
-    private val preferences: SharedPreferences =
-        context.getSharedPreferences(context.packageName, MODE_PRIVATE)
-    var position = 0
-        private set
 
-    private val autoPlayEnabledKey = "autoPlayEnabled"
-    private var autoPlayEnabled = true
+    private var position = 0
+    private var autoPlayEnabled = false
     private var playerControlsAreVisible = true
 
     @SuppressLint("LongLogTag")
@@ -62,7 +54,7 @@ class MediaPlayerController(
     }
 
     private fun checkAutoPlayEnabled() {
-        autoPlayEnabled = preferences.getBoolean(autoPlayEnabledKey, false)
+        autoPlayEnabled = folkAppPreferences.getAutoPlay()
         if (autoPlayEnabled) {
             binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
         } else {
@@ -157,10 +149,7 @@ class MediaPlayerController(
         }
         binding?.included?.playerAutoPlayButton?.setOnClickListener {
             autoPlayEnabled = !autoPlayEnabled
-
-            preferences.edit()
-                .putBoolean(autoPlayEnabledKey, autoPlayEnabled)
-                .apply()
+            folkAppPreferences.updateAutoPlay(autoPlayEnabled)
 
             if (autoPlayEnabled) {
                 Toast.makeText(it.context, R.string.auto_play_on, Toast.LENGTH_SHORT).show()

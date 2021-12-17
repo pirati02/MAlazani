@@ -3,11 +3,8 @@ package ge.baqar.gogia.malazani.arch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
-@ExperimentalCoroutinesApi
 abstract class ReactiveViewModel<INPUT : Any, OUTPUT : Any, STATE : OUTPUT>(
     initialState: STATE
 ) : ViewModel() {
@@ -17,8 +14,6 @@ abstract class ReactiveViewModel<INPUT : Any, OUTPUT : Any, STATE : OUTPUT>(
 
     private var outputs: Flow<OUTPUT> = emptyFlow()
 
-    @FlowPreview
-    @ExperimentalCoroutinesApi
     @Suppress("UNCHECKED_CAST")
     open fun intents(inputs: Flow<INPUT>): Flow<OUTPUT> {
         outputs = inputs

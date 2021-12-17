@@ -1,5 +1,6 @@
 package ge.baqar.gogia.malazani.ui.artist
 
+import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
 
 open class ArtistResult
@@ -21,6 +22,12 @@ open class ArtistState(
         )
     }
 }
+
+
+data class DownloadExternalState(
+    val songs: MutableList<Song>?,
+    val ensemble: Ensemble
+) : ArtistState(false, null)
 
 data class ChantsState(
     override val isInProgress: Boolean,

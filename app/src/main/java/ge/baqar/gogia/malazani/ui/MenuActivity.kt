@@ -15,21 +15,15 @@ import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
 import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 
-@InternalCoroutinesApi
-@FlowPreview
-@ExperimentalCoroutinesApi
 @RequiresApi(Build.VERSION_CODES.O)
 class MenuActivity : AppCompatActivity() {
 

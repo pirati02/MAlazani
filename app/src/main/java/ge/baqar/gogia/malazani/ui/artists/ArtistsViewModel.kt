@@ -1,24 +1,16 @@
 package ge.baqar.gogia.malazani.ui.artists
 
-import ArtistsAction
-import ArtistsLoaded
-import EnsemblesRequested
-import OldRecordingsRequested
 import android.os.Build
 import androidx.annotation.RequiresApi
 import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 
-@InternalCoroutinesApi
-@ExperimentalCoroutinesApi
 class ArtistsViewModel(
-    private val alazaniRepository: AlazaniRepository?
+    val alazaniRepository: AlazaniRepository
 ) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -26,7 +18,7 @@ class ArtistsViewModel(
         emit {
             state.copy(isInProgress = true)
         }
-        alazaniRepository?.ensembles()?.collect { result ->
+        alazaniRepository.ensembles().collect { result ->
             if (result is SucceedResult) {
                 emit {
                     result.value.sortBy { it.name }
@@ -44,7 +36,7 @@ class ArtistsViewModel(
         emit {
             state.copy(isInProgress = true)
         }
-        alazaniRepository?.oldRecordings()?.collect { result ->
+        alazaniRepository.oldRecordings().collect { result ->
             if (result is SucceedResult) {
                 emit {
                     state.copy(isInProgress = false, artists = result.value)
