@@ -44,9 +44,15 @@ class SongsAdapter(
     }
 
     fun applyNotPlayingState(){
-        dataSource.forEach {
+        val oldPlayingOne = dataSource.firstOrNull { it.isPlaying }
+        oldPlayingOne?.let {
+            val index = dataSource.indexOf(it)
             it.isPlaying = false
+            notifyItemChanged(index)
         }
+//        dataSource.forEach {
+//            it.isPlaying = false
+//        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {

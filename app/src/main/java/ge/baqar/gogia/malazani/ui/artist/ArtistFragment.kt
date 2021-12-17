@@ -108,13 +108,17 @@ class ArtistFragment : Fragment() {
                 (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
                     dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
-                    notifyDataSetChanged()
+                }
+                (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
+                    applyNotPlayingState()
                 }
             } else{
                 (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
                     dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
-                    notifyDataSetChanged()
+                }
+                (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
+                    applyNotPlayingState()
                 }
             }
         }
@@ -176,11 +180,7 @@ class ArtistFragment : Fragment() {
         if (state is SongsState) {
             if (state.songs.size > 0) {
                 binding?.songsProgressbar?.visibility = View.GONE
-                state.songs.firstOrNull {
-                    it == _currentSong
-                }?.apply {
-                    isPlaying = true
-                }
+                currentPlayingSong(CurrentPlayingSong(_currentSong))
                 binding?.songsListView?.adapter = SongsAdapter(state.songs) { song, index ->
                     play(index, state.songs)
                     currentPlayingSong(CurrentPlayingSong(song))
@@ -198,12 +198,8 @@ class ArtistFragment : Fragment() {
         }
         if (state is ChantsState) {
             if (state.chants.size > 0) {
-                state.chants.firstOrNull {
-                    it == _currentSong
-                }?.apply {
-                    isPlaying = true
-                }
                 binding?.chantsProgressbar?.visibility = View.GONE
+                currentPlayingSong(CurrentPlayingSong(_currentSong))
                 binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
                     play(index, state.chants)
                     currentPlayingSong(CurrentPlayingSong(song))
