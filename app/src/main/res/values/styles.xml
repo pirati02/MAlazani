@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style parent="Theme.AppCompat.Light.DarkActionBar" name="Theme.MAlazani">
-<!--        <item name="android:windowTranslucentNavigation">true</item> -->
-<!--        <item name="android:windowIsTranslucent">true</item>-->
+
+    <style name="Theme.MAlazani" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!--        <item name="android:windowTranslucentNavigation">true</item> -->
+        <!--        <item name="android:windowIsTranslucent">true</item>-->
     </style>
 
     <style name="ArtistTabViewStyle">
@@ -12,5 +13,10 @@
         <item name="android:gravity">center</item>
         <item name="fontFamily">@font/bpg_nino_mtavruli_bold</item>
         <item name="android:padding">15dp</item>
+    </style>
+
+    <style name="DownloadSwitchStyle">
+        <item name="colorControlActivated">#03A24B</item>
+        <item name="colorSwitchThumbNormal">#444343</item>
     </style>
 </resources>

@@ -66,7 +66,6 @@ class AlazaniRepository(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     suspend fun downloadSong(path: String): Flow<ReactiveResult<String, ByteArray>> {
         return coroutineScope {
             if (networkStatus.isOnline()) {

@@ -29,6 +29,13 @@ data class DownloadExternalState(
     val ensemble: Ensemble
 ) : ArtistState(false, null)
 
+data class DownloadLocallyState(
+    val songs: MutableList<Song>?,
+    val ensemble: Ensemble
+) : ArtistState(false, null)
+data class ArtistSongsDownloadStarted(val totalProgress: Int) : ArtistState(false, null)
+class ArtistSongsDownloaded() : ArtistState(false, null)
+
 data class ChantsState(
     override val isInProgress: Boolean,
     val chants: MutableList<Song>,
