@@ -22,7 +22,6 @@ import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 
-@RequiresApi(Build.VERSION_CODES.O)
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
     private val folkAppPreferences: FolkAppPreferences,

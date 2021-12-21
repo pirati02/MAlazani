@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentSearchBinding
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
 import reactivecircus.flowbinding.android.widget.textChanges
@@ -103,12 +104,7 @@ class SearchFragment : Fragment() {
                         val currentItem = it as Song
                         viewModel.ensembleById(currentItem.ensembleId) { ensemble ->
                             ensemble?.let {
-                                findNavController().navigate(
-                                    ge.baqar.gogia.malazani.R.id.navigation_artists_details,
-                                    Bundle().apply {
-                                        putParcelable("ensemble", ensemble)
-                                        putString("searchedItemId", currentItem.id)
-                                    })
+                                play(ensemble, currentItem)
                             }
                         }
                     }
@@ -122,5 +118,9 @@ class SearchFragment : Fragment() {
                 binding?.searchInclude?.songsSearchTab?.visibility = View.GONE
             }
         }
+    }
+
+    private fun play(ensemble: Ensemble, song: Song) {
+        (activity as MenuActivity).playMediaPlayback(0, mutableListOf(song), ensemble)
     }
 }

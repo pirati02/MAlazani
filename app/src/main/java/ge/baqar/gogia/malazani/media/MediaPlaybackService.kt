@@ -19,7 +19,6 @@ import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     private var notificationManager: NotificationManager? = null
@@ -114,7 +113,6 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         EventBus.getDefault().postSticky(mediaPlayerController)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
     private fun showNotification(showResumeIcon: Boolean = false) {
         val contentIntent = PendingIntent.getActivity(

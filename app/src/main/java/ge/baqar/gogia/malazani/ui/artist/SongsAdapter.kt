@@ -70,4 +70,8 @@ class SongsAdapter(
     override fun getItemCount(): Int {
         return dataSource.size
     }
+
+    fun getItemPosition(song: Song): Int {
+        return dataSource.indexOf(song)
+    }
 }

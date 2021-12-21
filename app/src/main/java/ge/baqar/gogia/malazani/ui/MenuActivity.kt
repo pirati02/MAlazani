@@ -24,7 +24,6 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 class MenuActivity : AppCompatActivity() {
 
     private var tempEnsemble: Ensemble? = null
@@ -43,7 +42,7 @@ class MenuActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
             } else {
-                startService(intent);
+                startService(intent)
             }
         }
     private lateinit var _binding: ActivityMenuBinding
@@ -116,7 +115,6 @@ class MenuActivity : AppCompatActivity() {
         EventBus.getDefault().post(RequestMediaControllerInstance())
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun playMediaPlayback(position: Int, songs: MutableList<Song>, ensemble: Ensemble) {
         if (mediaPlayerController != null) {
             _playMediaPlaybackAction?.invoke(songs, position, ensemble)
@@ -129,8 +127,7 @@ class MenuActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun doBindService() {
+    private fun doBindService() {
         val intent = Intent(this, MediaPlaybackService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
