@@ -34,7 +34,6 @@ class ArtistsListFragment : Fragment() {
         EventBus.getDefault().register(this)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -42,22 +41,24 @@ class ArtistsListFragment : Fragment() {
     ): View {
         if (_view == null) {
             binding = FragmentArtistsBinding.inflate(inflater, container, false)
-            if (binding?.artistsListView?.adapter == null) {
-                val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
-                    EnsemblesRequested()
-                } else {
-                    OldRecordingsRequested()
-                }
-                val loadFlow = flowOf(action)
-                initializeIntents(loadFlow)
-            }
             _view = binding?.root
-            binding?.include?.settingsBtn?.setOnClickListener {
-                findNavController().navigate(R.id.navigation_settings)
-            }
             return _view!!
         }
         return _view!!
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onResume() {
+        super.onResume()
+        if (binding?.artistsListView?.adapter == null || viewModel.dataSetOffline) {
+            val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
+                EnsemblesRequested()
+            } else {
+                OldRecordingsRequested()
+            }
+            val loadFlow = flowOf(action)
+            initializeIntents(loadFlow)
+        }
     }
 
     override fun onDestroy() {

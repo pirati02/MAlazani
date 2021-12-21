@@ -15,8 +15,7 @@ data class ArtistsState(
         val DEFAULT = ArtistsState(
             isInProgress = false,
             error = null,
-            artists = mutableListOf(),
-//            newMessage =  null
+            artists = mutableListOf()
         )
     }
 }

@@ -20,7 +20,7 @@ import org.koin.android.ext.android.inject
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
+class MediaPlaybackService : Service(){
 
     private var notificationManager: NotificationManager? = null
     private val notificationId: Int = 1024
@@ -34,18 +34,19 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         EventBus.getDefault().post(ServiceCreatedEvent())
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
     }
 
-    override fun onPrepared(p0: MediaPlayer?) {
-
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         handleAction(intent?.action)
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     @Subscribe
@@ -97,11 +98,6 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        EventBus.getDefault().unregister(this)
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
@@ -160,7 +156,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 notificationBuilder = NotificationCompat.Builder(this)
             }
             val notification: NotificationCompat.Builder = notificationBuilder
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_notification)
                 .setCustomContentView(notificationLayout)
                 .setCustomBigContentView(notificationLayoutExpanded)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())

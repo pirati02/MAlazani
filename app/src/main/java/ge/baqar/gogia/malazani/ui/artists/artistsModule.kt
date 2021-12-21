@@ -7,6 +7,5 @@ val artistsModule = module {
 
     single { AlazaniRepository(get(), get()) }
     //viewModel
-    factory { ArtistsViewModel(get()) }
+    factory { ArtistsViewModel(get(), get()) }
 }
-

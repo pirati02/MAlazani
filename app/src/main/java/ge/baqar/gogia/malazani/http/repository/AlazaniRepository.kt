@@ -50,7 +50,6 @@ class AlazaniRepository(
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
     suspend fun songs(id: String): Flow<ReactiveResult<String, SongsResponse>> {
         return coroutineScope {
             if (networkStatus.isOnline()) {
@@ -66,17 +65,13 @@ class AlazaniRepository(
         }
     }
 
-    suspend fun downloadSong(path: String): Flow<ReactiveResult<String, ByteArray>> {
+    suspend fun downloadSong(path: String): ReactiveResult<String, ByteArray> {
         return coroutineScope {
             if (networkStatus.isOnline()) {
                 val song = folkApiService.downloadSongData(path).body()?.bytes()
-                val flow = callbackFlow<ReactiveResult<String, ByteArray>> {
-                    trySend(song?.asSuccess!!)
-                    awaitClose { channel.close() }
-                }
-                return@coroutineScope flow
+                return@coroutineScope song?.asSuccess!!
             } else {
-                return@coroutineScope flowOf("network_is_off".asError)
+                return@coroutineScope "network_is_off".asError
             }
         }
     }

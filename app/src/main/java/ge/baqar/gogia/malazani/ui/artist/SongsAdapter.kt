@@ -17,9 +17,17 @@ class SongsAdapter(
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.songTitle)
         }
+        val availableOfflineIndicator: View by lazy {
+            itemView.findViewById(R.id.availableOfflineIndicator)
+        }
 
         fun bind(ensemble: Song, position: Int) {
             name.text = ensemble.name
+            if (ensemble.availableOffline) {
+                availableOfflineIndicator.visibility = View.VISIBLE
+            } else {
+                availableOfflineIndicator.visibility = View.GONE
+            }
             if (ensemble.isPlaying) {
                 itemView.setBackgroundColor(
                     ContextCompat.getColor(
@@ -43,16 +51,13 @@ class SongsAdapter(
         }
     }
 
-    fun applyNotPlayingState(){
+    fun applyNotPlayingState() {
         val oldPlayingOne = dataSource.firstOrNull { it.isPlaying }
         oldPlayingOne?.let {
             val index = dataSource.indexOf(it)
             it.isPlaying = false
             notifyItemChanged(index)
         }
-//        dataSource.forEach {
-//            it.isPlaying = false
-//        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {

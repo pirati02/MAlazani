@@ -6,9 +6,11 @@ data class Song(
     val id: String,
     val name: String,
     val path: String,
+    val data: ByteArray?,
     val songType: SongType,
     val ensembleId: String,
-    var isPlaying: Boolean = false
+    var isPlaying: Boolean = false,
+    var availableOffline: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (other is Song) {

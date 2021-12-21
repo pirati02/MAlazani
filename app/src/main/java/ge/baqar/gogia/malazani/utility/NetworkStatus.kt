@@ -9,24 +9,7 @@ import androidx.annotation.RequiresApi
 
 class NetworkStatus(private val application: Application) {
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun isOnline(): Boolean {
-//        val context: Context = application.applicationContext!!
-//        val connectivityManager =
-//            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
-//        connectivityManager?.let {
-//            val capabilities =
-//                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-//            if (capabilities != null) {
-//                when {
-//                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> return true
-//                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> return true
-//                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> return true
-//                }
-//            }
-//        }
-//        return false
-
         val context: Context = application.applicationContext!!
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

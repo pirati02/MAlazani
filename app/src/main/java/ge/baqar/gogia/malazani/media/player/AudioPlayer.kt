@@ -7,6 +7,9 @@ import android.os.Build
 import android.os.CountDownTimer
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 
 class AudioPlayer(private val context: Context) {
@@ -24,8 +27,8 @@ class AudioPlayer(private val context: Context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun play(audioData: String?, callback: () -> Unit) {
-        if (audioData == null) return
+    fun play(link: String?, audioData: ByteArray?, callback: () -> Unit) {
+        if (link == null && audioData == null) return
         reset()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
@@ -35,7 +38,17 @@ class AudioPlayer(private val context: Context) {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
-        mediaPlayer?.setDataSource(audioData)
+        if (audioData != null) {
+            val tempMp3: File = File.createTempFile("temp_song", "mp3", context.cacheDir)
+            tempMp3.deleteOnExit()
+            val fos = FileOutputStream(tempMp3)
+            fos.write(audioData)
+            fos.close()
+            val fis = FileInputStream(tempMp3)
+            mediaPlayer?.setDataSource(fis.fd)
+        } else {
+            mediaPlayer?.setDataSource(link)
+        }
         mediaPlayer?.prepareAsync()
         mediaPlayer?.setOnPreparedListener {
             mediaPlayer?.start()

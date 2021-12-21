@@ -2,14 +2,15 @@ package ge.baqar.gogia.malazani.storage.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
-import ge.baqar.gogia.malazani.poko.StorageOption
 
 class FolkAppPreferences(private val context: Context) {
     private val preferences: SharedPreferences by lazy {
         context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)!!
     }
-    private val storageOptionKey = "storageOption"
+
+    private val playerControlsAreVisibleKey = "playerControlsAreVisible"
     private val autoPlayEnabledKey = "autoPlayEnabled"
+    private val ensembleKey = "ensembleKey_"
 
     fun updateAutoPlay(autoPlayEnabled: Boolean) {
         preferences.edit()
@@ -21,18 +22,24 @@ class FolkAppPreferences(private val context: Context) {
         return preferences.getBoolean(autoPlayEnabledKey, false)
     }
 
-    fun updateStorageOption(storageOption: StorageOption) {
+    fun setOfflineEnabled(id: String, enabled: Boolean) {
         preferences.edit()
-            ?.putString(storageOptionKey, storageOption.toString())
-            ?.apply()
+            .putBoolean("${ensembleKey}${id}", enabled)
+            .apply()
     }
 
-    fun getStorageOption(): StorageOption {
-        return StorageOption.valueOf(
-            preferences.getString(
-                storageOptionKey,
-                StorageOption.ApplicationCache.toString()
-            ) ?: StorageOption.ApplicationCache.toString()
-        )
+    fun getOfflineEnabled(id: String): Boolean {
+        return preferences.getBoolean("${ensembleKey}${id}", false)
+    }
+
+    fun setPlayerState(playerControlsAreVisible: Boolean) {
+        preferences.edit()
+            .putBoolean(playerControlsAreVisibleKey, playerControlsAreVisible)
+            .apply()
+    }
+
+
+    fun getPlayerState(): Boolean {
+        return preferences.getBoolean(playerControlsAreVisibleKey, true)
     }
 }
