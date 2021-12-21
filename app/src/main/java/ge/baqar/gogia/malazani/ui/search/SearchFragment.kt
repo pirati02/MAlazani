@@ -107,6 +107,7 @@ class SearchFragment : Fragment() {
                                     ge.baqar.gogia.malazani.R.id.navigation_artists_details,
                                     Bundle().apply {
                                         putParcelable("ensemble", ensemble)
+                                        putString("searchedItemId", currentItem.id)
                                     })
                             }
                         }

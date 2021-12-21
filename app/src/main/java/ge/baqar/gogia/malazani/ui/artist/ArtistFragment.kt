@@ -1,8 +1,12 @@
 package ge.baqar.gogia.malazani.ui.artist
 
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,9 +16,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
+import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
@@ -36,6 +43,7 @@ import kotlin.time.ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
 
+    private var searchedItemId: String? = null
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
@@ -64,6 +72,7 @@ class ArtistFragment : Fragment() {
     ): View {
         binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
+        searchedItemId = arguments?.getString("searchedItemId")
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
 
         val loadSongsAndChantsAction = flowOf(
@@ -182,9 +191,40 @@ class ArtistFragment : Fragment() {
             if (state.songs.size > 0) {
                 binding?.songsProgressbar?.visibility = View.GONE
                 currentPlayingSong(CurrentPlayingSong(_currentSong))
+                state.songs.firstOrNull { it.id == searchedItemId }?.let {
+                    it.animate = true
+                }
                 binding?.songsListView?.adapter = SongsAdapter(state.songs) { song, index ->
                     play(index, state.songs)
                     currentPlayingSong(CurrentPlayingSong(song))
+                }
+                val hasAnimateItem = state.songs.filter { it.animate }
+                if (hasAnimateItem.isNotEmpty()) {
+                    val index = state.songs.indexOf(hasAnimateItem[0])
+                    hasAnimateItem[0].animate = false
+                    binding?.songsListView?.smoothScrollToPosition(index)
+                    binding?.songsListView?.addOnScrollListener(object :
+                        RecyclerView.OnScrollListener() {
+                        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                            super.onScrolled(recyclerView, dx, dy)
+                            val item = recyclerView.findViewHolderForLayoutPosition(index)
+                            item?.let {
+                                val itemView = it as SongsAdapter.SongViewHolder
+                                val backgroundColorAnimator: ObjectAnimator = ObjectAnimator.ofObject(
+                                    itemView.itemView,
+                                    "backgroundColor",
+                                    ArgbEvaluator(),
+                                    Color.WHITE,
+                                    ContextCompat.getColor(context!!, R.color.lighterGreen)
+                                )
+                                backgroundColorAnimator.repeatMode = ValueAnimator.REVERSE
+                                backgroundColorAnimator.repeatCount = 1
+                                backgroundColorAnimator.duration = 1500
+                                backgroundColorAnimator.start()
+                                binding?.songsListView?.removeOnScrollListener(this)
+                            }
+                        }
+                    })
                 }
                 binding?.songsListView?.visibility = View.VISIBLE
                 binding?.chantsListView?.visibility = View.GONE
@@ -199,11 +239,42 @@ class ArtistFragment : Fragment() {
         }
         if (state is ChantsState) {
             if (state.chants.size > 0) {
+                state.chants.firstOrNull { it.id == searchedItemId }?.let {
+                    it.animate = true
+                }
                 binding?.chantsProgressbar?.visibility = View.GONE
                 currentPlayingSong(CurrentPlayingSong(_currentSong))
                 binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
                     play(index, state.chants)
                     currentPlayingSong(CurrentPlayingSong(song))
+                }
+
+                val hasAnimateItem = state.chants.filter { it.animate }
+                if (hasAnimateItem.isNotEmpty()) {
+                    val index = state.chants.indexOf(hasAnimateItem[0])
+                    hasAnimateItem[0].animate = false
+                    binding?.songsListView?.smoothScrollToPosition(index)
+                    binding?.songsListView?.addOnScrollListener(object :
+                        RecyclerView.OnScrollListener() {
+                        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                            super.onScrolled(recyclerView, dx, dy)
+                            val item = recyclerView.findViewHolderForLayoutPosition(index)
+                            item?.let {
+                                    val itemView = it as SongsAdapter.SongViewHolder
+                                    val backgroundColorAnimator: ObjectAnimator = ObjectAnimator.ofObject(
+                                        itemView.itemView,
+                                        "backgroundColor",
+                                        ArgbEvaluator(),
+                                        Color.WHITE,
+                                        ContextCompat.getColor(context!!, R.color.lighterGreen)
+                                    )
+                                backgroundColorAnimator.repeatMode = ValueAnimator.REVERSE
+                                backgroundColorAnimator.repeatCount = 1500
+                                backgroundColorAnimator.start()
+                                binding?.songsListView?.removeOnScrollListener(this)
+                            }
+                        }
+                    })
                 }
             } else {
                 binding?.chantsProgressbar?.visibility = View.GONE

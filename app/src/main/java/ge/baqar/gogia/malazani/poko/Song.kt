@@ -9,8 +9,10 @@ data class Song(
     val songType: SongType,
     val ensembleId: String,
     val ensembleName: String,
-    var isPlaying: Boolean = false
+    var isPlaying: Boolean = false,
+    var animate: Boolean = false
 ) : SearchedItem {
+
     override fun equals(other: Any?): Boolean {
         if (other is Song) {
             return other.name == name
