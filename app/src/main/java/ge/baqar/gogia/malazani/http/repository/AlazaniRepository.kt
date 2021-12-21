@@ -49,8 +49,6 @@ class AlazaniRepository(
         }
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.M)
     suspend fun songs(id: String): Flow<ReactiveResult<String, SongsResponse>> {
         return coroutineScope {
             if (networkStatus.isOnline()) {

@@ -1,24 +1,23 @@
 package ge.baqar.gogia.malazani.media
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.view.View
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PLAY_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
-import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
+import ge.baqar.gogia.malazani.poko.AutoPlayState
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.events.ArtistChanged
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
-import ge.baqar.gogia.malazani.storage.prefs.FolkAppPreferences
+import ge.baqar.gogia.malazani.storage.FolkAppPreferences
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
@@ -34,10 +33,9 @@ class MediaPlayerController(
     var playList: MutableList<Song>? = null
 
     private var position = 0
-    private var autoPlayEnabled = false
+    private var autoPlayState = AutoPlayState.OFF
     private var playerControlsAreVisible = true
 
-    @SuppressLint("LongLogTag")
     fun play() {
         playList?.let {
             val artist = playList!![this.position]
@@ -54,11 +52,19 @@ class MediaPlayerController(
     }
 
     private fun checkAutoPlayEnabled() {
-        autoPlayEnabled = folkAppPreferences.getAutoPlay()
-        if (autoPlayEnabled) {
-            binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
-        } else {
-            binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24)
+        autoPlayState = folkAppPreferences.getAutoPlay()
+        binding?.included?.playerAutoPlayButton?.post {
+            when (autoPlayState) {
+                AutoPlayState.OFF -> {
+                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_off)
+                }
+                AutoPlayState.REPEAT_ONE -> {
+                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_one_24)
+                }
+                AutoPlayState.REPEAT_ALBUM -> {
+                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_on)
+                }
+            }
         }
     }
 
@@ -85,22 +91,31 @@ class MediaPlayerController(
             binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
             binding?.included?.playingTrackDurationTime?.text = null
 
-            if (!autoPlayEnabled){
-                binding?.included?.mediaPlayerView?.let {
-                    it.visibility = View.GONE
+            when (autoPlayState) {
+                AutoPlayState.OFF -> {
+                    return@completed
                 }
-                return@completed
-            }
-
-            if ((position + 1) < playList?.size!!) {
-                ++position
-                val nextItem = playList!![position]
-                viewModel.viewModelScope.launch {
-                    audioPlayer.play(nextItem.path) { onPrepareListener() }
-                    EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
+                AutoPlayState.REPEAT_ONE -> {
+                    val nextItem = playList!![position]
+                    viewModel.viewModelScope.launch {
+                        audioPlayer.play(nextItem.path) { onPrepareListener() }
+                        EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
+                    }
+                    binding?.included?.playingTrackTitle?.text = nextItem.name
+                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                 }
-                binding?.included?.playingTrackTitle?.text = nextItem.name
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                AutoPlayState.REPEAT_ALBUM -> {
+                    if ((position + 1) < playList?.size!!) {
+                        ++position
+                        val nextItem = playList!![position]
+                        viewModel.viewModelScope.launch {
+                            audioPlayer.play(nextItem.path) { onPrepareListener() }
+                            EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
+                        }
+                        binding?.included?.playingTrackTitle?.text = nextItem.name
+                        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                    }
+                }
             }
         }
         audioPlayer.updateTimeHandler { progress, time ->
@@ -148,19 +163,31 @@ class MediaPlayerController(
             stop()
         }
         binding?.included?.playerAutoPlayButton?.setOnClickListener {
-            autoPlayEnabled = !autoPlayEnabled
-            folkAppPreferences.updateAutoPlay(autoPlayEnabled)
-
-            if (autoPlayEnabled) {
-                Toast.makeText(it.context, R.string.auto_play_on, Toast.LENGTH_SHORT).show()
-                binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_white)
-            } else {
-                Toast.makeText(it.context, R.string.auto_play_off, Toast.LENGTH_SHORT).show()
-                binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24)
+            when (autoPlayState) {
+                AutoPlayState.OFF -> {
+                    autoPlayState = AutoPlayState.REPEAT_ONE
+                }
+                AutoPlayState.REPEAT_ONE -> {
+                    autoPlayState = AutoPlayState.REPEAT_ALBUM
+                }
+                AutoPlayState.REPEAT_ALBUM -> {
+                    autoPlayState = AutoPlayState.OFF
+                }
             }
+            folkAppPreferences.updateAutoPlay(autoPlayState)
+            checkAutoPlayEnabled()
+        }
+        playerControlsAreVisible = folkAppPreferences.getPlayerState()
+        if (playerControlsAreVisible) {
+            binding?.included?.playerControlsView?.visibility = View.VISIBLE
+            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
+        } else {
+            binding?.included?.playerControlsView?.visibility = View.GONE
+            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
         }
         binding?.included?.playerViewCloseBtn?.setOnClickListener {
             playerControlsAreVisible = !playerControlsAreVisible
+            folkAppPreferences.setPlayerState(playerControlsAreVisible)
             if (playerControlsAreVisible) {
                 binding?.included?.playerControlsView?.visibility = View.VISIBLE
                 binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
@@ -181,7 +208,6 @@ class MediaPlayerController(
 
     fun stop() {
         audioPlayer.release()
-        EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
         binding?.included?.playingTrackTime?.text = null
         binding?.included?.playerProgressBar?.progress = 0
         binding?.included?.playingTrackDurationTime?.text = null
@@ -242,7 +268,7 @@ class MediaPlayerController(
         binding?.included?.mediaPlayerView?.let {
             it.visibility = View.VISIBLE
         }
-        checkAutoPlayEnabled ()
+        checkAutoPlayEnabled()
         binding?.included?.playingTrackTitle?.text = artist.name
         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
         onPrepareListener()

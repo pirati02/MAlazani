@@ -1,7 +1,5 @@
 package ge.baqar.gogia.malazani.ui.artist
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
@@ -14,7 +12,6 @@ class ArtistViewModel(
     private val alazaniRepository: AlazaniRepository
 ) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun songs(
         ensemble: Ensemble
     ) = update {
@@ -40,7 +37,6 @@ class ArtistViewModel(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun ArtistAction.process(): Flow<() -> ArtistResult> {
         return when (this) {
             is ArtistSongsRequested -> {

@@ -45,7 +45,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         handleAction(intent?.action)
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     @Subscribe
@@ -160,7 +160,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 notificationBuilder = NotificationCompat.Builder(this)
             }
             val notification: NotificationCompat.Builder = notificationBuilder
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_notification)
                 .setCustomContentView(notificationLayout)
                 .setCustomBigContentView(notificationLayoutExpanded)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -199,12 +199,12 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
         if (mediaPlayerController.isPlaying() || showResumeIcon) {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_pause_circle_outline_24_white
+                R.drawable.ic_baseline_pause_circle_outline_24
             )
         } else {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_play_circle_outline_24_white
+                R.drawable.ic_baseline_play_circle_outline_24
             )
         }
 

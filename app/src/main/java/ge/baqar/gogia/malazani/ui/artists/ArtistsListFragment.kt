@@ -52,9 +52,6 @@ class ArtistsListFragment : Fragment() {
                 initializeIntents(loadFlow)
             }
             _view = binding?.root
-            binding?.include?.settingsBtn?.setOnClickListener {
-                findNavController().navigate(R.id.navigation_settings)
-            }
             return _view!!
         }
         return _view!!

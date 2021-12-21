@@ -3,10 +3,8 @@ package ge.baqar.gogia.malazani.media.player
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.CountDownTimer
 import android.os.PowerManager
-import androidx.annotation.RequiresApi
 
 
 class AudioPlayer(private val context: Context) {
@@ -23,7 +21,6 @@ class AudioPlayer(private val context: Context) {
         return mediaPlayer?.isPlaying == true
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun play(audioData: String?, callback: () -> Unit) {
         if (audioData == null) return
         reset()

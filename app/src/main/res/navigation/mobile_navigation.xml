@@ -28,10 +28,4 @@
         android:label="@string/artistDetails"
         tools:layout="@layout/fragment_artist" />
 
-
-    <fragment
-        android:id="@+id/navigation_settings"
-        android:name="ge.baqar.gogia.malazani.ui.settings.SettingsFragment"
-        android:label="@string/settings"
-        tools:layout="@layout/fragment_settings" />
 </navigation>

@@ -1,8 +1,12 @@
 package ge.baqar.gogia.malazani.ui.artist
 
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,9 +40,10 @@ class ArtistFragment : Fragment() {
     private var _ensemble: Ensemble? = null
 
     private val viewModel: ArtistViewModel by inject()
-    private val albumDownloadManager: AlbumDownloadManager by inject()
     private var binding: FragmentArtistBinding? = null
-
+    private val downloadManager: DownloadManager by lazy {
+        activity?.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,18 +95,30 @@ class ArtistFragment : Fragment() {
         binding?.toolbarInclude?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()
         }
-        binding?.toolbarInclude?.enableOfflineMode?.setOnCheckedChangeListener { _, enabled ->
-            if (enabled) {
-                val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
-                val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
-                albumDownloadManager.setDownloadData(
-                    _ensemble!!,
-                    songsDataSource?.dataSource!!,
-                    chantsDataSource?.dataSource!!
+
+        binding?.downloadAlbumbtn?.setOnClickListener {
+            val songs = mutableListOf<Song>()
+            val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
+            val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
+            songsDataSource?.let {
+                songs.addAll(it.dataSource)
+            }
+            chantsDataSource?.let {
+                songs.addAll(it.dataSource)
+            }
+            songs.map {
+                val downloadUri: Uri =
+                    Uri.parse(it.path)
+                val request = DownloadManager.Request(downloadUri)
+
+                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+                request.setAllowedOverRoaming(false)
+                request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
+                request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "${_ensemble?.name}-${it.name}.mp3"
                 )
-                albumDownloadManager.download()
-            } else {
-                albumDownloadManager.clearDownloads()
+                downloadManager.enqueue(request)
             }
         }
     }
