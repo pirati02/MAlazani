@@ -3,13 +3,14 @@ package ge.baqar.gogia.malazani.poko
 import com.google.gson.annotations.SerializedName
 
 data class Song(
-    val id: String,
+    override val id: String,
     val name: String,
     val path: String,
     val songType: SongType,
     val ensembleId: String,
+    val ensembleName: String,
     var isPlaying: Boolean = false
-) {
+) : SearchedItem {
     override fun equals(other: Any?): Boolean {
         if (other is Song) {
             return other.name == name
@@ -20,6 +21,10 @@ data class Song(
         return super.equals(other)
     }
 
+    override fun detailedName(): String {
+        return "$name - $ensembleName"
+    }
+
     override fun hashCode(): Int {
         return path.hashCode()
     }
@@ -28,6 +33,7 @@ data class Song(
 enum class SongType(val index: Int) {
     @SerializedName("0")
     Song(0),
+
     @SerializedName("1")
     Chant(1)
 }

@@ -61,7 +61,8 @@ class MenuActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_ensembles,
-                R.id.navigation_oldRecordings
+                R.id.navigation_oldRecordings,
+                R.id.navigation_search
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

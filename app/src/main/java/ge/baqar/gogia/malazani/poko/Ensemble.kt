@@ -7,11 +7,15 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Ensemble(
-    val id: String,
+    override val id: String,
     val name: String,
     var artistType: ArtistType,
-    var isPlaying: Boolean = false
-) : Parcelable
+    var isPlaying: Boolean = false,
+) : SearchedItem, Parcelable {
+    override fun detailedName(): String {
+        return name
+    }
+}
 
 enum class ArtistType(val type: String) {
     @SerializedName("1")

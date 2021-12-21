@@ -3,13 +3,13 @@ package ge.baqar.gogia.malazani.ui.artist
 import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
+import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
 import ge.baqar.gogia.malazani.poko.Ensemble
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 
 class ArtistViewModel(
-    private val alazaniRepository: AlazaniRepository
+    private val alazaniRepository: FolkApiRepository
 ) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
 
     fun songs(
