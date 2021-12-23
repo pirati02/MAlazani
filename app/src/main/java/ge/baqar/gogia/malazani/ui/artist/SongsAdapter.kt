@@ -1,5 +1,8 @@
 package ge.baqar.gogia.malazani.ui.artist
 
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,26 +12,20 @@ import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.poko.Song
 
+
 class SongsAdapter(
     val dataSource: MutableList<Song>,
     val clicked: SongsAdapter.(Song, Int) -> Unit
 ) : RecyclerView.Adapter<SongsAdapter.SongViewHolder>() {
+
     inner class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.songTitle)
         }
-        val availableOfflineIndicator: View by lazy {
-            itemView.findViewById(R.id.availableOfflineIndicator)
-        }
 
-        fun bind(ensemble: Song, position: Int) {
-            name.text = ensemble.name
-            if (ensemble.availableOffline) {
-                availableOfflineIndicator.visibility = View.VISIBLE
-            } else {
-                availableOfflineIndicator.visibility = View.GONE
-            }
-            if (ensemble.isPlaying) {
+        fun bind(song: Song, position: Int) {
+            name.text = song.name
+            if (song.isPlaying) {
                 itemView.setBackgroundColor(
                     ContextCompat.getColor(
                         itemView.context,
@@ -44,8 +41,8 @@ class SongsAdapter(
                 )
             }
             itemView.setOnClickListener {
-                clicked.invoke(this@SongsAdapter, ensemble, position)
-                ensemble.isPlaying = true
+                clicked.invoke(this@SongsAdapter, song, position)
+                song.isPlaying = true
                 notifyItemChanged(position)
             }
         }
@@ -72,5 +69,9 @@ class SongsAdapter(
 
     override fun getItemCount(): Int {
         return dataSource.size
+    }
+
+    fun getItemPosition(song: Song): Int {
+        return dataSource.indexOf(song)
     }
 }

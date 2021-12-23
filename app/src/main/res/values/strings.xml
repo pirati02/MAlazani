@@ -15,6 +15,6 @@
     <string name="storage_options_question">სად გსურთ შეინახოთ ჩანაწერები?</string>
     <string name="storage_option_application_cache">აპლიკაციის მეხსიერებაში</string>
     <string name="storage_option_appliance_cache">ტელეფონის მეხსიერებაში</string>
-    <string name="downloading_songs">მიმდინარეობს %s-(ი)ს სიმღერების გადმოწერა</string>
-    <string name="cancel">გაჩერება</string>
+    <string name="search">ძიება</string>
+    <string name="search_hint">მაგ: ალილო</string>
 </resources>

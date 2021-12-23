@@ -39,7 +39,7 @@
             android:id="@+id/playerViewCloseBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/drawable_selector_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
             android:src="@drawable/ic_baseline_keyboard_arrow_down_24"
             app:layout_constraintEnd_toEndOf="parent"
@@ -49,9 +49,9 @@
             android:id="@+id/playerAutoPlayButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/drawable_selector_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
-            android:src="@drawable/ic_baseline_repeat_24_white"
+            android:src="@drawable/ic_baseline_repeat_24_off"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -73,7 +73,7 @@
                 android:paddingStart="10dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="13sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -86,7 +86,7 @@
                 android:paddingTop="5dp"
                 android:paddingEnd="10dp"
                 android:paddingBottom="5dp"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="13sp" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -120,7 +120,7 @@
             android:layout_column="0"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:background="@drawable/drawable_player_btn_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
             android:src="@drawable/ic_outline_stop_circle_24" />
 
@@ -142,7 +142,7 @@
             android:layout_column="2"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:background="@drawable/drawable_player_btn_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
             android:src="@drawable/ic_baseline_fast_rewind_24" />
 
@@ -153,7 +153,7 @@
             android:layout_column="3"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:background="@drawable/drawable_player_btn_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
             android:src="@drawable/ic_round_fast_forward_24" />
 
@@ -164,7 +164,7 @@
             android:layout_column="4"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:background="@drawable/drawable_player_btn_background"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
             android:src="@drawable/ic_baseline_playlist_play_24" />
     </GridLayout>

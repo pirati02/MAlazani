@@ -3,7 +3,6 @@ package ge.baqar.gogia.malazani.ui.artist
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,13 +21,6 @@ import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.SongType
 import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
 import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
-import ge.baqar.gogia.malazani.storage.AlbumDownloadProvider
-import ge.baqar.gogia.malazani.storage.DownloadService
-import ge.baqar.gogia.malazani.storage.DownloadService.Companion.DOWNLOAD_SONGS
-import ge.baqar.gogia.malazani.storage.DownloadService.Companion.STOP_DOWNLOADING
-import ge.baqar.gogia.malazani.storage.DownloadServiceManager
-import ge.baqar.gogia.malazani.storage.DownloadableSong
-import ge.baqar.gogia.malazani.storage.prefs.FolkAppPreferences
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -44,13 +36,12 @@ import kotlin.time.ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {
 
+    private var searchedItemId: String? = null
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
     private val viewModel: ArtistViewModel by inject()
     private var binding: FragmentArtistBinding? = null
-    private val albumDownloadProvider: AlbumDownloadProvider by inject()
-    private val folkAppPreferences: FolkAppPreferences by inject()
     private val downloadManager: DownloadManager by lazy {
         activity?.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     }
@@ -74,6 +65,7 @@ class ArtistFragment : Fragment() {
     ): View {
         binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
+        searchedItemId = arguments?.getString("searchedItemId")
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
 
         val loadSongsAndChantsAction = flowOf(
@@ -106,94 +98,30 @@ class ArtistFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val offlineEnabled = folkAppPreferences.getOfflineEnabled(_ensemble?.id!!)
-            binding?.toolbarInclude?.enableOfflineMode?.isChecked = offlineEnabled
-            binding?.toolbarInclude?.enableOfflineMode?.setOnCheckedChangeListener { _, enabled ->
-                _ensemble?.let {
-                    folkAppPreferences.setOfflineEnabled(_ensemble?.id!!, enabled)
-                    if (enabled) {
-                        val songs = arrayListOf<DownloadableSong>();
-                        val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
-                        val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
-                        songs.addAll(chantsDataSource?.dataSource?.map {
-                            DownloadableSong(
-                                it.id,
-                                it.name,
-                                it.path,
-                                it.songType,
-                                it.ensembleId
-                            )
-                        }!!)
-                        songs.addAll(songsDataSource?.dataSource?.map {
-                            DownloadableSong(
-                                it.id,
-                                it.name,
-                                it.path,
-                                it.songType,
-                                it.ensembleId
-                            )
-                        }!!)
-                        val intent = Intent(activity, DownloadService::class.java).apply {
-                            action = DOWNLOAD_SONGS
-                            putExtra("ensemble", _ensemble)
-                            putParcelableArrayListExtra("songs", songs)
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            activity?.startForegroundService(intent)
-                        } else {
-                            activity?.startService(intent);
-                        }
-                    } else {
-                        albumDownloadProvider.tryGet(_ensemble?.id!!)
-                            .clearDownloads(_ensemble?.id!!)
-
-                        if (DownloadServiceManager.isRunning) {
-                            val intent = Intent(activity, DownloadService::class.java).apply {
-                                action = STOP_DOWNLOADING
-                                putExtra("ensemble", _ensemble)
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                activity?.startForegroundService(intent)
-                            } else {
-                                activity?.startService(intent);
-                            }
-                        }
-                    }
-                }
+        binding?.downloadAlbumbtn?.setOnClickListener {
+            val songs = mutableListOf<Song>()
+            val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
+            val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
+            songsDataSource?.let {
+                songs.addAll(it.dataSource)
             }
-        } else {
-            binding?.toolbarInclude?.enableOfflineMode?.visibility = View.GONE
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            binding?.downloadAlbumbtn?.setOnClickListener {
-                val songs = mutableListOf<Song>();
-                val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
-                val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
-                songsDataSource?.let {
-                    songs.addAll(it.dataSource)
-                }
-                chantsDataSource?.let {
-                    songs.addAll(it.dataSource)
-                }
-                songs.map {
-                    val downloadUri: Uri =
-                        Uri.parse(it.path)
-                    val request = DownloadManager.Request(downloadUri)
-
-                    request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-                    request.setAllowedOverRoaming(false)
-                    request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
-                    request.setDestinationInExternalPublicDir(
-                        Environment.DIRECTORY_DOWNLOADS,
-                        "${_ensemble?.name}-${it.name}.mp3"
-                    )
-                    downloadManager.enqueue(request)
-                }
+            chantsDataSource?.let {
+                songs.addAll(it.dataSource)
             }
-        } else {
-            binding?.downloadAlbumbtn?.visibility = View.GONE
+            songs.map {
+                val downloadUri: Uri =
+                    Uri.parse(it.path)
+                val request = DownloadManager.Request(downloadUri)
+
+                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+                request.setAllowedOverRoaming(false)
+                request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
+                request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "${_ensemble?.name}-${it.name}.mp3"
+                )
+                downloadManager.enqueue(request)
+            }
         }
     }
 
@@ -260,6 +188,7 @@ class ArtistFragment : Fragment() {
                     play(index, state.songs)
                     currentPlayingSong(CurrentPlayingSong(song))
                 }
+
                 binding?.songsListView?.visibility = View.VISIBLE
                 binding?.chantsListView?.visibility = View.GONE
             } else {
@@ -279,6 +208,7 @@ class ArtistFragment : Fragment() {
                     play(index, state.chants)
                     currentPlayingSong(CurrentPlayingSong(song))
                 }
+
             } else {
                 binding?.chantsProgressbar?.visibility = View.GONE
                 binding?.chantsListView?.visibility = View.GONE

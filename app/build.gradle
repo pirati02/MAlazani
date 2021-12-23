@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-parcelize'
-    id 'kotlin-kapt'
 }
 
 android {
@@ -12,8 +11,8 @@ android {
         applicationId "ge.baqar.gogia.malazani"
         minSdk 21
         targetSdk 31
-        versionCode 2255
-        versionName "2.2.5.5"
+        versionCode 2257
+        versionName "2.2.5.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
@@ -79,9 +78,4 @@ dependencies {
     //Logger
     implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'org.greenrobot:eventbus:3.3.1'
-
-    //Room
-    implementation "androidx.room:room-runtime:2.4.0"
-    implementation 'androidx.room:room-ktx:2.4.0'
-    kapt "androidx.room:room-compiler:2.4.0"
 }

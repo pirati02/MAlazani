@@ -27,7 +27,7 @@
             android:layout_marginRight="10dp"
             android:layout_height="wrap_content"
             android:padding="15dp"
-            android:src="@drawable/ic_outline_stop_circle_24_white" />
+            android:src="@drawable/ic_outline_stop_circle_24" />
 
 
         <ImageView
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:src="@drawable/ic_baseline_pause_circle_outline_24_white" />
+            android:src="@drawable/ic_baseline_pause_circle_outline_24" />
 
         <ImageView
             android:id="@+id/playPrevButton"
@@ -46,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:src="@drawable/ic_baseline_fast_rewind_24_white" />
+            android:src="@drawable/ic_baseline_fast_rewind_24" />
 
         <ImageView
             android:layout_marginLeft="10dp"
@@ -54,7 +54,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="15dp"
-            android:src="@drawable/ic_round_fast_forward_24_white" />
+            android:src="@drawable/ic_round_fast_forward_24" />
 
     </LinearLayout>
 </LinearLayout>

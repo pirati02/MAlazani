@@ -19,8 +19,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 
 
-@RequiresApi(Build.VERSION_CODES.O)
-class MediaPlaybackService : Service(){
+class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     private var notificationManager: NotificationManager? = null
     private val notificationId: Int = 1024
@@ -34,13 +33,12 @@ class MediaPlaybackService : Service(){
         EventBus.getDefault().post(ServiceCreatedEvent())
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        EventBus.getDefault().unregister(this)
-    }
-
     override fun onBind(p0: Intent?): IBinder? {
         return null
+    }
+
+    override fun onPrepared(p0: MediaPlayer?) {
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -100,6 +98,11 @@ class MediaPlaybackService : Service(){
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
+
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     fun getCurrentSong(event: GetCurrentSong){
         EventBus.getDefault().post(CurrentPlayingSong(mediaPlayerController.getCurrentSong()))
@@ -110,7 +113,6 @@ class MediaPlaybackService : Service(){
         EventBus.getDefault().postSticky(mediaPlayerController)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
     private fun showNotification(showResumeIcon: Boolean = false) {
         val contentIntent = PendingIntent.getActivity(
@@ -195,12 +197,12 @@ class MediaPlaybackService : Service(){
         if (mediaPlayerController.isPlaying() || showResumeIcon) {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_pause_circle_outline_24_white
+                R.drawable.ic_baseline_pause_circle_outline_24
             )
         } else {
             notificationLayoutExpanded.setImageViewResource(
                 R.id.playPauseButton,
-                R.drawable.ic_baseline_play_circle_outline_24_white
+                R.drawable.ic_baseline_play_circle_outline_24
             )
         }
 

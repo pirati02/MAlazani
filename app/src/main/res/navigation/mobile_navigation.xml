@@ -10,16 +10,20 @@
         android:name="ge.baqar.gogia.malazani.ui.artists.ArtistsListFragment"
         android:label="@string/ensembles"
         tools:layout="@layout/fragment_artists">
-        <argument android:name="artistType" android:defaultValue="1"/>
+        <argument
+            android:name="artistType"
+            android:defaultValue="1" />
     </fragment>
 
     <fragment
         android:id="@+id/navigation_oldRecordings"
         android:name="ge.baqar.gogia.malazani.ui.artists.ArtistsListFragment"
         android:label="@string/oldRecordings"
-        tools:layout="@layout/fragment_artists" >
+        tools:layout="@layout/fragment_artists">
 
-        <argument android:name="artistType" android:defaultValue="2"/>
+        <argument
+            android:name="artistType"
+            android:defaultValue="2" />
     </fragment>
 
     <fragment
@@ -27,4 +31,10 @@
         android:name="ge.baqar.gogia.malazani.ui.artist.ArtistFragment"
         android:label="@string/artistDetails"
         tools:layout="@layout/fragment_artist" />
+
+    <fragment
+        android:id="@+id/navigation_search"
+        android:name="ge.baqar.gogia.malazani.ui.search.SearchFragment"
+        android:label="@string/search"
+        tools:layout="@layout/fragment_search" />
 </navigation>

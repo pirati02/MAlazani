@@ -10,7 +10,6 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +22,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
+
 class ArtistsListFragment : Fragment() {
 
     private val viewModel: ArtistsViewModel by inject()
@@ -34,6 +34,7 @@ class ArtistsListFragment : Fragment() {
         EventBus.getDefault().register(this)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -41,24 +42,22 @@ class ArtistsListFragment : Fragment() {
     ): View {
         if (_view == null) {
             binding = FragmentArtistsBinding.inflate(inflater, container, false)
+            if (binding?.artistsListView?.adapter == null) {
+                val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
+                    EnsemblesRequested()
+                } else {
+                    OldRecordingsRequested()
+                }
+                val loadFlow = flowOf(action)
+                initializeIntents(loadFlow)
+            }
+            binding?.include?.searchImageView?.setOnClickListener {
+
+            }
             _view = binding?.root
             return _view!!
         }
         return _view!!
-    }
-
-    @RequiresApi(Build.VERSION_CODES.M)
-    override fun onResume() {
-        super.onResume()
-        if (binding?.artistsListView?.adapter == null || viewModel.dataSetOffline) {
-            val action = if (arguments?.get("artistType")?.toString()?.equals("1") == true) {
-                EnsemblesRequested()
-            } else {
-                OldRecordingsRequested()
-            }
-            val loadFlow = flowOf(action)
-            initializeIntents(loadFlow)
-        }
     }
 
     override fun onDestroy() {
@@ -68,9 +67,11 @@ class ArtistsListFragment : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun openArtistFragment(event: OpenArtistFragment) {
-        findNavController().navigate(R.id.navigation_artists_details, Bundle().apply {
-            putParcelable("ensemble", event.ensemble)
-        })
+        findNavController().navigate(
+            ge.baqar.gogia.malazani.R.id.navigation_artists_details,
+            Bundle().apply {
+                putParcelable("ensemble", event.ensemble)
+            })
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

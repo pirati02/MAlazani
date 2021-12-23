@@ -16,4 +16,5 @@
     <color name="colorAccentLighter">#F2C2A06C</color>
     <color name="colorActiveSong">#4CC2A06C</color>
     <color name="green">#03A24B</color>
+    <color name="lighterGreen">#4803A24B</color>
 </resources>

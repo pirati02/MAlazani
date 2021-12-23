@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.http
+package ge.baqar.gogia.malazani.http.service
 
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.SongsResponse
@@ -10,13 +10,16 @@ import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 interface FolkApiService {
-    @GET("ensembles")
+    @GET("folkapi/ensembles")
     suspend fun ensembles(): MutableList<Ensemble>
 
-    @GET("old-recordings")
+    @GET("folkapi/ensemble/{id}")
+    suspend fun ensemble(@Path("id") id: String): Ensemble
+
+    @GET("folkapi/old-recordings")
     suspend fun oldRecordings(): MutableList<Ensemble>
 
-    @GET("songs/{id}")
+    @GET("folkapi/songs/{id}")
     suspend fun songs(@Path("id") id: String): SongsResponse
 
     @Streaming
