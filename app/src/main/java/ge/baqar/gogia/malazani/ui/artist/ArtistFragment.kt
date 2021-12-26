@@ -1,12 +1,10 @@
 package ge.baqar.gogia.malazani.ui.artist
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.app.DownloadManager
-import android.content.Context
-import android.net.Uri
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,12 +13,16 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
+import ge.baqar.gogia.malazani.poko.DownloadableSong
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.SongType
 import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
 import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
+import ge.baqar.gogia.malazani.storage.DownloadService
+import ge.baqar.gogia.malazani.storage.DownloadService.Companion.DOWNLOAD_SONGS
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -42,9 +44,6 @@ class ArtistFragment : Fragment() {
 
     private val viewModel: ArtistViewModel by inject()
     private var binding: FragmentArtistBinding? = null
-    private val downloadManager: DownloadManager by lazy {
-        activity?.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,29 +98,46 @@ class ArtistFragment : Fragment() {
         }
 
         binding?.downloadAlbumbtn?.setOnClickListener {
-            val songs = mutableListOf<Song>()
-            val songsDataSource = binding?.songsListView?.adapter as? SongsAdapter
-            val chantsDataSource = binding?.chantsListView?.adapter as? SongsAdapter
-            songsDataSource?.let {
-                songs.addAll(it.dataSource)
-            }
-            chantsDataSource?.let {
-                songs.addAll(it.dataSource)
-            }
-            songs.map {
-                val downloadUri: Uri =
-                    Uri.parse(it.path)
-                val request = DownloadManager.Request(downloadUri)
-
-                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-                request.setAllowedOverRoaming(false)
-                request.setTitle("იწერება ${_ensemble?.name} ${it.name}")
-                request.setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    "${_ensemble?.name}-${it.name}.mp3"
+            EzPermission.with(requireContext())
+                .permissions(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
-                downloadManager.enqueue(request)
-            }
+                .request { granted, _, _ ->
+                    if (granted.isNotEmpty()) {
+                        val songs = arrayListOf<DownloadableSong>();
+                        songs.addAll(viewModel.state.songs.map {
+                            DownloadableSong(
+                                it.id,
+                                it.name,
+                                it.nameEng,
+                                it.path,
+                                it.songType,
+                                it.ensembleId
+                            )
+                        })
+                        songs.addAll(viewModel.state.chants.map {
+                            DownloadableSong(
+                                it.id,
+                                it.name,
+                                it.nameEng,
+                                it.path,
+                                it.songType,
+                                it.ensembleId
+                            )
+                        })
+
+                        val intent = Intent(activity, DownloadService::class.java).apply {
+                            action = DOWNLOAD_SONGS
+                            putExtra("ensemble", _ensemble)
+                            putParcelableArrayListExtra("songs", songs)
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            activity?.startForegroundService(intent)
+                        } else {
+                            activity?.startService(intent)
+                        }
+                    }
+                }
         }
     }
 
@@ -163,14 +179,9 @@ class ArtistFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun render(state: ArtistState) {
         if (state.isInProgress) {
-            if (state is SongsState) {
-                binding?.songsListView?.visibility = View.GONE
-                binding?.songsProgressbar?.visibility = View.VISIBLE
-            }
-            if (state is ChantsState) {
-                binding?.chantsListView?.visibility = View.GONE
-                binding?.chantsProgressbar?.visibility = View.VISIBLE
-            }
+            binding?.songsListView?.visibility = View.GONE
+            binding?.chantsListView?.visibility = View.GONE
+            binding?.progressbar?.visibility = View.VISIBLE
             return
         }
         if (state.error != null) {
@@ -180,41 +191,35 @@ class ArtistFragment : Fragment() {
             Timber.i(error)
             return
         }
-        if (state is SongsState) {
-            if (state.songs.size > 0) {
-                binding?.songsProgressbar?.visibility = View.GONE
-                currentPlayingSong(CurrentPlayingSong(_currentSong))
-                binding?.songsListView?.adapter = SongsAdapter(state.songs) { song, index ->
-                    play(index, state.songs)
-                    currentPlayingSong(CurrentPlayingSong(song))
-                }
 
-                binding?.songsListView?.visibility = View.VISIBLE
-                binding?.chantsListView?.visibility = View.GONE
-            } else {
-                binding?.chantsListView?.visibility = View.VISIBLE
-                binding?.songsListView?.visibility = View.GONE
-                binding?.songsProgressbar?.visibility = View.GONE
-                binding?.songsListView?.visibility = View.GONE
-                binding?.tabViewInclude?.artistSongsTab?.visibility = View.GONE
-                binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
+        binding?.progressbar?.visibility = View.GONE
+        if (state.songs.size > 0) {
+            currentPlayingSong(CurrentPlayingSong(_currentSong))
+            binding?.songsListView?.adapter = SongsAdapter(state.songs) { song, index ->
+                play(index, state.songs)
+                currentPlayingSong(CurrentPlayingSong(song))
             }
+
+            binding?.songsListView?.visibility = View.VISIBLE
+            binding?.chantsListView?.visibility = View.GONE
+        } else {
+            binding?.chantsListView?.visibility = View.VISIBLE
+            binding?.songsListView?.visibility = View.GONE
+            binding?.songsListView?.visibility = View.GONE
+            binding?.tabViewInclude?.artistSongsTab?.visibility = View.GONE
+            binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
         }
-        if (state is ChantsState) {
-            if (state.chants.size > 0) {
-                binding?.chantsProgressbar?.visibility = View.GONE
-                currentPlayingSong(CurrentPlayingSong(_currentSong))
-                binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
-                    play(index, state.chants)
-                    currentPlayingSong(CurrentPlayingSong(song))
-                }
-
-            } else {
-                binding?.chantsProgressbar?.visibility = View.GONE
-                binding?.chantsListView?.visibility = View.GONE
-                binding?.tabViewInclude?.artistChantsTab?.visibility = View.GONE
-                binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
+        if (state.chants.size > 0) {
+            currentPlayingSong(CurrentPlayingSong(_currentSong))
+            binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
+                play(index, state.chants)
+                currentPlayingSong(CurrentPlayingSong(song))
             }
+
+        } else {
+            binding?.chantsListView?.visibility = View.GONE
+            binding?.tabViewInclude?.artistChantsTab?.visibility = View.GONE
+            binding?.tabViewInclude?.tabSeparator?.visibility = View.GONE
         }
     }
 

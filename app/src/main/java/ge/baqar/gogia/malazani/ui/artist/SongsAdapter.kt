@@ -1,8 +1,5 @@
 package ge.baqar.gogia.malazani.ui.artist
 
-import android.animation.ArgbEvaluator
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -69,9 +66,5 @@ class SongsAdapter(
 
     override fun getItemCount(): Int {
         return dataSource.size
-    }
-
-    fun getItemPosition(song: Song): Int {
-        return dataSource.indexOf(song)
     }
 }

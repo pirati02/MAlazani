@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class Song(
     override val id: String,
     val name: String,
+    var nameEng: String,
     val path: String,
     val songType: SongType,
     val ensembleId: String,

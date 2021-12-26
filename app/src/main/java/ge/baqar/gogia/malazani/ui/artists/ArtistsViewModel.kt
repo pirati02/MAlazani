@@ -6,11 +6,15 @@ import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
 import ge.baqar.gogia.malazani.arch.SucceedResult
 import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
+import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.malazani.storage.db.FolkApiDao
+import ge.baqar.gogia.storage.CharConverter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 
 class ArtistsViewModel(
-    val alazaniRepository: FolkApiRepository
+    val alazaniRepository: FolkApiRepository,
+    val folkApiDao: FolkApiDao
 ) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -22,10 +26,27 @@ class ArtistsViewModel(
             if (result is SucceedResult) {
                 emit {
                     result.value.sortBy { it.name }
+                    result.value.forEach {
+                        it.nameEng = CharConverter.toEng(it.name)
+                    }
                     state.copy(isInProgress = false, artists = result.value)
                 }
             }
             if (result is FailedResult) {
+                val cachedEnsembles = folkApiDao.ensembles()
+                if (cachedEnsembles.isNotEmpty()) {
+                    val mapped = cachedEnsembles.map {
+                        Ensemble(
+                            it.referenceId,
+                            it.name,
+                            it.nameEng,
+                            it.artistType
+                        )
+                    }.toMutableList()
+                    emit {
+                        state.copy(isInProgress = false, artists = mapped)
+                    }
+                }
                 emit { state.copy(isInProgress = false, error = result.value) }
             }
         }

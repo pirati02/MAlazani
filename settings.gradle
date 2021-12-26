@@ -8,3 +8,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "MAlazani"
 include ':app'
+include ':storage'

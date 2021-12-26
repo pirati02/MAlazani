@@ -9,6 +9,7 @@ import kotlinx.parcelize.Parcelize
 data class Ensemble(
     override val id: String,
     val name: String,
+    var nameEng: String,
     var artistType: ArtistType,
     var isPlaying: Boolean = false,
 ) : SearchedItem, Parcelable {

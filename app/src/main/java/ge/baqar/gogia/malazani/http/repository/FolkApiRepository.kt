@@ -14,6 +14,7 @@ import ge.baqar.gogia.malazani.utility.NetworkStatus
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import java.io.InputStream
 
 class FolkApiRepository(
     private var networkStatus: NetworkStatus,
@@ -82,18 +83,12 @@ class FolkApiRepository(
         }
     }
 
-    suspend fun downloadSong(path: String): Flow<ReactiveResult<String, ByteArray>> {
-        return coroutineScope {
-            if (networkStatus.isOnline()) {
-                val song = folkApiService.downloadSongData(path).body()?.bytes()
-                val flow = callbackFlow<ReactiveResult<String, ByteArray>> {
-                    trySend(song?.asSuccess!!)
-                    awaitClose { channel.close() }
-                }
-                return@coroutineScope flow
-            } else {
-                return@coroutineScope flowOf("network_is_off".asError)
-            }
+    suspend fun downloadSong(path: String): ReactiveResult<String, InputStream> {
+        return if (networkStatus.isOnline()) {
+            val song = folkApiService.downloadSongData(path).body()?.byteStream()
+            song?.asSuccess!!
+        } else {
+            "network_is_off".asError
         }
     }
 

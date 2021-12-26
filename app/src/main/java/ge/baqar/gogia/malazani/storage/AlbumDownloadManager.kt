@@ -1,22 +1,25 @@
 package ge.baqar.gogia.malazani.storage
 
-import android.os.Parcelable
 import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.AlazaniRepository
+import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
+import ge.baqar.gogia.malazani.poko.DownloadableSong
 import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.SongType
-import ge.baqar.gogia.malazani.poko.database.DbEnsemble
-import ge.baqar.gogia.malazani.poko.database.DbSong
+import ge.baqar.gogia.malazani.poko.db.DbEnsemble
+import ge.baqar.gogia.malazani.poko.db.DbSong
+import ge.baqar.gogia.malazani.storage.db.FolkApiDao
+import ge.baqar.gogia.storage.domain.FileStreamContent
+import ge.baqar.gogia.storage.usecase.FileSaveController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
+import java.io.InputStream
 import java.util.*
 
 class AlbumDownloadManager internal constructor(
     private val folkApiDao: FolkApiDao,
-    private val alazaniRepository: AlazaniRepository
+    private val alazaniRepository: FolkApiRepository,
+    private val saveController: FileSaveController
 ) : CoroutineScope {
 
     override val coroutineContext = Dispatchers.IO + SupervisorJob()
@@ -34,10 +37,11 @@ class AlbumDownloadManager internal constructor(
                 UUID.randomUUID().toString(),
                 it.id,
                 it.name,
+                it.nameEng,
                 it.link,
                 it.ensembleId,
                 it.songType,
-                null
+                ""
             )
         })
     }
@@ -51,11 +55,12 @@ class AlbumDownloadManager internal constructor(
             var existingEnsemble = folkApiDao.ensembleById(_ensemble.id)
             if (existingEnsemble == null) {
                 existingEnsemble = DbEnsemble(
-                        UUID.randomUUID().toString(),
-                        _ensemble.id,
-                        _ensemble.name,
-                        _ensemble.artistType
-                    )
+                    UUID.randomUUID().toString(),
+                    _ensemble.id,
+                    _ensemble.name,
+                    _ensemble.nameEng,
+                    _ensemble.artistType
+                )
                 folkApiDao.saveEnsemble(existingEnsemble)
             }
 
@@ -74,10 +79,18 @@ class AlbumDownloadManager internal constructor(
                 if (canceled) return@launch
 
                 val result = alazaniRepository.downloadSong(song.path!!)
-                if (result is SucceedResult) {
-                    song.data = result.value
+                if (result is SucceedResult<InputStream>) {
+                    saveController.saveDocumentFile(
+                        FileStreamContent(
+                            data = result.value,
+                            fileNameWithoutSuffix = song.name,
+                            suffix = "mp3",
+                            mimeType = "audio/mp3",
+                            subfolderName = _ensemble.name
+                        )
+                    )
+                    folkApiDao.saveSong(song)
                 }
-                folkApiDao.saveSong(song)
             }
 
             isDownloading = false
@@ -96,12 +109,3 @@ class AlbumDownloadManager internal constructor(
         }
     }
 }
-
-@Parcelize
-data class DownloadableSong(
-    val id: String,
-    val name: String,
-    val link: String,
-    val songType: SongType,
-    val ensembleId: String
-) : Parcelable

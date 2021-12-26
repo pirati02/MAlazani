@@ -1,7 +1,10 @@
 package ge.baqar.gogia.malazani
 
 import android.app.Application
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import ge.baqar.gogia.malazani.http.networkModule
+import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.malazani.media.mediaModule
 import ge.baqar.gogia.malazani.storage.storageModule
 import ge.baqar.gogia.malazani.ui.artist.artistModule
@@ -12,6 +15,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
+import java.util.concurrent.TimeUnit
 
 class FolkApplication : Application() {
     companion object {
@@ -36,5 +40,12 @@ class FolkApplication : Application() {
                 )
             )
         }
+
+
+        val firstWorkRequest = OneTimeWorkRequestBuilder<SyncFilesAndDatabaseJob>()
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueue(firstWorkRequest)
     }
 }

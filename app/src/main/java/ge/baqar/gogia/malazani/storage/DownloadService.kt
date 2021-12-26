@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import ge.baqar.gogia.malazani.R
+import ge.baqar.gogia.malazani.poko.DownloadableSong
 import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import org.koin.android.ext.android.inject
@@ -92,26 +93,26 @@ class DownloadService : Service() {
         val songsDownloadTitle =
             String.format(getString(R.string.downloading_songs), ensemble.name)
 
-//        val contentIntent = PendingIntent.getActivity(
-//            this, 0,
-//            Intent(this, MenuActivity::class.java).apply {
-//                action = STOP_DOWNLOADING
-//            },
-//            Intent.FILL_IN_ACTION
-//        )
-//
-//        val cancelAction = NotificationCompat.Action(
-//            R.drawable.ic_round_cancel_24,
-//            getString(R.string.cancel),
-//            contentIntent
-//        )
+        val contentIntent = PendingIntent.getActivity(
+            this, 0,
+            Intent(this, MenuActivity::class.java).apply {
+                action = STOP_DOWNLOADING
+            },
+            Intent.FILL_IN_ACTION
+        )
+
+        val cancelAction = NotificationCompat.Action(
+            R.drawable.ic_round_cancel_24,
+            getString(R.string.cancel),
+            contentIntent
+        )
 
         val notification: NotificationCompat.Builder = notificationBuilder
             .setSmallIcon(R.drawable.ic_baseline_download_for_offline_24)
             .setAutoCancel(true)
             .setContentText(songsDownloadTitle)
             .setStyle(NotificationCompat.BigTextStyle())
-//            .addAction(cancelAction)
+            .addAction(cancelAction)
 
         val id = Random().nextInt(2000)
         startForeground(id, notification.build())
