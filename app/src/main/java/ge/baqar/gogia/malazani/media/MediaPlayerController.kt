@@ -1,9 +1,7 @@
 package ge.baqar.gogia.malazani.media
 
-import android.os.Build
 import android.view.View
 import android.widget.SeekBar
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
@@ -73,7 +71,7 @@ class MediaPlayerController(
         binding?.included?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
     }
 
-    private fun listenAudioPlayerChanges(artist: Song) {
+    private fun listenAudioPlayerChanges(song: Song) {
         audioPlayer.listenPlayer {
             if (it) {
                 binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
@@ -82,7 +80,7 @@ class MediaPlayerController(
             }
         }
         viewModel.viewModelScope.launch {
-            audioPlayer.play(artist.path) { onPrepareListener() }
+            audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
         }
         audioPlayer.completed {
             binding?.included?.playingTrackTime?.text = null
@@ -95,23 +93,23 @@ class MediaPlayerController(
                     return@completed
                 }
                 AutoPlayState.REPEAT_ONE -> {
-                    val nextItem = playList!![position]
+                    val song = playList!![position]
                     viewModel.viewModelScope.launch {
-                        audioPlayer.play(nextItem.path) { onPrepareListener() }
+                        audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
-                    binding?.included?.playingTrackTitle?.text = nextItem.name
+                    binding?.included?.playingTrackTitle?.text = song.name
                     binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
                     if ((position + 1) < playList?.size!!) {
                         ++position
-                        val nextItem = playList!![position]
+                        val song = playList!![position]
                         viewModel.viewModelScope.launch {
-                            audioPlayer.play(nextItem.path) { onPrepareListener() }
+                            audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
                             EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                         }
-                        binding?.included?.playingTrackTitle?.text = nextItem.name
+                        binding?.included?.playingTrackTitle?.text = song.name
                         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                     }
                 }
@@ -223,13 +221,13 @@ class MediaPlayerController(
     fun next() {
         if ((position + 1) < playList?.size!!) {
             ++position
-            val nextItem = playList!![position]
-            updateUI(nextItem)
+            val song = playList!![position]
+            updateUI(song)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(nextItem.path) { onPrepareListener() }
+                audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = nextItem.name
+            binding?.included?.playingTrackTitle?.text = song.name
         }
     }
 
@@ -240,7 +238,7 @@ class MediaPlayerController(
             val prevItem = playList!![position]
             updateUI(prevItem)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(prevItem.path) { onPrepareListener() }
+                audioPlayer.play(prevItem.path, prevItem.localPath) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = prevItem.name

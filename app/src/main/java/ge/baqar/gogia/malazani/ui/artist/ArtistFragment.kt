@@ -70,18 +70,12 @@ class ArtistFragment : Fragment() {
         val loadSongsAndChantsAction = flowOf(
             ArtistSongsRequested(_ensemble?.copy()!!),
         )
-        initializeIntents(inputs(loadSongsAndChantsAction))
+        initializeIntents(loadSongsAndChantsAction)
 
         initializeClickListeners()
         EventBus.getDefault().post(GetCurrentSong)
         return binding?.root!!
     }
-
-    @SuppressLint("NewApi")
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun inputs(vararg actions: Flow<ArtistSongsRequested>): Flow<ArtistAction> = merge(
-        *actions
-    )
 
     private fun initializeClickListeners() {
         binding?.tabViewInclude?.artistSongsTab?.setOnClickListener {
@@ -104,7 +98,7 @@ class ArtistFragment : Fragment() {
                 )
                 .request { granted, _, _ ->
                     if (granted.isNotEmpty()) {
-                        val songs = arrayListOf<DownloadableSong>();
+                        val songs = arrayListOf<DownloadableSong>()
                         songs.addAll(viewModel.state.songs.map {
                             DownloadableSong(
                                 it.id,
@@ -202,6 +196,9 @@ class ArtistFragment : Fragment() {
 
             binding?.songsListView?.visibility = View.VISIBLE
             binding?.chantsListView?.visibility = View.GONE
+
+            binding?.tabViewInclude?.artistSongsTab?.visibility = View.VISIBLE
+            binding?.tabViewInclude?.tabSeparator?.visibility = View.VISIBLE
         } else {
             binding?.chantsListView?.visibility = View.VISIBLE
             binding?.songsListView?.visibility = View.GONE
@@ -215,7 +212,8 @@ class ArtistFragment : Fragment() {
                 play(index, state.chants)
                 currentPlayingSong(CurrentPlayingSong(song))
             }
-
+            binding?.tabViewInclude?.artistChantsTab?.visibility = View.VISIBLE
+            binding?.tabViewInclude?.tabSeparator?.visibility = View.VISIBLE
         } else {
             binding?.chantsListView?.visibility = View.GONE
             binding?.tabViewInclude?.artistChantsTab?.visibility = View.GONE

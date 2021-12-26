@@ -62,7 +62,8 @@ internal class AudioFileSaveProcessor(
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
         val selection = "${MediaStore.Video.Media.DISPLAY_NAME} = ?"
         val selectionArgs = arrayOf(
-            fileName
+            if (fileName.endsWith(".mp3")) fileName
+            else "${fileName}.mp3"
         )
 
         val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI

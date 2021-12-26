@@ -9,12 +9,14 @@ import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.poko.SongType
 import ge.baqar.gogia.malazani.storage.db.FolkApiDao
 import ge.baqar.gogia.storage.CharConverter
+import ge.baqar.gogia.storage.usecase.FileSaveController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 
 class ArtistViewModel(
     private val alazaniRepository: FolkApiRepository,
-    private val folkApiDao: FolkApiDao
+    private val folkApiDao: FolkApiDao,
+    private val saveController: FileSaveController
 ) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
 
     fun songs(
@@ -26,13 +28,13 @@ class ArtistViewModel(
 
         alazaniRepository.songs(ensemble.id).collect { result ->
             if (result is SucceedResult) {
+                result.value.chants.forEach {
+                    it.nameEng = CharConverter.toEng(it.name)
+                }
+                result.value.songs.forEach {
+                    it.nameEng = CharConverter.toEng(it.name)
+                }
                 emit {
-                    result.value.chants.forEach {
-                        it.nameEng = CharConverter.toEng(it.name)
-                    }
-                    result.value.songs.forEach {
-                        it.nameEng = CharConverter.toEng(it.name)
-                    }
                     state.copy(
                         isInProgress = false,
                         songs = result.value.songs,
@@ -45,6 +47,7 @@ class ArtistViewModel(
                 val songs = cacheSongs
                     .filter { it.songType == SongType.Song }
                     .map {
+                        val fileSystemSong = saveController.getFile(ensemble.nameEng, it.name)
                         Song(
                             it.referenceId,
                             it.name,
@@ -54,13 +57,15 @@ class ArtistViewModel(
                             it.ensembleId,
                             ensemble.name,
                             false,
+                            localPath = fileSystemSong?.uri
                         )
                     }
                     .toMutableList()
 
                 val chants = cacheSongs
-                    .filter { it.songType == SongType.Song }
+                    .filter { it.songType == SongType.Chant }
                     .map {
+                        val fileSystemSong = saveController.getFile(ensemble.nameEng, it.name)
                         Song(
                             it.referenceId,
                             it.name,
@@ -69,7 +74,8 @@ class ArtistViewModel(
                             it.songType,
                             it.ensembleId,
                             ensemble.name,
-                            false,
+                            false, 
+                            localPath = fileSystemSong?.uri
                         )
                     }
                     .toMutableList()

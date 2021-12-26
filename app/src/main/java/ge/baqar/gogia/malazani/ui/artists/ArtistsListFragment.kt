@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
+import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -98,6 +99,7 @@ class ArtistsListFragment : Fragment() {
         }
         binding?.artistsProgressbar?.visibility = View.GONE
 
+        SyncFilesAndDatabaseJob.triggerNow(requireContext())
         if (state.artists.count() > 0) {
             binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
                 openArtistFragment(OpenArtistFragment(it))

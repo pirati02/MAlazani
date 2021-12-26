@@ -30,7 +30,8 @@ class SyncFilesAndDatabaseJob(appContext: Context, workerParams: WorkerParameter
                 val songs = folkApiDao.songsByEnsembleId(ensemble.referenceId)
 
                 val removalSongs = songs.filter { song ->
-                    val associatedFile = saveController.getFile(ensemble.nameEng, "${song.name}.mp3")
+                    val associatedFile =
+                        saveController.getFile(ensemble.nameEng, song.name)
                     associatedFile == null
                 }.map { it.id }
                 folkApiDao.removeSongsByIds(removalSongs)
@@ -46,5 +47,14 @@ class SyncFilesAndDatabaseJob(appContext: Context, workerParams: WorkerParameter
             .enqueue(firstWorkRequest)
 
         return Result.success()
+    }
+
+    companion object {
+        fun triggerNow(context: Context) {
+            val firstWorkRequest = OneTimeWorkRequestBuilder<SyncFilesAndDatabaseJob>()
+                .build()
+            WorkManager.getInstance(context)
+                .enqueue(firstWorkRequest)
+        }
     }
 }

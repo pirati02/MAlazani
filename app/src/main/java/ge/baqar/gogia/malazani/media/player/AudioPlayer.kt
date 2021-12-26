@@ -3,8 +3,10 @@ package ge.baqar.gogia.malazani.media.player
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.CountDownTimer
 import android.os.PowerManager
+import java.io.FileDescriptor
 
 
 class AudioPlayer(private val context: Context) {
@@ -21,8 +23,8 @@ class AudioPlayer(private val context: Context) {
         return mediaPlayer?.isPlaying == true
     }
 
-    fun play(audioData: String?, callback: () -> Unit) {
-        if (audioData == null) return
+    fun play(audioData: String?, audioURI: Uri?, callback: () -> Unit) {
+        if (audioData == null && audioURI == null) return
         reset()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
@@ -32,7 +34,11 @@ class AudioPlayer(private val context: Context) {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
-        mediaPlayer?.setDataSource(audioData)
+        if (audioURI != null)
+            mediaPlayer?.setDataSource(context, audioURI)
+        else
+            mediaPlayer?.setDataSource(audioData)
+
         mediaPlayer?.prepareAsync()
         mediaPlayer?.setOnPreparedListener {
             mediaPlayer?.start()

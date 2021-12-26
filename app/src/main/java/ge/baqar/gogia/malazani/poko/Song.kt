@@ -1,5 +1,6 @@
 package ge.baqar.gogia.malazani.poko
 
+import android.net.Uri
 import com.google.gson.annotations.SerializedName
 
 data class Song(
@@ -10,7 +11,8 @@ data class Song(
     val songType: SongType,
     val ensembleId: String,
     val ensembleName: String,
-    var isPlaying: Boolean = false
+    var isPlaying: Boolean = false,
+    val localPath: Uri? = null
 ) : SearchedItem {
 
     override fun equals(other: Any?): Boolean {

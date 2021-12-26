@@ -11,7 +11,7 @@ data class Ensemble(
     val name: String,
     var nameEng: String,
     var artistType: ArtistType,
-    var isPlaying: Boolean = false,
+    var isPlaying: Boolean = false
 ) : SearchedItem, Parcelable {
     override fun detailedName(): String {
         return name

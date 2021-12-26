@@ -41,11 +41,6 @@ class FolkApplication : Application() {
             )
         }
 
-
-        val firstWorkRequest = OneTimeWorkRequestBuilder<SyncFilesAndDatabaseJob>()
-            .build()
-
-        WorkManager.getInstance(this)
-            .enqueue(firstWorkRequest)
+        SyncFilesAndDatabaseJob.triggerNow(this)
     }
 }
