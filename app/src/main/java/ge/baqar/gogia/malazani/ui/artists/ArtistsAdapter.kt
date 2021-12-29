@@ -6,7 +6,8 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.model.Ensemble
+
 
 class ArtistsAdapter(
     private val dataSource: MutableList<Ensemble>,

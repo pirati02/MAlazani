@@ -9,3 +9,7 @@ dependencyResolutionManagement {
 rootProject.name = "MAlazani"
 include ':app'
 include ':storage'
+include ':db'
+include ':model'
+include ':http'
+include ':utils'

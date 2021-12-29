@@ -1,6 +1,6 @@
 package ge.baqar.gogia.malazani.ui.artist
 
-import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.model.Song
 
 open class ArtistResult
 

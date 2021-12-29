@@ -3,10 +3,11 @@ package ge.baqar.gogia.malazani.media.player
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.CountDownTimer
 import android.os.PowerManager
-import java.io.FileDescriptor
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 
 class AudioPlayer(private val context: Context) {
@@ -23,8 +24,8 @@ class AudioPlayer(private val context: Context) {
         return mediaPlayer?.isPlaying == true
     }
 
-    fun play(audioData: String?, audioURI: Uri?, callback: () -> Unit) {
-        if (audioData == null && audioURI == null) return
+    fun play(audioData: String?, dataStream: ByteArray?, callback: () -> Unit) {
+        if (audioData == null && dataStream == null) return
         reset()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
@@ -34,9 +35,10 @@ class AudioPlayer(private val context: Context) {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
-        if (audioURI != null)
-            mediaPlayer?.setDataSource(context, audioURI)
-        else
+        if (dataStream != null) {
+            val fis = getTempSongFile(dataStream)
+            mediaPlayer?.setDataSource(fis.fd)
+        } else
             mediaPlayer?.setDataSource(audioData)
 
         mediaPlayer?.prepareAsync()
@@ -46,6 +48,16 @@ class AudioPlayer(private val context: Context) {
             callback.invoke()
             mediaPlayerIsPlayingCallback?.invoke(isPlaying())
         }
+    }
+
+    private fun getTempSongFile(dataStream: ByteArray): FileInputStream {
+        val tempMp3: File = File.createTempFile("temp_song", "mp3", context.cacheDir)
+        tempMp3.deleteOnExit()
+        val fos = FileOutputStream(tempMp3)
+        fos.write(dataStream)
+        fos.close()
+        val fis = FileInputStream(tempMp3)
+        return fis
     }
 
     fun pause() {

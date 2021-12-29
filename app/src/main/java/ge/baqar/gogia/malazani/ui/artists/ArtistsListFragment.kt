@@ -12,7 +12,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
 import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
-import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
+import ge.baqar.gogia.model.events.OpenArtistFragment
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -24,6 +25,7 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 
+@InternalCoroutinesApi
 class ArtistsListFragment : Fragment() {
 
     private val viewModel: ArtistsViewModel by inject()
@@ -51,9 +53,6 @@ class ArtistsListFragment : Fragment() {
                 }
                 val loadFlow = flowOf(action)
                 initializeIntents(loadFlow)
-            }
-            binding?.include?.searchImageView?.setOnClickListener {
-
             }
             _view = binding?.root
             return _view!!

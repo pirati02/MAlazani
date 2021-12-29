@@ -11,12 +11,14 @@ import ge.baqar.gogia.malazani.ui.artist.artistModule
 import ge.baqar.gogia.malazani.ui.artists.artistsModule
 import ge.baqar.gogia.malazani.ui.search.searchModule
 import ge.baqar.gogia.malazani.utility.utilityModule
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import java.util.concurrent.TimeUnit
 
+@InternalCoroutinesApi
 class FolkApplication : Application() {
     companion object {
         var instance: Application? = null

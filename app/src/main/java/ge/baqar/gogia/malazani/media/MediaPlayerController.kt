@@ -3,6 +3,7 @@ package ge.baqar.gogia.malazani.media
 import android.view.View
 import android.widget.SeekBar
 import androidx.lifecycle.viewModelScope
+import ge.baqar.gogia.db.FolkAppPreferences
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
@@ -10,16 +11,16 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MED
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PLAY_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
-import ge.baqar.gogia.malazani.poko.AutoPlayState
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
-import ge.baqar.gogia.malazani.poko.events.ArtistChanged
-import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
-import ge.baqar.gogia.malazani.storage.FolkAppPreferences
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
+import ge.baqar.gogia.model.AutoPlayState
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.events.ArtistChanged
+import ge.baqar.gogia.model.events.OpenArtistFragment
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 
+@InternalCoroutinesApi
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
     private val folkAppPreferences: FolkAppPreferences,
@@ -80,7 +81,7 @@ class MediaPlayerController(
             }
         }
         viewModel.viewModelScope.launch {
-            audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
+            audioPlayer.play(song.path, song.data) { onPrepareListener() }
         }
         audioPlayer.completed {
             binding?.included?.playingTrackTime?.text = null
@@ -95,7 +96,7 @@ class MediaPlayerController(
                 AutoPlayState.REPEAT_ONE -> {
                     val song = playList!![position]
                     viewModel.viewModelScope.launch {
-                        audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
+                        audioPlayer.play(song.path, song.data) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
                     binding?.included?.playingTrackTitle?.text = song.name
@@ -106,11 +107,13 @@ class MediaPlayerController(
                         ++position
                         val song = playList!![position]
                         viewModel.viewModelScope.launch {
-                            audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
+                            audioPlayer.play(song.path, song.data) { onPrepareListener() }
                             EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                         }
                         binding?.included?.playingTrackTitle?.text = song.name
                         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                    } else {
+                        EventBus.getDefault().post(ArtistChanged(MediaPlaybackService.STOP_MEDIA))
                     }
                 }
             }
@@ -224,7 +227,7 @@ class MediaPlayerController(
             val song = playList!![position]
             updateUI(song)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(song.path, song.localPath) { onPrepareListener() }
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = song.name
@@ -235,13 +238,13 @@ class MediaPlayerController(
     fun previous() {
         if (position > 0) {
             --position
-            val prevItem = playList!![position]
-            updateUI(prevItem)
+            val song = playList!![position]
+            updateUI(song)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(prevItem.path, prevItem.localPath) { onPrepareListener() }
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = prevItem.name
+            binding?.included?.playingTrackTitle?.text = song.name
         }
     }
 

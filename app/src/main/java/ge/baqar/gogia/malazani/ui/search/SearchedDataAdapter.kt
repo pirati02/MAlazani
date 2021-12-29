@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.SearchedItem
+import ge.baqar.gogia.model.SearchedItem
 
 class SearchedDataAdapter<Item: SearchedItem>(
     private val dataSource: MutableList<Item>,

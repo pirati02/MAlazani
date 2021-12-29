@@ -1,7 +1,7 @@
 package ge.baqar.gogia.malazani.storage
 
-import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
-import ge.baqar.gogia.malazani.storage.db.FolkApiDao
+import ge.baqar.gogia.db.db.FolkApiDao
+import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.storage.usecase.FileSaveController
 
 class AlbumDownloadProvider(

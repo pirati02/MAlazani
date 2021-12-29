@@ -15,16 +15,17 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
-import ge.baqar.gogia.malazani.poko.DownloadableSong
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
-import ge.baqar.gogia.malazani.poko.SongType
-import ge.baqar.gogia.malazani.poko.events.CurrentPlayingSong
-import ge.baqar.gogia.malazani.poko.events.GetCurrentSong
 import ge.baqar.gogia.malazani.storage.DownloadService
 import ge.baqar.gogia.malazani.storage.DownloadService.Companion.DOWNLOAD_SONGS
 import ge.baqar.gogia.malazani.ui.MenuActivity
+import ge.baqar.gogia.model.DownloadableSong
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.SongType
+import ge.baqar.gogia.model.events.CurrentPlayingSong
+import ge.baqar.gogia.model.events.GetCurrentSong
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -34,6 +35,7 @@ import timber.log.Timber
 import kotlin.time.ExperimentalTime
 
 @ExperimentalCoroutinesApi
+@InternalCoroutinesApi
 @ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 class ArtistFragment : Fragment() {

@@ -7,7 +7,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.Song
+import ge.baqar.gogia.model.Song
 
 
 class SongsAdapter(

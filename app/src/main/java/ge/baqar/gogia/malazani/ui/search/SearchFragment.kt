@@ -11,14 +11,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentSearchBinding
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
 import ge.baqar.gogia.malazani.ui.MenuActivity
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
 import reactivecircus.flowbinding.android.widget.textChanges
 import timber.log.Timber
 
+@InternalCoroutinesApi
 class SearchFragment : Fragment() {
     private val viewModel: SearchViewModel by inject()
     private var binding: FragmentSearchBinding? = null

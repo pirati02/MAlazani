@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -16,21 +15,19 @@ import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
-import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
-import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
-import ge.baqar.gogia.storage.usecase.FileSaveController
-import kotlinx.coroutines.launch
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.events.RequestMediaControllerInstance
+import ge.baqar.gogia.model.events.ServiceCreatedEvent
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import org.koin.android.ext.android.inject
 
 
+@InternalCoroutinesApi
 class MenuActivity : AppCompatActivity() {
 
-    private val saveController: FileSaveController by inject()
     private var tempEnsemble: Ensemble? = null
     private var tempDataSource: MutableList<Song>? = null
     private var tempPosition: Int? = null

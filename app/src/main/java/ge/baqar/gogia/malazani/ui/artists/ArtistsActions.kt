@@ -1,6 +1,7 @@
 package ge.baqar.gogia.malazani.ui.artists
 
-import ge.baqar.gogia.malazani.poko.Ensemble
+import ge.baqar.gogia.model.Ensemble
+
 
 //Actions
 open class ArtistsAction

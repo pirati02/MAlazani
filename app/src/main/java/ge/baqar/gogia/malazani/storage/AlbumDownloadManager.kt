@@ -1,12 +1,12 @@
 package ge.baqar.gogia.malazani.storage
 
-import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
-import ge.baqar.gogia.malazani.poko.DownloadableSong
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.db.DbEnsemble
-import ge.baqar.gogia.malazani.poko.db.DbSong
-import ge.baqar.gogia.malazani.storage.db.FolkApiDao
+import ge.baqar.gogia.db.db.FolkApiDao
+import ge.baqar.gogia.db.model.DbEnsemble
+import ge.baqar.gogia.db.model.DbSong
+import ge.baqar.gogia.http.repository.FolkApiRepository
+import ge.baqar.gogia.model.DownloadableSong
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.SucceedResult
 import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.usecase.FileSaveController
 import kotlinx.coroutines.CoroutineScope
@@ -21,13 +21,13 @@ class AlbumDownloadManager internal constructor(
     private val alazaniRepository: FolkApiRepository,
     private val saveController: FileSaveController
 ) : CoroutineScope {
-
     override val coroutineContext = Dispatchers.IO + SupervisorJob()
 
     private val songs: MutableList<DbSong> = mutableListOf()
     private lateinit var _ensemble: Ensemble
     private var isDownloading = false
     private var canceled = false
+    var downloadId = Random().nextInt(3000)
 
     fun setDownloadData(ensemble: Ensemble, downloadSongs: MutableList<DownloadableSong>) {
         _ensemble = ensemble

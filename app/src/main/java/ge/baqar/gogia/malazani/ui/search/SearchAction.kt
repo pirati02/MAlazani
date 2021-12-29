@@ -1,6 +1,6 @@
 package ge.baqar.gogia.malazani.ui.search
 
-import ge.baqar.gogia.malazani.poko.SearchResult
+import ge.baqar.gogia.model.SearchResult
 
 //Actions
 open class SearchAction

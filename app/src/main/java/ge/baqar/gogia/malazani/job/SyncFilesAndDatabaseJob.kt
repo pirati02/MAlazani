@@ -5,7 +5,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import ge.baqar.gogia.malazani.storage.db.FolkApiDao
+import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.storage.usecase.FileSaveController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

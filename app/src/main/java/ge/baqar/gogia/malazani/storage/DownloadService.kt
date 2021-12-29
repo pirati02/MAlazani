@@ -10,13 +10,15 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.DownloadableSong
-import ge.baqar.gogia.malazani.poko.Ensemble
 import ge.baqar.gogia.malazani.ui.MenuActivity
+import ge.baqar.gogia.model.DownloadableSong
+import ge.baqar.gogia.model.Ensemble
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.koin.android.ext.android.inject
 import java.util.*
 import kotlin.time.ExperimentalTime
 
+@InternalCoroutinesApi
 @ExperimentalTime
 class DownloadService : Service() {
     private var notificationManager: NotificationManager? = null
@@ -32,51 +34,46 @@ class DownloadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val ensemble = intent?.getParcelableExtra<Ensemble>("ensemble")
         when (intent?.action) {
             DOWNLOAD_SONGS -> {
-                val ensemble = intent.getParcelableExtra<Ensemble>("ensemble")
-                showNotification(ensemble!!)
                 val songs = intent.getParcelableArrayListExtra<DownloadableSong>("songs")
                 DownloadServiceManager.isRunning = true
-                downloadSongs(ensemble, songs!!)
+                val id = downloadSongs(ensemble!!, songs!!)
+                showNotification(ensemble, id)
             }
             STOP_DOWNLOADING -> {
-                val ensemble = intent.getParcelableExtra<Ensemble>("ensemble")
                 DownloadServiceManager.isRunning = false
-                stopServiceInternally(ensemble)
+                cancelDownloads(ensemble!!)
+                stopForeground(true)
             }
         }
         return START_NOT_STICKY
     }
 
-    private fun stopServiceInternally(ensemble: Ensemble?) {
-        ensemble?.let {
-            cancelDownloads(ensemble)
-        }
-        stopForeground(true)
-    }
-
     private fun cancelDownloads(ensemble: Ensemble) {
         val albumDownloadManager = albumDownloadProvider.tryGet(ensemble.id)
+        albumDownloadManager.clearDownloads(ensemble.id)
         albumDownloadManager.cancel()
         albumDownloadProvider.dispose(albumDownloadManager)
     }
 
-    private fun downloadSongs(ensemble: Ensemble?, songs: ArrayList<DownloadableSong>) {
-        val albumDownloadManager = albumDownloadProvider.tryGet(ensemble?.id!!)
+    private fun downloadSongs(ensemble: Ensemble, songs: ArrayList<DownloadableSong>): Int {
+        val albumDownloadManager = albumDownloadProvider.tryGet(ensemble.id)
         albumDownloadManager.setDownloadData(
             ensemble,
             songs
         )
         albumDownloadManager.download {
-            stopServiceInternally(ensemble)
             DownloadServiceManager.isRunning = false
+            stopForeground(true)
         }
+        return albumDownloadManager.downloadId
     }
 
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private fun showNotification(ensemble: Ensemble) {
+    private fun showNotification(ensemble: Ensemble, id: Int) {
         val notificationBuilder: NotificationCompat.Builder =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channelId = "DOWNLOADING_NOTIFICATION_CHANNEL for ${ensemble.name}"
@@ -97,6 +94,7 @@ class DownloadService : Service() {
             this, 0,
             Intent(this, MenuActivity::class.java).apply {
                 action = STOP_DOWNLOADING
+                putExtra("ensemble", ensemble)
             },
             Intent.FILL_IN_ACTION
         )
@@ -114,7 +112,6 @@ class DownloadService : Service() {
             .setStyle(NotificationCompat.BigTextStyle())
             .addAction(cancelAction)
 
-        val id = Random().nextInt(2000)
         startForeground(id, notification.build())
     }
 

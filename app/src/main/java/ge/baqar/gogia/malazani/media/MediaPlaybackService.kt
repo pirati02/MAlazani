@@ -11,14 +11,16 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import ge.baqar.gogia.malazani.R
-import ge.baqar.gogia.malazani.poko.events.*
 import ge.baqar.gogia.malazani.ui.MenuActivity
+import ge.baqar.gogia.model.events.*
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 
 
+@InternalCoroutinesApi
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     private var notificationManager: NotificationManager? = null
