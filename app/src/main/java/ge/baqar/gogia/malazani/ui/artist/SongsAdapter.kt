@@ -19,9 +19,17 @@ class SongsAdapter(
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.songTitle)
         }
+        val availableOfflineIndicator: View by lazy {
+            itemView.findViewById(R.id.availableOfflineIndicator)
+        }
 
         fun bind(song: Song, position: Int) {
             name.text = song.name
+            if (song.availableOffline) {
+                availableOfflineIndicator.visibility = View.VISIBLE
+            } else {
+                availableOfflineIndicator.visibility = View.GONE
+            }
             if (song.isPlaying) {
                 itemView.setBackgroundColor(
                     ContextCompat.getColor(

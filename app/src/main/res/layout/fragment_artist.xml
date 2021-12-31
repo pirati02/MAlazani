@@ -55,15 +55,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabViewSeparator" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/downloadAlbumbtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:backgroundTint="@color/colorAccent"
-        android:src="@drawable/ic_baseline_arrow_circle_down_24"
-        android:tint="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/tabViewInclude" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

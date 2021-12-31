@@ -92,6 +92,7 @@ class MediaPlayerController(
 
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
+                    stop()
                     return@completed
                 }
                 AutoPlayState.REPEAT_ONE -> {
@@ -114,7 +115,7 @@ class MediaPlayerController(
                         binding?.included?.playingTrackTitle?.text = song.name
                         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                     } else {
-                        EventBus.getDefault().post(ArtistChanged(MediaPlaybackService.STOP_MEDIA))
+                        stop()
                     }
                 }
             }

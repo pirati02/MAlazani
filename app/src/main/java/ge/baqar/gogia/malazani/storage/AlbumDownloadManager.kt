@@ -78,19 +78,22 @@ class AlbumDownloadManager internal constructor(
             for (song in filtered) {
                 if (canceled) return@launch
 
-                val result = alazaniRepository.downloadSong(song.path!!)
-                if (result is SucceedResult<InputStream>) {
-                    saveController.saveDocumentFile(
-                        FileStreamContent(
-                            data = result.value,
-                            fileNameWithoutSuffix = song.name,
-                            suffix = "mp3",
-                            mimeType = "audio/mp3",
-                            subfolderName = _ensemble.name
+                val exists = saveController.getFile(_ensemble.nameEng, song.name) != null
+                if (!exists) {
+                    val result = alazaniRepository.downloadSong(song.path!!)
+                    if (result is SucceedResult<InputStream>) {
+                        saveController.saveDocumentFile(
+                            FileStreamContent(
+                                data = result.value,
+                                fileNameWithoutSuffix = song.name,
+                                suffix = "mp3",
+                                mimeType = "audio/mp3",
+                                subfolderName = _ensemble.name
+                            )
                         )
-                    )
-                    folkApiDao.saveSong(song)
+                    }
                 }
+                folkApiDao.saveSong(song)
             }
 
             isDownloading = false

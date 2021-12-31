@@ -14,9 +14,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.androidisland.ezpermission.EzPermission
+import ge.baqar.gogia.db.FolkAppPreferences
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.storage.DownloadService
 import ge.baqar.gogia.malazani.storage.DownloadService.Companion.DOWNLOAD_SONGS
+import ge.baqar.gogia.malazani.storage.DownloadService.Companion.STOP_DOWNLOADING
+import ge.baqar.gogia.malazani.storage.DownloadServiceManager
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
@@ -26,7 +29,10 @@ import ge.baqar.gogia.model.events.CurrentPlayingSong
 import ge.baqar.gogia.model.events.GetCurrentSong
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -44,6 +50,7 @@ class ArtistFragment : Fragment() {
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
+    private val folkAppPreferences: FolkAppPreferences by inject()
     private val viewModel: ArtistViewModel by inject()
     private var binding: FragmentArtistBinding? = null
 
@@ -93,47 +100,64 @@ class ArtistFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        binding?.downloadAlbumbtn?.setOnClickListener {
-            EzPermission.with(requireContext())
-                .permissions(
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                )
-                .request { granted, _, _ ->
-                    if (granted.isNotEmpty()) {
-                        val songs = arrayListOf<DownloadableSong>()
-                        songs.addAll(viewModel.state.songs.map {
-                            DownloadableSong(
-                                it.id,
-                                it.name,
-                                it.nameEng,
-                                it.path,
-                                it.songType,
-                                it.ensembleId
-                            )
-                        })
-                        songs.addAll(viewModel.state.chants.map {
-                            DownloadableSong(
-                                it.id,
-                                it.name,
-                                it.nameEng,
-                                it.path,
-                                it.songType,
-                                it.ensembleId
-                            )
-                        })
+        val offlineEnabled = folkAppPreferences.getOfflineEnabled(_ensemble?.id!!)
+        binding?.toolbarInclude?.enableOfflineMode?.isChecked = offlineEnabled
+        binding?.toolbarInclude?.enableOfflineMode?.setOnCheckedChangeListener { _, enabled ->
+            if (enabled) {
+                folkAppPreferences.setOfflineEnabled(_ensemble?.id!!, enabled)
+                EzPermission.with(requireContext())
+                    .permissions(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    )
+                    .request { granted, _, _ ->
+                        if (granted.isNotEmpty()) {
+                            val songs = arrayListOf<DownloadableSong>()
+                            songs.addAll(viewModel.state.songs.map {
+                                DownloadableSong(
+                                    it.id,
+                                    it.name,
+                                    it.nameEng,
+                                    it.path,
+                                    it.songType,
+                                    it.ensembleId
+                                )
+                            })
+                            songs.addAll(viewModel.state.chants.map {
+                                DownloadableSong(
+                                    it.id,
+                                    it.name,
+                                    it.nameEng,
+                                    it.path,
+                                    it.songType,
+                                    it.ensembleId
+                                )
+                            })
 
-                        val intent = Intent(activity, DownloadService::class.java).apply {
-                            action = DOWNLOAD_SONGS
-                            putExtra("ensemble", _ensemble)
-                            putParcelableArrayListExtra("songs", songs)
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            activity?.startForegroundService(intent)
-                        } else {
-                            activity?.startService(intent)
+                            val intent = Intent(activity, DownloadService::class.java).apply {
+                                action = DOWNLOAD_SONGS
+                                putExtra("ensemble", _ensemble)
+                                putParcelableArrayListExtra("songs", songs)
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                activity?.startForegroundService(intent)
+                            } else {
+                                activity?.startService(intent)
+                            }
                         }
                     }
+            } else {
+                if (DownloadServiceManager.isRunning) {
+                    val intent = Intent(activity, DownloadService::class.java).apply {
+                        action = STOP_DOWNLOADING
+                        putExtra("ensemble", _ensemble)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        activity?.startForegroundService(intent)
+                    } else {
+                        activity?.startService(intent);
+                    }
                 }
+            }
         }
     }
 

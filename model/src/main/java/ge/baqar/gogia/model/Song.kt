@@ -11,8 +11,10 @@ data class Song(
     val ensembleId: String,
     val ensembleName: String,
     var isPlaying: Boolean = false,
-    val data: ByteArray? = null
+    val data: ByteArray? = null,
+    var availableOffline: Boolean = false
 ) : SearchedItem {
+
 
     override fun equals(other: Any?): Boolean {
         if (other is Song) {

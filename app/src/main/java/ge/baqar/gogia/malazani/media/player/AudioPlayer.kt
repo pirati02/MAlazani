@@ -33,7 +33,6 @@ class AudioPlayer(private val context: Context) {
         mediaPlayer?.setAudioAttributes(
             AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .setUsage(AudioAttributes.USAGE_MEDIA)
                 .build()
         )
         if (dataStream != null) {

@@ -26,75 +26,86 @@ class ArtistViewModel(
             ArtistState.IS_LOADING
         }
 
-        alazaniRepository.songs(ensemble.id).collect(object: FlowCollector<ReactiveResult<String, SongsResponse>>{
-            override suspend fun emit(result: ReactiveResult<String, SongsResponse>) {
-                if (result is SucceedResult) {
-                    result.value.chants.forEach {
-                        it.nameEng = CharConverter.toEng(it.name)
-                    }
-                    result.value.songs.forEach {
-                        it.nameEng = CharConverter.toEng(it.name)
-                    }
-                    emit {
-                        state.copy(
-                            isInProgress = false,
-                            songs = result.value.songs,
-                            chants = result.value.chants
-                        )
-                    }
-                }
-                if (result is FailedResult) {
-                    val cacheSongs = folkApiDao.songsByEnsembleId(ensemble.id)
-                    val songs = cacheSongs
-                        .filter { it.songType == SongType.Song }
-                        .map {
-                            val fileSystemSong = saveController.getFile(ensemble.nameEng, it.name)
-                            Song(
-                                it.referenceId,
-                                it.name,
-                                it.nameEng,
-                                it.filePath,
-                                it.songType,
-                                it.ensembleId,
-                                ensemble.name,
-                                false,
-                                data = fileExtensions.read(fileSystemSong?.data)
+        alazaniRepository.songs(ensemble.id)
+            .collect(object : FlowCollector<ReactiveResult<String, SongsResponse>> {
+                override suspend fun emit(result: ReactiveResult<String, SongsResponse>) {
+                    if (result is SucceedResult) {
+                        val songs = folkApiDao.songsByEnsembleId(ensemble.id)
+
+                        result.value.chants.forEach { song ->
+                            song.nameEng = CharConverter.toEng(song.name)
+                            song.availableOffline =
+                                songs.firstOrNull { it.referenceId == song.id } != null
+                        }
+                        result.value.songs.forEach { song ->
+                            song.nameEng = CharConverter.toEng(song.name)
+                            song.availableOffline =
+                                songs.firstOrNull { it.referenceId == song.id } != null
+                        }
+                        emit {
+                            state.copy(
+                                isInProgress = false,
+                                songs = result.value.songs,
+                                chants = result.value.chants
                             )
                         }
-                        .toMutableList()
+                    }
+                    if (result is FailedResult) {
+                        val cacheSongs = folkApiDao.songsByEnsembleId(ensemble.id)
+                        val songs = cacheSongs
+                            .filter { it.songType == SongType.Song }
+                            .map {
+                                val fileSystemSong =
+                                    saveController.getFile(ensemble.nameEng, it.name)
+                                Song(
+                                    it.referenceId,
+                                    it.name,
+                                    it.nameEng,
+                                    it.filePath,
+                                    it.songType,
+                                    it.ensembleId,
+                                    ensemble.name,
+                                    false,
+                                    data = fileExtensions.read(fileSystemSong?.data),
+                                    availableOffline = true
+                                )
+                            }
+                            .toMutableList()
 
-                    val chants = cacheSongs
-                        .filter { it.songType == SongType.Chant }
-                        .map {
-                            val fileSystemSong = saveController.getFile(ensemble.nameEng, it.name)
-                            Song(
-                                it.referenceId,
-                                it.name,
-                                it.nameEng,
-                                it.filePath,
-                                it.songType,
-                                it.ensembleId,
-                                ensemble.name,
-                                false,
-                                data = fileExtensions.read(fileSystemSong?.data)
+                        val chants = cacheSongs
+                            .filter { it.songType == SongType.Chant }
+                            .map {
+                                val fileSystemSong =
+                                    saveController.getFile(ensemble.nameEng, it.name)
+                                Song(
+                                    it.referenceId,
+                                    it.name,
+                                    it.nameEng,
+                                    it.filePath,
+                                    it.songType,
+                                    it.ensembleId,
+                                    ensemble.name,
+                                    false,
+                                    data = fileExtensions.read(fileSystemSong?.data),
+                                    availableOffline = true
+                                )
+                            }
+                            .toMutableList()
+
+                        emit {
+                            state.copy(
+                                isInProgress = false,
+                                songs = songs,
+                                chants = chants
                             )
                         }
-                        .toMutableList()
-
-                    emit {
-                        state.copy(
-                            isInProgress = false,
-                            songs = songs,
-                            chants = chants
-                        )
-                    }
-                    emit {
-                        state.copy(isInProgress = false, error = result.value)
+                        emit {
+                            state.copy(isInProgress = false, error = result.value)
+                        }
                     }
                 }
-            }
 
-        })
+            })
     }
 
     override fun ArtistAction.process(): Flow<() -> ArtistResult> {
