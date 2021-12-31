@@ -1,7 +1,7 @@
 package ge.baqar.gogia.storage.dataaccess
 
+import android.annotation.SuppressLint
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -13,6 +13,7 @@ import ge.baqar.gogia.storage.domain.FileBytesContent
 import ge.baqar.gogia.storage.domain.FileResult
 import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.domain.SaveContent
+import java.io.File
 
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -59,6 +60,7 @@ internal class AudioFileSaveProcessor(
         }
     }
 
+    @SuppressLint("Recycle")
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
         val selection = "${MediaStore.Video.Media.DISPLAY_NAME} = ?"
         val selectionArgs = arrayOf(
@@ -70,24 +72,21 @@ internal class AudioFileSaveProcessor(
         val musicCursor = contentResolver.query(musicUri, null, selection, selectionArgs, null)
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
-            val idColumn = musicCursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-            val songArtist = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
-            val songName = musicCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+            val songArtist = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.ARTIST)
+            val songName = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
+            val songData = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATA)
 
             do {
-                val id = musicCursor.getLong(idColumn)
                 val name = musicCursor.getString(songName)
                 val artist = musicCursor.getString(songArtist)?.lowercase()
-
-                val contentUri: Uri = ContentUris.withAppendedId(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    id
-                )
+                val data = musicCursor.getString(songData)
+                val uri = Uri.fromFile(File(data))
 
                 if (artist == dirName)
-                    return FileResult(contentUri, name)
+                    return FileResult(uri, name)
             } while (musicCursor.moveToNext())
         }
+        musicCursor?.close()
         return null
     }
 

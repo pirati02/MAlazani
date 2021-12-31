@@ -10,6 +10,7 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PLAY_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import ge.baqar.gogia.model.AutoPlayState
@@ -38,7 +39,7 @@ class MediaPlayerController(
         playList?.let {
             val artist = playList!![this.position]
 
-            initializeViewClickListeners()
+            viewListeners()
             listenAudioPlayerChanges(artist)
             binding?.included?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
@@ -124,7 +125,7 @@ class MediaPlayerController(
         }
     }
 
-    private fun initializeViewClickListeners() {
+    private fun viewListeners() {
         binding?.included?.playerProgressBar?.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -202,11 +203,12 @@ class MediaPlayerController(
     }
 
     fun pause() {
-        audioPlayer.pause()
         EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
+        audioPlayer.pause()
     }
 
     fun stop() {
+        EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
         audioPlayer.release()
         binding?.included?.playingTrackTime?.text = null
         binding?.included?.playerProgressBar?.progress = 0
@@ -217,8 +219,8 @@ class MediaPlayerController(
     }
 
     fun resume() {
-        audioPlayer.resume()
         EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
+        audioPlayer.resume()
     }
 
     fun next() {
@@ -264,7 +266,7 @@ class MediaPlayerController(
     }
 
     private fun updateUI(artist: Song) {
-        initializeViewClickListeners()
+        viewListeners()
         binding?.included?.mediaPlayerView?.let {
             it.visibility = View.VISIBLE
         }

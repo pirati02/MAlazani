@@ -58,7 +58,7 @@ class ArtistViewModel(
                                 it.ensembleId,
                                 ensemble.name,
                                 false,
-                                data = fileExtensions.read(fileSystemSong?.uri)
+                                data = fileExtensions.read(fileSystemSong?.data)
                             )
                         }
                         .toMutableList()
@@ -76,7 +76,7 @@ class ArtistViewModel(
                                 it.ensembleId,
                                 ensemble.name,
                                 false,
-                                data = fileExtensions.read(fileSystemSong?.uri)
+                                data = fileExtensions.read(fileSystemSong?.data)
                             )
                         }
                         .toMutableList()

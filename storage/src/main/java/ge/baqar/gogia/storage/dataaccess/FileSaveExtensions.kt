@@ -75,7 +75,6 @@ fun getFile(
 ): FileResult {
     val uniqueFileName = FileNameLegacyResolver.getUniqueFileName(attachmentPath, fileName)
     val savedFile = File(attachmentPath, uniqueFileName)
-
     return FileResult(savedFile.toUri(), savedFile.name)
 }
 
