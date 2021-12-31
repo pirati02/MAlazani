@@ -78,6 +78,15 @@ fun getFile(
     return FileResult(savedFile.toUri(), savedFile.name)
 }
 
+fun exists(
+    fileName: String,
+    attachmentPath: File
+): Boolean {
+    val uniqueFileName = FileNameLegacyResolver.getUniqueFileName(attachmentPath, fileName)
+    val savedFile = File(attachmentPath, uniqueFileName)
+    return savedFile.exists()
+}
+
 fun saveToFile(
     fileName: String,
     attachmentPath: File,

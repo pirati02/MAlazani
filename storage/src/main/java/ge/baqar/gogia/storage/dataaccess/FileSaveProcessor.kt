@@ -31,5 +31,6 @@ internal interface FileSaveProcessor {
     fun saveFile(content: FileStreamContent): Uri
     fun saveFile(content: FileBytesContent): Uri
 
+    suspend fun exists(dirName: String, fileName: String): Boolean
     suspend fun getFile(dirName: String, fileName: String): FileResult?
 }

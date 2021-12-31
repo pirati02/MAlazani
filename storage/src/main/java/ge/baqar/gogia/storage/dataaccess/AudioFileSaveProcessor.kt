@@ -60,6 +60,11 @@ internal class AudioFileSaveProcessor(
         }
     }
 
+    override suspend fun exists(dirName: String, fileName: String): Boolean {
+        return getFile(dirName, fileName) != null
+    }
+
+
     @SuppressLint("Recycle")
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
         val selection = "${MediaStore.Video.Media.DISPLAY_NAME} = ?"

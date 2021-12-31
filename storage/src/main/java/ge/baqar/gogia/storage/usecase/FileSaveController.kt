@@ -65,4 +65,10 @@ class FileSaveController internal constructor(
             processors.audioManager.getFile(dirName, fileName)
         } else null
     }
+
+    suspend fun exists(dirName: String, fileName: String): Boolean {
+        return if (checkPermissionProcessor.hasWritePermission()) {
+            processors.audioManager.exists(dirName, fileName)
+        } else false
+    }
 }

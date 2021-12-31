@@ -29,6 +29,10 @@ internal class AudioFileSaveLegacyProcessor(
             }
     }
 
+    override suspend fun exists(dirName: String, fileName: String): Boolean {
+        return exists(fileName, File(getDirectory(dirName)))
+    }
+
     override suspend fun getFile(dirName: String, fileName: String): FileResult {
         return getFile(fileName, File(getDirectory(dirName)))
     }
