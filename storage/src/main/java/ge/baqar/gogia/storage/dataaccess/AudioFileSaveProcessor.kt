@@ -13,6 +13,7 @@ import ge.baqar.gogia.storage.domain.FileBytesContent
 import ge.baqar.gogia.storage.domain.FileResult
 import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.domain.SaveContent
+import ge.baqar.gogia.storage.utils.endsWithMp3
 import java.io.File
 
 
@@ -69,7 +70,7 @@ internal class AudioFileSaveProcessor(
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
         val selection = "${MediaStore.Video.Media.DISPLAY_NAME} = ?"
         val selectionArgs = arrayOf(
-            if (fileName.endsWith(".mp3")) fileName
+            if (fileName.endsWithMp3()) fileName
             else "${fileName}.mp3"
         )
 

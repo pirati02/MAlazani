@@ -164,12 +164,8 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 .setCustomContentView(notificationLayout)
                 .setCustomBigContentView(notificationLayoutExpanded)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                .setDefaults(Notification.DEFAULT_LIGHTS)
                 .setColorized(true)
-                .setAutoCancel(true)
                 .setColor(ContextCompat.getColor(this, R.color.colorAccentLighter))
-                .setVibrate(longArrayOf(-1))
-
 
             startForeground(notificationId, notification.build())
         }

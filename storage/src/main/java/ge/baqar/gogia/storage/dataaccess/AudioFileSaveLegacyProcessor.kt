@@ -38,12 +38,12 @@ internal class AudioFileSaveLegacyProcessor(
     }
 
     private fun getDirectory(content: SaveContent): String {
-        return getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() +
-                content.subfolderName?.let { "/$it" }.orEmpty()
+        return "${getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString()}/${
+            content.subfolderName?.let { "/$it" }.orEmpty()
+        }"
     }
 
     private fun getDirectory(path: String): String {
-        return getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() +
-                path
+        return "${getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString()}/${path}"
     }
 }

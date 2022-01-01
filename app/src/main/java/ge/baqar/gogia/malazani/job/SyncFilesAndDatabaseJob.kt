@@ -31,7 +31,7 @@ class SyncFilesAndDatabaseJob(appContext: Context, workerParams: WorkerParameter
 
                 val removalSongs = songs.filter { song ->
                     val associatedFile =
-                        saveController.exists(ensemble.nameEng, song.name)
+                        saveController.exists(ensemble.nameEng, song.nameEng)
                     !associatedFile
                 }.map { it.id }
                 folkApiDao.removeSongsByIds(removalSongs)

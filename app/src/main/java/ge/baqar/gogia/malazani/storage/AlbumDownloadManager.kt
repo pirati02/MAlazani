@@ -78,17 +78,17 @@ class AlbumDownloadManager internal constructor(
             for (song in filtered) {
                 if (canceled) return@launch
 
-                val exists = saveController.exists(_ensemble.nameEng, song.name)
+                val exists = saveController.exists(_ensemble.nameEng, song.nameEng)
                 if (!exists) {
                     val result = alazaniRepository.downloadSong(song.path!!)
                     if (result is SucceedResult<InputStream>) {
                         saveController.saveDocumentFile(
                             FileStreamContent(
                                 data = result.value,
-                                fileNameWithoutSuffix = song.name,
+                                fileNameWithoutSuffix = song.nameEng,
                                 suffix = "mp3",
                                 mimeType = "audio/mp3",
-                                subfolderName = _ensemble.name
+                                subfolderName = _ensemble.nameEng
                             )
                         )
                     }

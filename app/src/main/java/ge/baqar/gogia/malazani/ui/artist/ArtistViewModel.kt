@@ -56,7 +56,7 @@ class ArtistViewModel(
                             .filter { it.songType == SongType.Song }
                             .map {
                                 val fileSystemSong =
-                                    saveController.getFile(ensemble.nameEng, it.name)
+                                    saveController.getFile(ensemble.nameEng, it.nameEng)
                                 Song(
                                     it.referenceId,
                                     it.name,
@@ -76,7 +76,7 @@ class ArtistViewModel(
                             .filter { it.songType == SongType.Chant }
                             .map {
                                 val fileSystemSong =
-                                    saveController.getFile(ensemble.nameEng, it.name)
+                                    saveController.getFile(ensemble.nameEng, it.nameEng)
                                 Song(
                                     it.referenceId,
                                     it.name,

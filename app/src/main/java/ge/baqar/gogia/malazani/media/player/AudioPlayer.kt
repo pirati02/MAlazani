@@ -8,6 +8,13 @@ import android.os.PowerManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import android.media.AudioManager
+import androidx.core.content.ContextCompat
+
+import androidx.core.content.ContextCompat.getSystemService
+
+
+
 
 
 class AudioPlayer(private val context: Context) {
@@ -38,22 +45,15 @@ class AudioPlayer(private val context: Context) {
         if (dataStream != null) {
             val fis = getTempSongFile(dataStream)
             mediaPlayer?.setDataSource(fis.fd)
-        } else
+        } else {
             mediaPlayer?.setDataSource(audioData)
-
+        }
         mediaPlayer?.prepareAsync()
         mediaPlayer?.setOnPreparedListener {
             it.start()
             startTimer()
             callback.invoke()
             mediaPlayerIsPlayingCallback?.invoke(isPlaying())
-        }
-        mediaPlayer?.setOnErrorListener { mediaPlayer, i, i2 ->
-
-            false
-        }
-        mediaPlayer?.setOnInfoListener { mediaPlayer, i, i2 ->
-            false
         }
     }
 

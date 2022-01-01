@@ -17,6 +17,6 @@
     <string name="storage_option_appliance_cache">ტელეფონის მეხსიერებაში</string>
     <string name="search">ძიება</string>
     <string name="search_hint">მაგ: ალილო</string>
-    <string name="downloading_songs">downloading songs</string>
     <string name="cancel">გაქმება</string>
+    <string name="downloading">იწერება</string>
 </resources>

@@ -40,7 +40,9 @@ class DownloadService : Service() {
                 val songs = intent.getParcelableArrayListExtra<DownloadableSong>("songs")
                 DownloadServiceManager.isRunning = true
                 val id = downloadSongs(ensemble!!, songs!!)
-                showNotification(ensemble, id)
+
+                val downloadSongs = songs.map { it.name }.joinToString(", \n")
+                showNotification(ensemble, id, downloadSongs)
             }
             STOP_DOWNLOADING -> {
                 DownloadServiceManager.isRunning = false
@@ -73,7 +75,7 @@ class DownloadService : Service() {
 
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private fun showNotification(ensemble: Ensemble, id: Int) {
+    private fun showNotification(ensemble: Ensemble, id: Int, downloadSongs: String) {
         val notificationBuilder: NotificationCompat.Builder =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channelId = "DOWNLOADING_NOTIFICATION_CHANNEL for ${ensemble.name}"
@@ -87,8 +89,7 @@ class DownloadService : Service() {
             } else {
                 NotificationCompat.Builder(this)
             }
-        val songsDownloadTitle =
-            String.format(getString(R.string.downloading_songs), ensemble.name)
+        val songsDownloadTitle ="${getString(R.string.downloading)} \n $downloadSongs"
 
         val contentIntent = PendingIntent.getActivity(
             this, 0,

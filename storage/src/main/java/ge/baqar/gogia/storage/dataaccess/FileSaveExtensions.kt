@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import ge.baqar.gogia.storage.domain.FileResult
 import ge.baqar.gogia.storage.domain.FileSaveResult
 import ge.baqar.gogia.storage.domain.UnknownSaveError
+import ge.baqar.gogia.storage.utils.endsWithMp3
 import java.io.*
 
 fun ContentResolver.saveFile(
@@ -75,7 +76,10 @@ fun getFile(
 ): FileResult {
     val uniqueFileName = FileNameLegacyResolver.getUniqueFileName(attachmentPath, fileName)
     val savedFile = File(attachmentPath, uniqueFileName)
-    return FileResult(savedFile.toUri(), savedFile.name)
+    val filePath = if (savedFile.absolutePath.endsWithMp3()) savedFile.absolutePath
+                    else "${savedFile.absolutePath}.mp3"
+    val ur = File(filePath).toUri()
+    return FileResult(ur, savedFile.name)
 }
 
 fun exists(

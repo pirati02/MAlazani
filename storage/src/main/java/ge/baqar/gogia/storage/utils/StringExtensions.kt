@@ -11,3 +11,7 @@ fun String.suffixOrEmpty(): String {
 fun String.suffixOrNull(): String? {
     return suffixOrEmpty().nullIfEmpty()
 }
+
+fun String.endsWithMp3(): Boolean {
+    return this.endsWith(".mp3")
+}
