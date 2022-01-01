@@ -11,8 +11,8 @@ android {
         applicationId "ge.baqar.gogia.malazani"
         minSdk 21
         targetSdk 31
-        versionCode 2257
-        versionName "2.2.5.7"
+        versionCode 2258
+        versionName "2.2.5.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
