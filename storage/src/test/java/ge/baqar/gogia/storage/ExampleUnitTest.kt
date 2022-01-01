@@ -11,7 +11,18 @@ import org.junit.Assert.*
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun char_convertion_count_are_equal() {
+        val string = "ბაქარი"
+        val converted = CharConverter.toEng(string)
+
+        assertEquals(string.length, converted.length)
+    }
+
+    @Test
+    fun char_convertion_count_are_equal_with_undefined_character() {
+        val string = "ბაქარი(("
+        val converted = CharConverter.toEng(string)
+
+        assertEquals(string.length, converted.length)
     }
 }

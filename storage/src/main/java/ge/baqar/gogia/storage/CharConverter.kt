@@ -39,7 +39,8 @@ object CharConverter {
 
     fun toEng(text: String): String {
         return text.map {
-            charMap[it]
+            val char = if (charMap.containsKey(it)) charMap[it] else it
+            char.toString()
         }.joinToString("")
     }
 }
