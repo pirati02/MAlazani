@@ -61,14 +61,19 @@ internal class AudioFileSaveProcessor(
         }
     }
 
+    override fun delete(dirName: String) {
+        val selection = "${MediaStore.Video.Media.ARTIST} like ?"
+        val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        contentResolver.delete(musicUri, selection, arrayOf(dirName))
+    }
+
     override suspend fun exists(dirName: String, fileName: String): Boolean {
         return getFile(dirName, fileName) != null
     }
 
-
     @SuppressLint("Recycle")
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
-        val selection = "${MediaStore.Video.Media.DISPLAY_NAME} = ?"
+        val selection = "${MediaStore.Video.Media.DISPLAY_NAME} like ?"
         val selectionArgs = arrayOf(
             if (fileName.endsWithMp3()) fileName
             else "${fileName}.mp3"
@@ -84,7 +89,7 @@ internal class AudioFileSaveProcessor(
 
             do {
                 val name = musicCursor.getString(songName)
-                val artist = musicCursor.getString(songArtist)?.lowercase()
+                    val artist = musicCursor.getString(songArtist)?.lowercase()
                 val data = musicCursor.getString(songData)
                 val uri = Uri.fromFile(File(data))
 

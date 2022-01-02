@@ -23,9 +23,11 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import kotlin.time.ExperimentalTime
 
 
 @InternalCoroutinesApi
+@ExperimentalTime
 class MenuActivity : AppCompatActivity() {
 
     private var tempEnsemble: Ensemble? = null
@@ -47,6 +49,7 @@ class MenuActivity : AppCompatActivity() {
                 startService(intent)
             }
         }
+
     private lateinit var _binding: ActivityMenuBinding
     private lateinit var navController: NavController
     var mediaPlayerController: MediaPlayerController? = null
@@ -63,7 +66,8 @@ class MenuActivity : AppCompatActivity() {
             setOf(
                 R.id.navigation_ensembles,
                 R.id.navigation_oldRecordings,
-                R.id.navigation_search
+                R.id.navigation_search,
+                R.id.navigation_favs
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

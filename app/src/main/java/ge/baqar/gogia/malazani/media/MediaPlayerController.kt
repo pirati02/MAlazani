@@ -1,8 +1,13 @@
 package ge.baqar.gogia.malazani.media
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.view.View
 import android.widget.SeekBar
 import androidx.lifecycle.viewModelScope
+import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
@@ -12,20 +17,27 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PLAY_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
+import ge.baqar.gogia.malazani.storage.DownloadService
 import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
 import ge.baqar.gogia.model.AutoPlayState
+import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
 import ge.baqar.gogia.model.events.ArtistChanged
 import ge.baqar.gogia.model.events.OpenArtistFragment
+import ge.baqar.gogia.model.events.SongsMarkedAsFavourite
+import ge.baqar.gogia.model.events.SongsUnmarkedAsFavourite
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 @InternalCoroutinesApi
 class MediaPlayerController(
     private val viewModel: ArtistViewModel,
     private val folkAppPreferences: FolkAppPreferences,
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    private val context: Context
 ) {
     var binding: ActivityMenuBinding? = null
     var playListEnsemble: Ensemble? = null
@@ -37,16 +49,21 @@ class MediaPlayerController(
 
     fun play() {
         playList?.let {
-            val artist = playList!![this.position]
-
+            val song = playList!![this.position]
             viewListeners()
-            listenAudioPlayerChanges(artist)
+            listenAudioPlayerChanges(song)
             binding?.included?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
             }
             checkAutoPlayEnabled()
-            binding?.included?.playingTrackTitle?.text = artist.name
+            binding?.included?.playingTrackTitle?.text = song.name
             binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+            if (song.isFav) {
+                binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_24)
+            } else {
+                binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_border_24)
+            }
+            updateFavouriteMarkFor(song)
         }
     }
 
@@ -96,23 +113,26 @@ class MediaPlayerController(
                     return@completed
                 }
                 AutoPlayState.REPEAT_ONE -> {
-                    val song = playList!![position]
+                    val repeatedSong = playList!![position]
                     viewModel.viewModelScope.launch {
-                        audioPlayer.play(song.path, song.data) { onPrepareListener() }
+                        audioPlayer.play(
+                            repeatedSong.path,
+                            repeatedSong.data
+                        ) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
-                    binding?.included?.playingTrackTitle?.text = song.name
+                    binding?.included?.playingTrackTitle?.text = repeatedSong.name
                     binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
                     if ((position + 1) < playList?.size!!) {
                         ++position
-                        val song = playList!![position]
+                        val nextSong = playList!![position]
                         viewModel.viewModelScope.launch {
-                            audioPlayer.play(song.path, song.data) { onPrepareListener() }
+                            audioPlayer.play(nextSong.path, nextSong.data) { onPrepareListener() }
                             EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                         }
-                        binding?.included?.playingTrackTitle?.text = song.name
+                        binding?.included?.playingTrackTitle?.text = nextSong.name
                         binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
                     } else {
                         stop()
@@ -201,6 +221,78 @@ class MediaPlayerController(
         binding?.included?.playerPlaylistButton?.setOnClickListener {
             EventBus.getDefault().post(OpenArtistFragment(playListEnsemble!!))
         }
+        binding?.included?.favBtn?.setOnClickListener {
+            val currentSong = getCurrentSong()!!
+
+            EzPermission.with(context)
+                .permissions(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+                .request { granted, _, _ ->
+                    if (granted.isNotEmpty()) {
+                        viewModel.viewModelScope.launch {
+                            var isFav = viewModel.isSongFav(currentSong.id)
+                            val downloadableSongs = DownloadableSong(
+                                currentSong.id,
+                                currentSong.name,
+                                currentSong.nameEng,
+                                currentSong.path,
+                                currentSong.songType,
+                                currentSong.ensembleId
+                            )
+                            if (!isFav) {
+                                val intent = Intent(context, DownloadService::class.java).apply {
+                                    action = DownloadService.DOWNLOAD_SONGS
+                                    putExtra("ensemble", playListEnsemble)
+                                    putParcelableArrayListExtra(
+                                        "songs",
+                                        arrayListOf(downloadableSongs)
+                                    )
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.startService(intent)
+                                }
+                            } else {
+                                val intent = Intent(context, DownloadService::class.java).apply {
+                                    action = DownloadService.STOP_DOWNLOADING
+                                    putExtra("ensemble", playListEnsemble)
+                                    putParcelableArrayListExtra(
+                                        "songs",
+                                        arrayListOf(downloadableSongs)
+                                    )
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.startService(intent)
+                                }
+
+                                updateFavouriteMarkFor(currentSong.also {
+                                    isFav = false
+                                })
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    fun songsMarkedAsFavourite(event: SongsMarkedAsFavourite) {
+        val ids = event.ids
+        playList?.filter { event.ids.contains(it.id) }?.forEach {
+            it.isFav = ids.contains(it.id)
+        }
+        updateFavouriteMarkFor(getCurrentSong())
+    }
+
+    fun songsUnMarkedAsFavourite(event: SongsUnmarkedAsFavourite) {
+        val ids = event.ids
+        playList?.filter { event.ids.contains(it.id) }?.forEach {
+            it.isFav = !ids.contains(it.id)
+        }
+        updateFavouriteMarkFor(getCurrentSong())
     }
 
     fun pause() {
@@ -234,6 +326,7 @@ class MediaPlayerController(
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = song.name
+            updateFavouriteMarkFor(song)
         }
     }
 
@@ -248,7 +341,18 @@ class MediaPlayerController(
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
             binding?.included?.playingTrackTitle?.text = song.name
+            updateFavouriteMarkFor(song)
         }
+    }
+
+    private fun updateFavouriteMarkFor(song: Song?) {
+       song?.let{
+           if (song.isFav) {
+               binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_24)
+           } else {
+               binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_border_24)
+           }
+       }
     }
 
     fun getCurrentSong(): Song? {

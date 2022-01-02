@@ -14,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.InputStream
+import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 class AlbumDownloadManager internal constructor(
@@ -33,7 +35,7 @@ class AlbumDownloadManager internal constructor(
         _ensemble = ensemble
         songs.clear()
         songs.addAll(downloadSongs.map {
-            DbSong(
+            val dbSong = DbSong(
                 UUID.randomUUID().toString(),
                 it.id,
                 it.name,
@@ -43,6 +45,7 @@ class AlbumDownloadManager internal constructor(
                 it.songType,
                 ""
             )
+            dbSong
         })
     }
 
@@ -105,10 +108,11 @@ class AlbumDownloadManager internal constructor(
         canceled = true
     }
 
-    fun clearDownloads(ensembleId: String) {
+    fun clearDownloads(ensembleId: String, ensembleName: String) {
         launch {
             folkApiDao.removeEnsemble(ensembleId)
             folkApiDao.removeSongsByEnsembleId(ensembleId)
+            saveController.delete(ensembleName)
         }
     }
 }

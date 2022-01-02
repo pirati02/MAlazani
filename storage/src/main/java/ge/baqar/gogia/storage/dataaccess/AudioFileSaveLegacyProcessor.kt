@@ -10,6 +10,7 @@ import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.domain.SaveContent
 import java.io.File
 
+
 internal class AudioFileSaveLegacyProcessor(
     private val context: Context,
     private val fileProviderName: String?
@@ -27,6 +28,26 @@ internal class AudioFileSaveLegacyProcessor(
             .getUriWithFileProviderIfPresent(fileProviderName, context).also {
                 it.startMediaScan(context)
             }
+    }
+
+    override fun delete(dirName: String) {
+        val fileOrDirectory = File(dirName)
+        if (fileOrDirectory.isDirectory)
+            for (child in fileOrDirectory.listFiles()) {
+                deleteDir(child)
+            }
+
+        fileOrDirectory.delete()
+    }
+
+    private fun deleteDir(dir: File) {
+        if (dir.isDirectory) {
+            val children = dir.list()
+            for (i in children.indices) {
+                deleteDir(File(dir, children[i]))
+            }
+        }
+        dir.delete()
     }
 
     override suspend fun exists(dirName: String, fileName: String): Boolean {

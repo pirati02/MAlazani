@@ -6,16 +6,22 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.google.android.exoplayer2.offline.Download
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.events.SongsMarkedAsFavourite
+import ge.baqar.gogia.model.events.SongsUnmarkedAsFavourite
 import kotlinx.coroutines.InternalCoroutinesApi
+import org.greenrobot.eventbus.EventBus
 import org.koin.android.ext.android.inject
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.time.ExperimentalTime
 
 @InternalCoroutinesApi
@@ -41,23 +47,24 @@ class DownloadService : Service() {
                 DownloadServiceManager.isRunning = true
                 val id = downloadSongs(ensemble!!, songs!!)
 
-                val downloadSongs = songs.map { it.name }.joinToString(", \n")
-                showNotification(ensemble, id, downloadSongs)
+                showNotification(ensemble, id, songs)
             }
             STOP_DOWNLOADING -> {
+                val songs = intent.getParcelableArrayListExtra<DownloadableSong>("songs")
                 DownloadServiceManager.isRunning = false
-                cancelDownloads(ensemble!!)
+                cancelDownloads(ensemble!!, songs!!)
                 stopForeground(true)
             }
         }
         return START_NOT_STICKY
     }
 
-    private fun cancelDownloads(ensemble: Ensemble) {
+    private fun cancelDownloads(ensemble: Ensemble, songs: ArrayList<DownloadableSong>) {
         val albumDownloadManager = albumDownloadProvider.tryGet(ensemble.id)
-        albumDownloadManager.clearDownloads(ensemble.id)
+        albumDownloadManager.clearDownloads(ensemble.id, ensemble.nameEng)
         albumDownloadManager.cancel()
         albumDownloadProvider.dispose(albumDownloadManager)
+        EventBus.getDefault().post(SongsUnmarkedAsFavourite(songs.map { it.id }.toMutableList()))
     }
 
     private fun downloadSongs(ensemble: Ensemble, songs: ArrayList<DownloadableSong>): Int {
@@ -69,13 +76,13 @@ class DownloadService : Service() {
         albumDownloadManager.download {
             DownloadServiceManager.isRunning = false
             stopForeground(true)
+            EventBus.getDefault().post(SongsMarkedAsFavourite(songs.map { it.id }.toMutableList()))
         }
         return albumDownloadManager.downloadId
     }
 
-
     @SuppressLint("UnspecifiedImmutableFlag")
-    private fun showNotification(ensemble: Ensemble, id: Int, downloadSongs: String) {
+    private fun showNotification(ensemble: Ensemble, id: Int, songs: ArrayList<DownloadableSong>) {
         val notificationBuilder: NotificationCompat.Builder =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channelId = "DOWNLOADING_NOTIFICATION_CHANNEL for ${ensemble.name}"
@@ -89,13 +96,16 @@ class DownloadService : Service() {
             } else {
                 NotificationCompat.Builder(this)
             }
-        val songsDownloadTitle ="${getString(R.string.downloading)} \n $downloadSongs"
+
+        val downloadSongs = songs.joinToString(", \n") { it.name }
+        val songsDownloadTitle = "${getString(R.string.downloading)} \n $downloadSongs"
 
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java).apply {
                 action = STOP_DOWNLOADING
                 putExtra("ensemble", ensemble)
+                putExtra("songs", downloadSongs)
             },
             Intent.FILL_IN_ACTION
         )
@@ -116,9 +126,8 @@ class DownloadService : Service() {
         startForeground(id, notification.build())
     }
 
-
     companion object {
-        val DOWNLOAD_SONGS = "DOWNLOAD_SONGS"
-        val STOP_DOWNLOADING = "STOP_DOWNLOADING"
+        const val DOWNLOAD_SONGS = "DOWNLOAD_SONGS"
+        const val STOP_DOWNLOADING = "STOP_DOWNLOADING"
     }
 }

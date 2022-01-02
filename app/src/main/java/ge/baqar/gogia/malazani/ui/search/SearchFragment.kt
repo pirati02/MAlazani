@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
 import reactivecircus.flowbinding.android.widget.textChanges
 import timber.log.Timber
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 @InternalCoroutinesApi
 class SearchFragment : Fragment() {
     private val viewModel: SearchViewModel by inject()
@@ -54,7 +56,6 @@ class SearchFragment : Fragment() {
         }
         return binding?.root!!
     }
-
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun initializeIntents(inputs: Flow<SearchAction>) {

@@ -1,5 +1,6 @@
 package ge.baqar.gogia.malazani.ui.artist
 
+import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
@@ -10,6 +11,7 @@ import ge.baqar.gogia.utils.FileExtensions
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
 class ArtistViewModel(
@@ -34,12 +36,12 @@ class ArtistViewModel(
 
                         result.value.chants.forEach { song ->
                             song.nameEng = CharConverter.toEng(song.name)
-                            song.availableOffline =
+                            song.isFav =
                                 songs.firstOrNull { it.referenceId == song.id } != null
                         }
                         result.value.songs.forEach { song ->
                             song.nameEng = CharConverter.toEng(song.name)
-                            song.availableOffline =
+                            song.isFav =
                                 songs.firstOrNull { it.referenceId == song.id } != null
                         }
                         emit {
@@ -67,7 +69,7 @@ class ArtistViewModel(
                                     ensemble.name,
                                     false,
                                     data = fileExtensions.read(fileSystemSong?.data),
-                                    availableOffline = true
+                                    isFav = true
                                 )
                             }
                             .toMutableList()
@@ -87,7 +89,7 @@ class ArtistViewModel(
                                     ensemble.name,
                                     false,
                                     data = fileExtensions.read(fileSystemSong?.data),
-                                    availableOffline = true
+                                    isFav = true
                                 )
                             }
                             .toMutableList()
@@ -117,5 +119,9 @@ class ArtistViewModel(
 
             }
         }
+    }
+
+    suspend fun isSongFav(songId: String): Boolean {
+        return  folkApiDao.song(songId) != null
     }
 }

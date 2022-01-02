@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
 class SearchViewModel(
-    val alazaniRepository: FolkApiRepository
+    private val folkApiRepository: FolkApiRepository
 ) : ReactiveViewModel<SearchAction, SearchResultState, SearchState>(SearchState.DEFAULT) {
     override fun SearchAction.process(): Flow<() -> SearchResultState> {
         return when (this) {
@@ -34,7 +34,7 @@ class SearchViewModel(
             SearchState.LOADING
         }
 
-        alazaniRepository.search(term).collect(object :FlowCollector<ReactiveResult<String, SearchResult>>{
+        folkApiRepository.search(term).collect(object :FlowCollector<ReactiveResult<String, SearchResult>>{
             override suspend fun emit(result: ReactiveResult<String, SearchResult>) {
                 if (result is SucceedResult) {
                     emit {
@@ -51,7 +51,7 @@ class SearchViewModel(
 
     fun ensembleById(ensembleId: String, completion: (Ensemble?) -> Unit){
         viewModelScope.launch {
-            val ensemble = alazaniRepository.ensemble(ensembleId)
+            val ensemble = folkApiRepository.ensemble(ensembleId)
             completion(ensemble)
         }
     }

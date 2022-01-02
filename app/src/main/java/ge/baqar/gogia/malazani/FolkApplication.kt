@@ -9,6 +9,7 @@ import ge.baqar.gogia.malazani.media.mediaModule
 import ge.baqar.gogia.malazani.storage.storageModule
 import ge.baqar.gogia.malazani.ui.artist.artistModule
 import ge.baqar.gogia.malazani.ui.artists.artistsModule
+import ge.baqar.gogia.malazani.ui.favourites.favouritesModule
 import ge.baqar.gogia.malazani.ui.search.searchModule
 import ge.baqar.gogia.malazani.utility.utilityModule
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -17,7 +18,9 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import java.util.concurrent.TimeUnit
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 @InternalCoroutinesApi
 class FolkApplication : Application() {
     companion object {
@@ -38,7 +41,8 @@ class FolkApplication : Application() {
                     storageModule,
                     artistsModule,
                     artistModule,
-                    searchModule
+                    searchModule,
+                    favouritesModule
                 )
             )
         }

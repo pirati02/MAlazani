@@ -13,11 +13,6 @@ class FileSaveController internal constructor(
     private val checkPermissionProcessor: CheckWritePermissionProcessor,
 ) {
     companion object {
-
-        /*
-         * @param fileProviderName name of file provider for apis with sdk < Q
-         * if sharing file intent needed
-         */
         fun getInstance(context: Context, fileProviderName: String? = null): FileSaveController {
             return FileSaveController(
                 ProcessorProvider(context, fileProviderName),
@@ -70,5 +65,9 @@ class FileSaveController internal constructor(
         return if (checkPermissionProcessor.hasWritePermission()) {
             processors.audioManager.exists(dirName, fileName)
         } else false
+    }
+
+    fun delete(ensembleName: String) {
+        processors.audioManager.delete(ensembleName)
     }
 }

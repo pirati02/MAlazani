@@ -12,7 +12,7 @@ data class Song(
     val ensembleName: String,
     var isPlaying: Boolean = false,
     val data: ByteArray? = null,
-    var availableOffline: Boolean = false
+    var isFav: Boolean = false
 ) : SearchedItem {
 
 

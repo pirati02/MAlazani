@@ -18,8 +18,10 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
+import kotlin.time.ExperimentalTime
 
 
+@ExperimentalTime
 @InternalCoroutinesApi
 class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
@@ -103,6 +105,16 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     override fun onDestroy() {
         super.onDestroy()
         EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe
+    fun songsMarkedAsFavourite(event: SongsMarkedAsFavourite) {
+        mediaPlayerController.songsMarkedAsFavourite(event)
+    }
+
+    @Subscribe
+    fun songsUnMarkedAsFavourite(event: SongsUnmarkedAsFavourite) {
+        mediaPlayerController.songsUnMarkedAsFavourite(event)
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)

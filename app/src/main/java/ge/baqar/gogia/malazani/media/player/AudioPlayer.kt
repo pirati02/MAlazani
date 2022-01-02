@@ -42,6 +42,7 @@ class AudioPlayer(private val context: Context) {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
+
         if (dataStream != null) {
             val fis = getTempSongFile(dataStream)
             mediaPlayer?.setDataSource(fis.fd)

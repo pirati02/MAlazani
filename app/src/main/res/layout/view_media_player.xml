@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mediaPlayerView"
     android:layout_width="0dp"
+    android:visibility="gone"
     android:layout_height="wrap_content"
     android:background="@color/mediaPlayerColor"
     android:orientation="vertical"
-    android:visibility="gone"
     app:layout_constraintBottom_toTopOf="@id/nav_view"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent">
@@ -23,7 +23,7 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/playingTrackTitle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="0.4"
             android:fontFamily="@font/bpg_nino_mtavruli_bold"
             android:gravity="center"
@@ -31,7 +31,7 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             app:layout_constraintEnd_toStartOf="@id/playerViewCloseBtn"
-            app:layout_constraintStart_toEndOf="@+id/playerAutoPlayButton"
+            app:layout_constraintStart_toEndOf="@+id/favBtn"
             app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -55,13 +55,23 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/favBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:src="@drawable/ic_baseline_favorite_border_24"
+            app:layout_constraintStart_toEndOf="@id/playerAutoPlayButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/playingTrackTitle">
+            app:layout_constraintTop_toBottomOf="@id/playerAutoPlayButton">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/playingTrackTime"

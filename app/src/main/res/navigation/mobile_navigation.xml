@@ -37,4 +37,10 @@
         android:name="ge.baqar.gogia.malazani.ui.search.SearchFragment"
         android:label="@string/search"
         tools:layout="@layout/fragment_search" />
+
+    <fragment
+        android:id="@+id/navigation_favs"
+        android:name="ge.baqar.gogia.malazani.ui.favourites.FavouritesFragment"
+        android:label="@string/favourites"
+        tools:layout="@layout/fragment_favourites" />
 </navigation>

@@ -9,6 +9,9 @@ import ge.baqar.gogia.db.model.DbSong
 @Dao
 interface FolkApiDao {
 
+    @Query("SELECT * FROM Song ORDER By name_eng ASC")
+    suspend fun songs(): MutableList<DbSong>
+
     @Query("SELECT * FROM Song WHERE ensemble_id = :ensembleId")
     fun songsByEnsembleId(ensembleId: String): MutableList<DbSong>
 
@@ -30,6 +33,9 @@ interface FolkApiDao {
     @Query("DELETE FROM Ensemble WHERE reference_id = :ensembleId")
     fun removeEnsemble(ensembleId: String)
 
-    @Query("DELETE FROM Ensemble WHERE id in (:ids)")
+    @Query("DELETE FROM Song WHERE reference_id in (:ids)")
     suspend fun removeSongsByIds(ids: List<String>)
+
+    @Query("SELECT * FROM Song WHERE reference_id = :songId")
+    suspend fun song(songId: String): DbSong?
 }
