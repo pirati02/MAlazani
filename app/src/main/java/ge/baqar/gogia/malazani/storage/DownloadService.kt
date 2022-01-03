@@ -6,11 +6,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
-import android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.google.android.exoplayer2.offline.Download
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.model.DownloadableSong
@@ -20,8 +18,6 @@ import ge.baqar.gogia.model.events.SongsUnmarkedAsFavourite
 import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.koin.android.ext.android.inject
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.time.ExperimentalTime
 
 @InternalCoroutinesApi
@@ -61,7 +57,7 @@ class DownloadService : Service() {
 
     private fun cancelDownloads(ensemble: Ensemble, songs: ArrayList<DownloadableSong>) {
         val albumDownloadManager = albumDownloadProvider.tryGet(ensemble.id)
-        albumDownloadManager.clearDownloads(ensemble.id, ensemble.nameEng)
+        albumDownloadManager.clearDownloads(ensemble.id, songs, ensemble.nameEng)
         albumDownloadManager.cancel()
         albumDownloadProvider.dispose(albumDownloadManager)
         EventBus.getDefault().post(SongsUnmarkedAsFavourite(songs.toMutableList()))

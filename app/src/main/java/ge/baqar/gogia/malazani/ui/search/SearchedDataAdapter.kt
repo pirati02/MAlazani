@@ -10,7 +10,7 @@ import ge.baqar.gogia.model.SearchedItem
 
 class SearchedDataAdapter<Item: SearchedItem>(
     private val dataSource: MutableList<Item>,
-    private val clicked: SearchedDataAdapter<Item>.(Item) -> Unit
+    private val clicked: SearchedDataAdapter<Item>.(Int, Item) -> Unit
 ) :
     RecyclerView.Adapter<SearchedDataAdapter<Item>.SearchedItemViewHolder>() {
     inner class SearchedItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -18,10 +18,10 @@ class SearchedDataAdapter<Item: SearchedItem>(
             itemView.findViewById(R.id.title)
         }
 
-        fun bind(item: Item) {
+        fun bind(position: Int, item: Item) {
             name.text = item.detailedName()
             itemView.setOnClickListener {
-                clicked(item)
+                clicked(position, item)
             }
         }
     }
@@ -33,7 +33,7 @@ class SearchedDataAdapter<Item: SearchedItem>(
     }
 
     override fun onBindViewHolder(holder: SearchedItemViewHolder, position: Int) {
-        holder.bind(dataSource[position])
+        holder.bind(position, dataSource[position])
     }
 
     override fun getItemCount(): Int {

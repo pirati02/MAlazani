@@ -35,6 +35,11 @@ class EnsemblesFragment : Fragment() {
         EventBus.getDefault().register(this)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
+
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,11 +61,6 @@ class EnsemblesFragment : Fragment() {
             return _view!!
         }
         return _view!!
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        EventBus.getDefault().unregister(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

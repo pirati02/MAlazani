@@ -30,8 +30,8 @@ internal class AudioFileSaveLegacyProcessor(
             }
     }
 
-    override fun delete(dirName: String) {
-        val fileOrDirectory = File(dirName)
+    override fun delete(dirName: String, fileName: String) {
+        val fileOrDirectory = File(dirName, fileName)
         if (fileOrDirectory.isDirectory)
             for (child in fileOrDirectory.listFiles()) {
                 deleteDir(child)

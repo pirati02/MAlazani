@@ -67,7 +67,7 @@ class FileSaveController internal constructor(
         } else false
     }
 
-    fun delete(ensembleName: String) {
-        processors.audioManager.delete(ensembleName)
+    fun delete(ensembleName: String, fileName: String) {
+        processors.audioManager.delete(ensembleName, fileName)
     }
 }

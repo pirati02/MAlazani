@@ -37,11 +37,12 @@ internal class AudioFileSaveProcessor(
 
     private fun SaveContent.getContentValues(): ContentValues {
         val contentDetails = ContentValues().apply {
-            put(MediaStore.Audio.Media.DISPLAY_NAME, fileNameWithSuffix)
+            put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileNameWithSuffix)
+            put(MediaStore.Audio.AudioColumns.ARTIST, subfolderName)
             mimeType?.let { put(MediaStore.Audio.Media.MIME_TYPE, it) }
             subfolderName?.let {
                 put(
-                    MediaStore.Audio.Media.RELATIVE_PATH,
+                    MediaStore.Audio.AudioColumns.RELATIVE_PATH,
                     "${Environment.DIRECTORY_MUSIC}/$it"
                 )
             }
@@ -61,10 +62,16 @@ internal class AudioFileSaveProcessor(
         }
     }
 
-    override fun delete(dirName: String) {
-        val selection = "${MediaStore.Video.Media.ARTIST} like ?"
-        val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        contentResolver.delete(musicUri, selection, arrayOf(dirName))
+    override fun delete(dirName: String, fileName: String) {
+        val musicUri = getAudioFolderUri()
+        val file = formatFile(fileName)
+        val selection = "${MediaStore.Audio.AudioColumns.DISPLAY_NAME} LIKE ?"
+        contentResolver.delete(musicUri, selection, arrayOf(file))
+    }
+
+    private fun formatFile(fileName: String): String {
+        return if (fileName.endsWithMp3()) fileName
+        else "${fileName}.mp3"
     }
 
     override suspend fun exists(dirName: String, fileName: String): Boolean {
@@ -73,32 +80,37 @@ internal class AudioFileSaveProcessor(
 
     @SuppressLint("Recycle")
     override suspend fun getFile(dirName: String, fileName: String): FileResult? {
-        val selection = "${MediaStore.Video.Media.DISPLAY_NAME} like ?"
+        val selection = "${MediaStore.Audio.AudioColumns.DISPLAY_NAME} like ?"
         val selectionArgs = arrayOf(
-            if (fileName.endsWithMp3()) fileName
-            else "${fileName}.mp3"
+            formatFile(fileName)
         )
 
-        val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val musicUri = getAudioFolderUri()
         val musicCursor = contentResolver.query(musicUri, null, selection, selectionArgs, null)
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
-            val songArtist = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.ARTIST)
             val songName = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
             val songData = musicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATA)
 
             do {
                 val name = musicCursor.getString(songName)
-                    val artist = musicCursor.getString(songArtist)?.lowercase()
                 val data = musicCursor.getString(songData)
-                val uri = Uri.fromFile(File(data))
 
-                if (artist == dirName)
+                val file = File(data)
+                val uri = Uri.fromFile(file)
+                val folderName = getFolderName(file.absolutePath)
+
+                if (folderName == dirName)
                     return FileResult(uri, name)
             } while (musicCursor.moveToNext())
         }
         musicCursor?.close()
         return null
+    }
+
+    private fun getFolderName(absolutePath: String): String {
+        val array = absolutePath.split("/")
+        return array[array.size - 2]
     }
 
 

@@ -14,6 +14,7 @@ import ge.baqar.gogia.malazani.databinding.FragmentSearchBinding
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
@@ -23,6 +24,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @InternalCoroutinesApi
+@FlowPreview
 class SearchFragment : Fragment() {
     private val viewModel: SearchViewModel by inject()
     private var binding: FragmentSearchBinding? = null
@@ -87,12 +89,11 @@ class SearchFragment : Fragment() {
             binding?.searchProgressBar?.visibility = View.GONE
             if (state.result.ensembles.isNotEmpty()) {
                 binding?.ensemblesSearchResultListView?.adapter =
-                    SearchedDataAdapter(state.result.ensembles) {
-                        val currentItem = it as Ensemble
+                    SearchedDataAdapter(state.result.ensembles) { _, ensemble ->
                         findNavController().navigate(
                             ge.baqar.gogia.malazani.R.id.navigation_artists_details,
                             Bundle().apply {
-                                putParcelable("ensemble", currentItem)
+                                putParcelable("ensemble", ensemble)
                             })
                     }
                 binding?.ensemblesSearchResultListView?.visibility = View.VISIBLE
@@ -103,11 +104,10 @@ class SearchFragment : Fragment() {
 
             if (state.result.songs.isNotEmpty()) {
                 binding?.songsSearchResultListView?.adapter =
-                    SearchedDataAdapter(state.result.songs) {
-                        val currentItem = it as Song
-                        viewModel.ensembleById(currentItem.ensembleId) { ensemble ->
+                    SearchedDataAdapter(state.result.songs) { position, song ->
+                        viewModel.ensembleById(song.ensembleId) { ensemble ->
                             ensemble?.let {
-                                play(ensemble, currentItem)
+                                play(position, ensemble, state.result.songs)
                             }
                         }
                     }
@@ -123,7 +123,7 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun play(ensemble: Ensemble, song: Song) {
-        (activity as MenuActivity).playMediaPlayback(0, mutableListOf(song), ensemble)
+    private fun play(position: Int, ensemble: Ensemble, songs: MutableList<Song>) {
+        (activity as MenuActivity).playMediaPlayback(position, songs, ensemble)
     }
 }

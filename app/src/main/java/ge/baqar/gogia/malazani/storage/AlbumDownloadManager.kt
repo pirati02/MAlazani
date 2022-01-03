@@ -6,6 +6,7 @@ import ge.baqar.gogia.db.model.DbSong
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
 import ge.baqar.gogia.model.SucceedResult
 import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.usecase.FileSaveController
@@ -14,8 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.InputStream
-import java.time.Instant
-import java.time.LocalDate
 import java.util.*
 
 class AlbumDownloadManager internal constructor(
@@ -108,11 +107,17 @@ class AlbumDownloadManager internal constructor(
         canceled = true
     }
 
-    fun clearDownloads(ensembleId: String, ensembleName: String) {
+    fun clearDownloads(ensembleId: String, songIds: MutableList<DownloadableSong>, ensembleName: String) {
         launch {
-            folkApiDao.removeEnsemble(ensembleId)
-            folkApiDao.removeSongsByEnsembleId(ensembleId)
-            saveController.delete(ensembleName)
+            folkApiDao.removeSongsByIds(songIds.map { it.id })
+
+            val songs = folkApiDao.songsByEnsembleId(ensembleId)
+            if (songs.isEmpty())
+                folkApiDao.removeEnsemble(ensembleId)
+
+            songIds.forEach {
+                saveController.delete(ensembleName, it.nameEng)
+            }
         }
     }
 }

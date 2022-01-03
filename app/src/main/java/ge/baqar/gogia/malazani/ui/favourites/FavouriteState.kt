@@ -12,7 +12,7 @@ data class FavouriteState(
 
     companion object {
         val DEFAULT = FavouriteState(
-            isInProgress = false,
+            isInProgress = true,
             error = null,
             favSongs = mutableListOf()
         )
