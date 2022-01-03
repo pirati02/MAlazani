@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.ui.artists
+package ge.baqar.gogia.malazani.ui.ensembles
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 
 @InternalCoroutinesApi
-class ArtistsViewModel(
+class EnsemblesViewModel(
     private val alazaniRepository: FolkApiRepository,
     private val folkApiDao: FolkApiDao
-) : ReactiveViewModel<ArtistsAction, ArtistsResult, ArtistsState>(ArtistsState.DEFAULT) {
+) : ReactiveViewModel<EnsemblesAction, EnsemblesResult, ArtistsState>(ArtistsState.DEFAULT) {
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun ensembles() = update {
@@ -78,9 +78,9 @@ class ArtistsViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    override fun ArtistsAction.process(): Flow<() -> ArtistsResult> {
+    override fun EnsemblesAction.process(): Flow<() -> EnsemblesResult> {
         return when (this) {
-            is ArtistsLoaded -> update {
+            is EnsemblesLoaded -> update {
                 emit {
                     state.copy(
                         isInProgress = false,

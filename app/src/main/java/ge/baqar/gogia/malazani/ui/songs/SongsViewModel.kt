@@ -1,6 +1,5 @@
-package ge.baqar.gogia.malazani.ui.artist
+package ge.baqar.gogia.malazani.ui.songs
 
-import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
@@ -11,15 +10,14 @@ import ge.baqar.gogia.utils.FileExtensions
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
-class ArtistViewModel(
+class SongsViewModel(
     private val alazaniRepository: FolkApiRepository,
     private val folkApiDao: FolkApiDao,
     private val saveController: FileSaveController,
     private val fileExtensions: FileExtensions
-) : ReactiveViewModel<ArtistAction, ArtistResult, ArtistState>(ArtistState.DEFAULT) {
+) : ReactiveViewModel<SongsAction, SongsResult, ArtistState>(ArtistState.DEFAULT) {
 
     fun songs(
         ensemble: Ensemble
@@ -110,9 +108,9 @@ class ArtistViewModel(
             })
     }
 
-    override fun ArtistAction.process(): Flow<() -> ArtistResult> {
+    override fun SongsAction.process(): Flow<() -> SongsResult> {
         return when (this) {
-            is ArtistSongsRequested -> {
+            is SongsRequested -> {
                 songs(ensemble)
             }
             else -> update {

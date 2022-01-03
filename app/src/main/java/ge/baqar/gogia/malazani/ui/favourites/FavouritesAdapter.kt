@@ -8,8 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.model.Song
 
-class FavouritesAdapter(private val dataSource: MutableList<Song>,
-                        private val callback: (Song) -> Unit) : RecyclerView.Adapter<FavouritesAdapter.FavouritesViewHolder>() {
+class FavouritesAdapter(
+    var dataSource: MutableList<Song>,
+    private val callback: (Song) -> Unit) : RecyclerView.Adapter<FavouritesAdapter.FavouritesViewHolder>() {
 
     inner class FavouritesViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val songName: AppCompatTextView by lazy {

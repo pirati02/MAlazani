@@ -1,6 +1,8 @@
 package ge.baqar.gogia.model.events
 
-data class SongsMarkedAsFavourite(val ids: MutableList<String>)
+import ge.baqar.gogia.model.DownloadableSong
 
-data class SongsUnmarkedAsFavourite(val ids: MutableList<String>)
+data class SongsMarkedAsFavourite(val songs: MutableList<DownloadableSong>)
+
+data class SongsUnmarkedAsFavourite(val songs: MutableList<DownloadableSong>)
 

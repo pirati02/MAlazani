@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.ui.artists
+package ge.baqar.gogia.malazani.ui.ensembles
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,10 +9,10 @@ import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.model.Ensemble
 
 
-class ArtistsAdapter(
+class EnsemblesAdapter(
     private val dataSource: MutableList<Ensemble>,
     val clicked: (Ensemble) -> Unit
-) : RecyclerView.Adapter<ArtistsAdapter.EnsembleViewHolder>() {
+) : RecyclerView.Adapter<EnsemblesAdapter.EnsembleViewHolder>() {
     inner class EnsembleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: AppCompatTextView by lazy {
             itemView.findViewById(R.id.artistTitle)

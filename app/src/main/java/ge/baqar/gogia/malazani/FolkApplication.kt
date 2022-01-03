@@ -1,23 +1,19 @@
 package ge.baqar.gogia.malazani
 
 import android.app.Application
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import ge.baqar.gogia.malazani.http.networkModule
-import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.malazani.media.mediaModule
 import ge.baqar.gogia.malazani.storage.storageModule
-import ge.baqar.gogia.malazani.ui.artist.artistModule
-import ge.baqar.gogia.malazani.ui.artists.artistsModule
+import ge.baqar.gogia.malazani.ui.ensembles.ensemblesModule
 import ge.baqar.gogia.malazani.ui.favourites.favouritesModule
 import ge.baqar.gogia.malazani.ui.search.searchModule
+import ge.baqar.gogia.malazani.ui.songs.songsModule
 import ge.baqar.gogia.malazani.utility.utilityModule
 import kotlinx.coroutines.InternalCoroutinesApi
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
-import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -39,14 +35,12 @@ class FolkApplication : Application() {
                     mediaModule,
                     networkModule,
                     storageModule,
-                    artistsModule,
-                    artistModule,
+                    ensemblesModule,
+                    songsModule,
                     searchModule,
                     favouritesModule
                 )
             )
         }
-
-        SyncFilesAndDatabaseJob.triggerNow(this)
     }
 }

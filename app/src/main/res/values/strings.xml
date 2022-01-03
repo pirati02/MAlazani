@@ -20,4 +20,5 @@
     <string name="search_hint">მაგ: ალილო</string>
     <string name="cancel">გაქმება</string>
     <string name="downloading">იწერება</string>
+    <string name="no_records">ჩანაწერები არ არის</string>
 </resources>

@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.ui.artists
+package ge.baqar.gogia.malazani.ui.ensembles
 
 import android.os.Build
 import android.os.Bundle
@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
-import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.model.events.OpenArtistFragment
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -24,11 +23,10 @@ import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-
 @InternalCoroutinesApi
-class ArtistsListFragment : Fragment() {
+class EnsemblesFragment : Fragment() {
 
-    private val viewModel: ArtistsViewModel by inject()
+    private val viewModel: EnsemblesViewModel by inject()
     private var binding: FragmentArtistsBinding? = null
     private var _view: View? = null
 
@@ -75,7 +73,7 @@ class ArtistsListFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    fun initializeIntents(inputs: Flow<ArtistsAction>) {
+    fun initializeIntents(inputs: Flow<EnsemblesAction>) {
         viewModel.intents(inputs)
             .onEach { output ->
                 when (output) {
@@ -93,16 +91,21 @@ class ArtistsListFragment : Fragment() {
             Timber.i(error)
         }
         if (state.isInProgress) {
+            binding?.noRecordsView?.visibility = View.GONE
             binding?.artistsProgressbar?.visibility = View.VISIBLE
             return
         }
-        binding?.artistsProgressbar?.visibility = View.GONE
 
-        SyncFilesAndDatabaseJob.triggerNow(requireContext())
-        if (state.artists.count() > 0) {
-            binding?.artistsListView?.adapter = ArtistsAdapter(state.artists) {
+        binding?.artistsProgressbar?.visibility = View.GONE
+        if (state.artists.isNotEmpty()) {
+            binding?.noRecordsView?.visibility = View.GONE
+            binding?.artistsListView?.visibility = View.VISIBLE
+            binding?.artistsListView?.adapter = EnsemblesAdapter(state.artists) {
                 openArtistFragment(OpenArtistFragment(it))
             }
+        } else {
+            binding?.artistsListView?.visibility = View.GONE
+            binding?.noRecordsView?.visibility = View.VISIBLE
         }
     }
 

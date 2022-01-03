@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.ui.artist
+package ge.baqar.gogia.malazani.ui.songs
 
 import android.view.LayoutInflater
 import android.view.View

@@ -1,13 +1,13 @@
-package ge.baqar.gogia.malazani.ui.artists
+package ge.baqar.gogia.malazani.ui.ensembles
 
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import kotlinx.coroutines.InternalCoroutinesApi
 import org.koin.dsl.module
 
 @InternalCoroutinesApi
-val artistsModule = module {
+val ensemblesModule = module {
 
     single { FolkApiRepository(get(), get(), get()) }
     //viewModel
-    factory { ArtistsViewModel(get(), get()) }
+    factory { EnsemblesViewModel(get(), get()) }
 }

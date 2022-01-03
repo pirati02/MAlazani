@@ -64,7 +64,7 @@ class DownloadService : Service() {
         albumDownloadManager.clearDownloads(ensemble.id, ensemble.nameEng)
         albumDownloadManager.cancel()
         albumDownloadProvider.dispose(albumDownloadManager)
-        EventBus.getDefault().post(SongsUnmarkedAsFavourite(songs.map { it.id }.toMutableList()))
+        EventBus.getDefault().post(SongsUnmarkedAsFavourite(songs.toMutableList()))
     }
 
     private fun downloadSongs(ensemble: Ensemble, songs: ArrayList<DownloadableSong>): Int {
@@ -76,7 +76,7 @@ class DownloadService : Service() {
         albumDownloadManager.download {
             DownloadServiceManager.isRunning = false
             stopForeground(true)
-            EventBus.getDefault().post(SongsMarkedAsFavourite(songs.map { it.id }.toMutableList()))
+            EventBus.getDefault().post(SongsMarkedAsFavourite(songs.toMutableList()))
         }
         return albumDownloadManager.downloadId
     }

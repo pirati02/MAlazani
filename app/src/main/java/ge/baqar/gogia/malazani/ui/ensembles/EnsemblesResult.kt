@@ -1,19 +1,19 @@
-package ge.baqar.gogia.malazani.ui.artists
+package ge.baqar.gogia.malazani.ui.ensembles
 
 import ge.baqar.gogia.model.Ensemble
 
 
-open class ArtistsResult
+open class EnsemblesResult
 
 data class ArtistsState(
     val isInProgress: Boolean,
     val artists: MutableList<Ensemble>,
     val error: String?
-) : ArtistsResult() {
+) : EnsemblesResult() {
 
     companion object {
         val DEFAULT = ArtistsState(
-            isInProgress = false,
+            isInProgress = true,
             error = null,
             artists = mutableListOf()
         )

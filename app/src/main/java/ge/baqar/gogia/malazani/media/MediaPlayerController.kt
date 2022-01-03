@@ -18,7 +18,7 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
 import ge.baqar.gogia.malazani.storage.DownloadService
-import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
+import ge.baqar.gogia.malazani.ui.songs.SongsViewModel
 import ge.baqar.gogia.model.AutoPlayState
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
@@ -34,7 +34,7 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @InternalCoroutinesApi
 class MediaPlayerController(
-    private val viewModel: ArtistViewModel,
+    private val viewModel: SongsViewModel,
     private val folkAppPreferences: FolkAppPreferences,
     private val audioPlayer: AudioPlayer,
     private val context: Context
@@ -280,17 +280,17 @@ class MediaPlayerController(
     }
 
     fun songsMarkedAsFavourite(event: SongsMarkedAsFavourite) {
-        val ids = event.ids
-        playList?.filter { event.ids.contains(it.id) }?.forEach {
-            it.isFav = ids.contains(it.id)
+        val ids = event.songs
+        playList?.filter { event.songs.map { it.id }.contains(it.id) }?.forEach {
+            it.isFav = ids.map { it.id }.contains(it.id)
         }
         updateFavouriteMarkFor(getCurrentSong())
     }
 
     fun songsUnMarkedAsFavourite(event: SongsUnmarkedAsFavourite) {
-        val ids = event.ids
-        playList?.filter { event.ids.contains(it.id) }?.forEach {
-            it.isFav = !ids.contains(it.id)
+        val ids = event.songs
+        playList?.filter { event.songs.map { it.id }.contains(it.id) }?.forEach {
+            it.isFav = !ids.map { it.id }.contains(it.id)
         }
         updateFavouriteMarkFor(getCurrentSong())
     }

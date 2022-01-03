@@ -1,4 +1,4 @@
-package ge.baqar.gogia.malazani.ui.artist
+package ge.baqar.gogia.malazani.ui.songs
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -38,14 +38,14 @@ import kotlin.time.ExperimentalTime
 @InternalCoroutinesApi
 @ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
-class ArtistFragment : Fragment() {
+class SongsFragment : Fragment() {
 
     private var searchedItemId: String? = null
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
     private val folkAppPreferences: FolkAppPreferences by inject()
-    private val viewModel: ArtistViewModel by inject()
+    private val viewModel: SongsViewModel by inject()
     private var binding: FragmentArtistBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,7 +71,7 @@ class ArtistFragment : Fragment() {
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
 
         val loadSongsAndChantsAction = flowOf(
-            ArtistSongsRequested(_ensemble?.copy()!!),
+            SongsRequested(_ensemble?.copy()!!),
         )
         initializeIntents(loadSongsAndChantsAction)
 
@@ -98,12 +98,13 @@ class ArtistFragment : Fragment() {
         binding?.toolbarInclude?.enableOfflineMode?.isChecked = offlineEnabled
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Subscribe
     fun songsMarkedAsFavourite(event: SongsMarkedAsFavourite) {
         binding?.songsListView?.post {
             (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                 dataSource
-                    .filter { event.ids.contains(it.id) }
+                    .filter { event.songs.map { it.id }.contains(it.id) }
                     .forEach {
                         it.isFav = true
                     }
@@ -111,7 +112,7 @@ class ArtistFragment : Fragment() {
             }
             (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                 dataSource
-                    .filter { event.ids.contains(it.id) }
+                    .filter { event.songs.map { it.id }.contains(it.id) }
                     .forEach {
                         it.isFav = true
                     }
@@ -120,12 +121,13 @@ class ArtistFragment : Fragment() {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Subscribe
     fun songsMarkedAsFavourite(event: SongsUnmarkedAsFavourite) {
         binding?.songsListView?.post {
             (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                 dataSource
-                    .filter { event.ids.contains(it.id) }
+                    .filter { event.songs.map { it.id }.contains(it.id) }
                     .forEach {
                         it.isFav = false
                     }
@@ -133,7 +135,7 @@ class ArtistFragment : Fragment() {
             }
             (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                 dataSource
-                    .filter { event.ids.contains(it.id) }
+                    .filter { event.songs.map { it.id }.contains(it.id) }
                     .forEach {
                         it.isFav = false
                     }
@@ -167,7 +169,7 @@ class ArtistFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun initializeIntents(inputs: Flow<ArtistAction>) {
+    fun initializeIntents(inputs: Flow<SongsAction>) {
         viewModel.intents(inputs)
             .onEach { output ->
                 when (output) {

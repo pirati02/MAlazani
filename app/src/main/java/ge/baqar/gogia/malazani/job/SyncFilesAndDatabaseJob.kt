@@ -24,17 +24,21 @@ class SyncFilesAndDatabaseJob(appContext: Context, workerParams: WorkerParameter
 
     override fun doWork(): Result {
         launch {
-
             val ensembles = folkApiDao.ensembles()
             ensembles.forEach { ensemble ->
-                val songs = folkApiDao.songsByEnsembleId(ensemble.referenceId)
+                var songs = folkApiDao.songsByEnsembleId(ensemble.referenceId)
 
                 val removalSongs = songs.filter { song ->
                     val associatedFile =
                         saveController.exists(ensemble.nameEng, song.nameEng)
                     !associatedFile
-                }.map { it.id }
+                }.map { it.referenceId }
                 folkApiDao.removeSongsByIds(removalSongs)
+
+                songs = folkApiDao.songsByEnsembleId(ensemble.referenceId)
+
+                if(songs.isEmpty())
+                    folkApiDao.removeEnsemble(ensemble.referenceId)
             }
         }
 

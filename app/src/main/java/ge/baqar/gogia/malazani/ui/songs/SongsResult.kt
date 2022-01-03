@@ -1,15 +1,15 @@
-package ge.baqar.gogia.malazani.ui.artist
+package ge.baqar.gogia.malazani.ui.songs
 
 import ge.baqar.gogia.model.Song
 
-open class ArtistResult
+open class SongsResult
 
 data class ArtistState(
     val isInProgress: Boolean,
     val chants: MutableList<Song>,
     val songs: MutableList<Song>,
     val error: String?
-) : ArtistResult() {
+) : SongsResult() {
 
 
     companion object {
