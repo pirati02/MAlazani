@@ -71,7 +71,7 @@ class SongsFragment : Fragment() {
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
 
         val loadSongsAndChantsAction = flowOf(
-            SongsRequested(_ensemble?.copy()!!),
+            SongsRequested(_ensemble!!),
         )
         initializeIntents(loadSongsAndChantsAction)
 

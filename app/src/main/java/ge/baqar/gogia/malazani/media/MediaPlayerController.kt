@@ -5,11 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
-import android.widget.SeekBar
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
-import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
@@ -50,62 +48,40 @@ class MediaPlayerController(
     fun play() {
         playList?.let {
             val song = playList!![this.position]
-            viewListeners()
             listenAudioPlayerChanges(song)
-            binding?.included?.mediaPlayerView?.let {
+            viewListeners()
+            binding?.mediaPlayerView?.let {
                 it.visibility = View.VISIBLE
             }
             checkAutoPlayEnabled()
-            binding?.included?.playingTrackTitle?.text = song.name
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-            if (song.isFav) {
-                binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_24)
-            } else {
-                binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_border_24)
-            }
+            binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
         }
     }
 
     private fun checkAutoPlayEnabled() {
         autoPlayState = folkAppPreferences.getAutoPlay()
-        binding?.included?.playerAutoPlayButton?.post {
-            when (autoPlayState) {
-                AutoPlayState.OFF -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_off)
-                }
-                AutoPlayState.REPEAT_ONE -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_one_24)
-                }
-                AutoPlayState.REPEAT_ALBUM -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_on)
-                }
-            }
-        }
+        binding?.mediaPlayerView?.setAutoPlayState(autoPlayState)
     }
 
     private fun onPrepareListener() {
-        val duration = audioPlayer.getDurationString()
-        binding?.included?.playingTrackDurationTime?.text = duration
-        binding?.included?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
+        val durationString = audioPlayer.getDurationString()
+        val duration = audioPlayer.getDuration().toInt()
+        binding?.mediaPlayerView?.setAutoPlayState(autoPlayState)
+        binding?.mediaPlayerView?.setDuration(durationString, duration)
     }
 
     private fun listenAudioPlayerChanges(song: Song) {
         audioPlayer.listenPlayer {
-            if (it) {
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-            } else {
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            }
+            binding?.mediaPlayerView?.isPlaying(it)
         }
         viewModel.viewModelScope.launch {
             audioPlayer.play(song.path, song.data) { onPrepareListener() }
         }
         audioPlayer.completed {
-            binding?.included?.playingTrackTime?.text = null
-            binding?.included?.playerProgressBar?.progress = 0
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            binding?.included?.playingTrackDurationTime?.text = null
+            binding?.mediaPlayerView?.setDuration(null, 0)
+            binding?.mediaPlayerView?.setCurrentDuration(null)
+            binding?.mediaPlayerView?.isPlaying(false)
 
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
@@ -121,8 +97,8 @@ class MediaPlayerController(
                         ) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
-                    binding?.included?.playingTrackTitle?.text = repeatedSong.name
-                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                    binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name)
+                    binding?.mediaPlayerView?.isPlaying(true)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
                     if ((position + 1) < playList?.size!!) {
@@ -132,8 +108,8 @@ class MediaPlayerController(
                             audioPlayer.play(nextSong.path, nextSong.data) { onPrepareListener() }
                             EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
                         }
-                        binding?.included?.playingTrackTitle?.text = nextSong.name
-                        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                        binding?.mediaPlayerView?.setTrackTitle(nextSong.name)
+                        binding?.mediaPlayerView?.isPlaying(true)
                     } else {
                         stop()
                     }
@@ -141,50 +117,34 @@ class MediaPlayerController(
             }
         }
         audioPlayer.updateTimeHandler { progress, time ->
-            binding?.included?.playingTrackTime?.text = time
-            binding?.included?.playerProgressBar?.progress = progress?.toInt()!!
+            binding?.mediaPlayerView?.setProgress(time, progress.toInt() )
         }
     }
 
     private fun viewListeners() {
-        binding?.included?.playerProgressBar?.setOnSeekBarChangeListener(object :
-            SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-
+        binding?.mediaPlayerView?.setSeekListener = { progress ->
+            viewModel.viewModelScope.launch {
+                audioPlayer.playOn(progress)
             }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-                viewModel.viewModelScope.launch {
-                    audioPlayer.playOn(p0?.progress)
-                }
-            }
-        })
-
-        binding?.included?.playStopButton?.setOnClickListener {
-            audioPlayer.release()
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
         }
-        binding?.included?.playNextButton?.setOnClickListener {
+
+        binding?.mediaPlayerView?.onNext = {
             next()
         }
-        binding?.included?.playPrevButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onPrev = {
             previous()
         }
-        binding?.included?.playPauseButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onPlayPause = {
             if (audioPlayer.isPlaying()) {
                 pause()
             } else {
                 resume()
             }
         }
-        binding?.included?.playStopButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onStop = {
             stop()
         }
-        binding?.included?.playerAutoPlayButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onAutoPlayChanged  = {
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
                     autoPlayState = AutoPlayState.REPEAT_ONE
@@ -201,27 +161,23 @@ class MediaPlayerController(
         }
         playerControlsAreVisible = folkAppPreferences.getPlayerState()
         if (playerControlsAreVisible) {
-            binding?.included?.playerControlsView?.visibility = View.VISIBLE
-            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
+            binding?.mediaPlayerView?.maximize()
         } else {
-            binding?.included?.playerControlsView?.visibility = View.GONE
-            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
+            binding?.mediaPlayerView?.minimize()
         }
-        binding?.included?.playerViewCloseBtn?.setOnClickListener {
+        binding?.mediaPlayerView?.setOnCloseListener = {
             playerControlsAreVisible = !playerControlsAreVisible
             folkAppPreferences.setPlayerState(playerControlsAreVisible)
             if (playerControlsAreVisible) {
-                binding?.included?.playerControlsView?.visibility = View.VISIBLE
-                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
+                binding?.mediaPlayerView?.maximize()
             } else {
-                binding?.included?.playerControlsView?.visibility = View.GONE
-                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
+                binding?.mediaPlayerView?.minimize()
             }
         }
-        binding?.included?.playerPlaylistButton?.setOnClickListener {
+        binding?.mediaPlayerView?.openPlayListListener = {
             EventBus.getDefault().post(OpenArtistFragment(playListEnsemble!!))
         }
-        binding?.included?.favBtn?.setOnClickListener {
+        binding?.mediaPlayerView?.setFabButtonClickListener = {
             val currentSong = getCurrentSong()!!
 
             EzPermission.with(context)
@@ -303,10 +259,9 @@ class MediaPlayerController(
     fun stop() {
         EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
         audioPlayer.release()
-        binding?.included?.playingTrackTime?.text = null
-        binding?.included?.playerProgressBar?.progress = 0
-        binding?.included?.playingTrackDurationTime?.text = null
-        binding?.included?.mediaPlayerView?.let {
+        binding?.mediaPlayerView?.setDuration(null, 0)
+        binding?.mediaPlayerView?.setCurrentDuration(null)
+        binding?.mediaPlayerView?.let {
             it.visibility = View.GONE
         }
     }
@@ -325,7 +280,7 @@ class MediaPlayerController(
                 audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = song.name
+            binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
         }
     }
@@ -340,19 +295,15 @@ class MediaPlayerController(
                 audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = song.name
+            binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
         }
     }
 
     private fun updateFavouriteMarkFor(song: Song?) {
-       song?.let{
-           if (song.isFav) {
-               binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_24)
-           } else {
-               binding?.included?.favBtn?.setImageResource(R.drawable.ic_baseline_favorite_border_24)
-           }
-       }
+        song?.let {
+            binding?.mediaPlayerView?.setIsFav(song.isFav)
+        }
     }
 
     fun getCurrentSong(): Song? {
@@ -370,14 +321,14 @@ class MediaPlayerController(
         }
     }
 
-    private fun updateUI(artist: Song) {
+    private fun updateUI(song: Song) {
         viewListeners()
-        binding?.included?.mediaPlayerView?.let {
+        binding?.mediaPlayerView?.let {
             it.visibility = View.VISIBLE
         }
         checkAutoPlayEnabled()
-        binding?.included?.playingTrackTitle?.text = artist.name
-        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        binding?.mediaPlayerView?.setTrackTitle(song.name)
+        binding?.mediaPlayerView?.isPlaying(true)
         onPrepareListener()
     }
 

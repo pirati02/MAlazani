@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat.getSystemService
 
 
 class AudioPlayer(private val context: Context) {
-    private var updateCallback: ((Long?, String?) -> Unit)? = null
+    private var updateCallback: ((Long, String?) -> Unit)? = null
     private var mediaPlayer: MediaPlayer? = null
     private var timer: CountDownTimer? = null
     private var mediaPlayerIsPlayingCallback: ((Boolean) -> Unit)? = null
@@ -78,7 +78,7 @@ class AudioPlayer(private val context: Context) {
         mediaPlayerIsPlayingCallback?.invoke(isPlaying())
     }
 
-    fun updateTimeHandler(callback: (Long?, String?) -> Unit) {
+    fun updateTimeHandler(callback: (Long, String?) -> Unit) {
         if (mediaPlayer == null) return
         updateCallback = callback
     }
@@ -86,8 +86,8 @@ class AudioPlayer(private val context: Context) {
     private fun startTimer() {
         timer = object : CountDownTimer(getDuration(), 1000.toLong()) {
             override fun onTick(p0: Long) {
-                val currentDuration = mediaPlayer?.currentPosition?.toLong()
-                val durationString = getTimeString(currentDuration!!)
+                val currentDuration = mediaPlayer?.currentPosition?.toLong()!!
+                val durationString = getTimeString(currentDuration)
                 updateCallback?.invoke(currentDuration, durationString)
             }
 
