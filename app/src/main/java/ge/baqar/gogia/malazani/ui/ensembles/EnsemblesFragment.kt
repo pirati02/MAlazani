@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
 import ge.baqar.gogia.model.events.OpenArtistFragment
@@ -65,11 +66,11 @@ class EnsemblesFragment : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun openArtistFragment(event: OpenArtistFragment) {
-//        findNavController().navigate(
-//            ge.baqar.gogia.malazani.R.id.navigation_artists_details,
-//            Bundle().apply {
-//                putParcelable("ensemble", event.ensemble)
-//            })
+        findNavController().navigate(
+            ge.baqar.gogia.malazani.R.id.navigation_artists_details,
+            Bundle().apply {
+                putParcelable("ensemble", event.ensemble)
+            })
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

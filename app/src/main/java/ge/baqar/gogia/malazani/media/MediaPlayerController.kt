@@ -44,16 +44,13 @@ class MediaPlayerController(
 
     private var position = 0
     private var autoPlayState = AutoPlayState.OFF
-    private var playerControlsAreVisible = true
 
     fun play() {
         playList?.let {
             val song = playList!![this.position]
             listenAudioPlayerChanges(song)
             viewListeners()
-            binding?.mediaPlayerView?.let {
-                it.visibility = View.VISIBLE
-            }
+            binding?.mediaPlayerView?.show()
             checkAutoPlayEnabled()
             binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
@@ -160,23 +157,13 @@ class MediaPlayerController(
             folkAppPreferences.updateAutoPlay(autoPlayState)
             checkAutoPlayEnabled()
         }
-        playerControlsAreVisible = folkAppPreferences.getPlayerState()
-        if (playerControlsAreVisible) {
-            binding?.mediaPlayerView?.maximize()
-        } else {
-            binding?.mediaPlayerView?.minimize()
-        }
+
         binding?.mediaPlayerView?.setOnCloseListener = {
-            playerControlsAreVisible = !playerControlsAreVisible
-            folkAppPreferences.setPlayerState(playerControlsAreVisible)
-            if (playerControlsAreVisible) {
-                binding?.mediaPlayerView?.maximize()
-            } else {
-                binding?.mediaPlayerView?.minimize()
-            }
+            folkAppPreferences.setPlayerState(binding?.mediaPlayerView?.minimized!!)
         }
         binding?.mediaPlayerView?.openPlayListListener = {
             EventBus.getDefault().post(OpenArtistFragment(ensemble!!))
+            binding?.mediaPlayerView?.minimize()
         }
         binding?.mediaPlayerView?.setFabButtonClickListener = {
             val currentSong = getCurrentSong()!!
@@ -262,9 +249,7 @@ class MediaPlayerController(
         audioPlayer.release()
         binding?.mediaPlayerView?.setDuration(null, 0)
         binding?.mediaPlayerView?.setCurrentDuration(null)
-        binding?.mediaPlayerView?.let {
-            it.visibility = View.GONE
-        }
+        binding?.mediaPlayerView?.hide()
     }
 
     fun resume() {

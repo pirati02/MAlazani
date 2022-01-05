@@ -49,7 +49,7 @@
         android:id="@+id/navigation_player"
         android:name="ge.baqar.gogia.malazani.ui.player.PlayerFragment"
         android:label="@string/player"
-        tools:layout="@layout/fragment_player">
+        tools:layout="@layout/view_media_player_expanded">
 
     </fragment>
 </navigation>

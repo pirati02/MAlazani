@@ -81,12 +81,15 @@ class FolkApiRepository(
     }
 
     suspend fun downloadSong(path: String): ReactiveResult<String, InputStream> {
-        return if (networkStatus.isOnline()) {
+        val result = if (networkStatus.isOnline()) {
             val song = folkApiService.downloadSongData(path).body()?.byteStream()
-            song?.asSuccess!!
+                ?: return "network_is_off".asError
+
+            song.asSuccess
         } else {
             "network_is_off".asError
         }
+        return result
     }
 
     suspend fun ensemble(ensembleId: String): Ensemble? {

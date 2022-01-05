@@ -1,11 +1,11 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="496.2dp"
-    android:height="496.2dp"
+    android:width="350.2dp"
+    android:height="350.2dp"
     android:viewportWidth="496.2"
     android:viewportHeight="496.2">
   <path
       android:pathData="M496.2,248.1C496.2,111.1 385.1,0 248.1,0S0,111.1 0,248.1s111.1,248.1 248.1,248.1S496.2,385.1 496.2,248.1z"
-      android:fillColor="@color/colorAccentLighter"/>
+      android:fillColor="@color/mediaPlayerColor"/>
   <path
       android:pathData="M248.1,109.4c-76.6,0 -138.7,62.1 -138.7,138.7s62.1,138.7 138.7,138.7s138.7,-62.1 138.7,-138.7S324.7,109.4 248.1,109.4zM249.6,261.5c-8.4,0 -15.2,-6.8 -15.2,-15.2c0,-8.4 6.8,-15.3 15.2,-15.3s15.3,6.8 15.3,15.3C264.9,254.7 258,261.5 249.6,261.5z"
       android:fillColor="#E3E2E2"/>
