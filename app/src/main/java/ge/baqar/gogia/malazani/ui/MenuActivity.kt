@@ -5,8 +5,10 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -18,6 +20,7 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.events.OpenArtistFragment
 import ge.baqar.gogia.model.events.RequestMediaControllerInstance
 import ge.baqar.gogia.model.events.ServiceCreatedEvent
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -39,7 +42,7 @@ class MenuActivity : AppCompatActivity() {
     private var _playMediaPlaybackAction: ((MutableList<Song>, Int, Ensemble) -> Unit)? =
         { songs, position, ensemble ->
             mediaPlayerController?.playList = songs
-            mediaPlayerController?.playListEnsemble = ensemble
+            mediaPlayerController?.ensemble = ensemble
             mediaPlayerController?.setInitialPosition(position)
             val intent = Intent(this, MediaPlaybackService::class.java).apply {
                 action = MediaPlaybackService.PLAY_MEDIA
@@ -75,6 +78,8 @@ class MenuActivity : AppCompatActivity() {
         _binding.navView.setupWithNavController(navController)
         if (MediaPlaybackServiceManager.isRunning)
             doBindService()
+
+
     }
 
     override fun onStart() {
@@ -122,6 +127,26 @@ class MenuActivity : AppCompatActivity() {
         EventBus.getDefault().post(RequestMediaControllerInstance())
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun openArtistFragment(event: OpenArtistFragment) {
+//        findNavController().navigate(
+//            ge.baqar.gogia.malazani.R.id.navigation_artists_details,
+//            Bundle().apply {
+//                putParcelable("ensemble", event.ensemble)
+//            })
+        val view = mediaPlayerController?.getSharedTransactionView()!!
+        val extras = FragmentNavigatorExtras(view to "heronakamura")
+        navController
+            .navigate(
+                R.id.navigation_player,
+                Bundle().apply {
+                    putParcelable("ensemble", event.ensemble)
+                },
+                null,
+                extras
+            )
+    }
+
     fun playMediaPlayback(position: Int, songs: MutableList<Song>, ensemble: Ensemble) {
         if (mediaPlayerController != null) {
             _playMediaPlaybackAction?.invoke(songs, position, ensemble)
@@ -150,4 +175,10 @@ class MenuActivity : AppCompatActivity() {
         val intent = Intent(this, MediaPlaybackService::class.java)
         stopService(intent)
     }
+}
+
+@ExperimentalTime
+@InternalCoroutinesApi
+fun Fragment.menuActivity(): MenuActivity {
+    return activity as MenuActivity
 }

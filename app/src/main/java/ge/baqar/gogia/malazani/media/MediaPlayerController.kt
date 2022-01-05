@@ -8,6 +8,7 @@ import android.view.View
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
+import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
@@ -38,7 +39,7 @@ class MediaPlayerController(
     private val context: Context
 ) {
     var binding: ActivityMenuBinding? = null
-    var playListEnsemble: Ensemble? = null
+    var ensemble: Ensemble? = null
     var playList: MutableList<Song>? = null
 
     private var position = 0
@@ -175,7 +176,7 @@ class MediaPlayerController(
             }
         }
         binding?.mediaPlayerView?.openPlayListListener = {
-            EventBus.getDefault().post(OpenArtistFragment(playListEnsemble!!))
+            EventBus.getDefault().post(OpenArtistFragment(ensemble!!))
         }
         binding?.mediaPlayerView?.setFabButtonClickListener = {
             val currentSong = getCurrentSong()!!
@@ -199,7 +200,7 @@ class MediaPlayerController(
                             if (!isFav) {
                                 val intent = Intent(context, DownloadService::class.java).apply {
                                     action = DownloadService.DOWNLOAD_SONGS
-                                    putExtra("ensemble", playListEnsemble)
+                                    putExtra("ensemble", ensemble)
                                     putParcelableArrayListExtra(
                                         "songs",
                                         arrayListOf(downloadableSongs)
@@ -213,7 +214,7 @@ class MediaPlayerController(
                             } else {
                                 val intent = Intent(context, DownloadService::class.java).apply {
                                     action = DownloadService.STOP_DOWNLOADING
-                                    putExtra("ensemble", playListEnsemble)
+                                    putExtra("ensemble", ensemble)
                                     putParcelableArrayListExtra(
                                         "songs",
                                         arrayListOf(downloadableSongs)
@@ -334,5 +335,9 @@ class MediaPlayerController(
 
     fun setInitialPosition(position: Int) {
         this.position = position
+    }
+
+    fun getSharedTransactionView(): View? {
+        return binding?.mediaPlayerView?.findViewById(R.id.playingTrackTitle)
     }
 }

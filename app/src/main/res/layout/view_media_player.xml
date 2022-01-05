@@ -23,6 +23,7 @@
             android:id="@+id/playingTrackTitle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:transitionName="heronakamura"
             android:layout_weight="0.4"
             android:fontFamily="@font/bpg_nino_mtavruli_bold"
             android:gravity="center"

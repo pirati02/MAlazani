@@ -21,4 +21,5 @@
     <string name="cancel">გაქმება</string>
     <string name="downloading">იწერება</string>
     <string name="no_records">ჩანაწერები არ არის</string>
+    <string name="player">player</string>
 </resources>

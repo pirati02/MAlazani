@@ -43,4 +43,13 @@
         android:name="ge.baqar.gogia.malazani.ui.favourites.FavouritesFragment"
         android:label="@string/favourites"
         tools:layout="@layout/fragment_favourites" />
+
+
+    <fragment
+        android:id="@+id/navigation_player"
+        android:name="ge.baqar.gogia.malazani.ui.player.PlayerFragment"
+        android:label="@string/player"
+        tools:layout="@layout/fragment_player">
+
+    </fragment>
 </navigation>
