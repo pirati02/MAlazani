@@ -8,7 +8,6 @@ import android.view.View
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
-import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
@@ -18,6 +17,7 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
 import ge.baqar.gogia.malazani.storage.DownloadService
 import ge.baqar.gogia.malazani.ui.songs.SongsViewModel
+import ge.baqar.gogia.malazani.utility.asDownloadable
 import ge.baqar.gogia.model.AutoPlayState
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
@@ -50,6 +50,12 @@ class MediaPlayerController(
             val song = playList!![this.position]
             listenAudioPlayerChanges(song)
             viewListeners()
+            viewModel.viewModelScope.launch {
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
+
+                viewModel.saveCurrentSong(song)
+                viewModel.saveEnsemble(ensemble!!)
+            }
             binding?.mediaPlayerView?.show()
             checkAutoPlayEnabled()
             binding?.mediaPlayerView?.setTrackTitle(song.name)
@@ -73,9 +79,6 @@ class MediaPlayerController(
         audioPlayer.listenPlayer {
             binding?.mediaPlayerView?.isPlaying(it)
         }
-        viewModel.viewModelScope.launch {
-            audioPlayer.play(song.path, song.data) { onPrepareListener() }
-        }
         audioPlayer.completed {
             binding?.mediaPlayerView?.setDuration(null, 0)
             binding?.mediaPlayerView?.setCurrentDuration(null)
@@ -97,20 +100,12 @@ class MediaPlayerController(
                     }
                     binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name)
                     binding?.mediaPlayerView?.isPlaying(true)
+
+                    viewModel.saveCurrentSong(song)
+                    viewModel.saveEnsemble(ensemble!!)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
-                    if ((position + 1) < playList?.size!!) {
-                        ++position
-                        val nextSong = playList!![position]
-                        viewModel.viewModelScope.launch {
-                            audioPlayer.play(nextSong.path, nextSong.data) { onPrepareListener() }
-                            EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
-                        }
-                        binding?.mediaPlayerView?.setTrackTitle(nextSong.name)
-                        binding?.mediaPlayerView?.isPlaying(true)
-                    } else {
-                        stop()
-                    }
+                    next()
                 }
             }
         }
@@ -176,14 +171,7 @@ class MediaPlayerController(
                     if (granted.isNotEmpty()) {
                         viewModel.viewModelScope.launch {
                             var isFav = viewModel.isSongFav(currentSong.id)
-                            val downloadableSongs = DownloadableSong(
-                                currentSong.id,
-                                currentSong.name,
-                                currentSong.nameEng,
-                                currentSong.path,
-                                currentSong.songType,
-                                currentSong.ensembleId
-                            )
+                            val downloadableSongs = currentSong.asDownloadable()
                             if (!isFav) {
                                 val intent = Intent(context, DownloadService::class.java).apply {
                                     action = DownloadService.DOWNLOAD_SONGS
@@ -268,9 +256,10 @@ class MediaPlayerController(
             }
             binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
+            viewModel.saveCurrentSong(song)
+            viewModel.saveEnsemble(ensemble!!)
         }
     }
-
 
     fun previous() {
         if (position > 0) {
@@ -283,6 +272,8 @@ class MediaPlayerController(
             }
             binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
+            viewModel.saveCurrentSong(song)
+            viewModel.saveEnsemble(ensemble!!)
         }
     }
 
@@ -322,7 +313,10 @@ class MediaPlayerController(
         this.position = position
     }
 
-    fun getSharedTransactionView(): View? {
-        return binding?.mediaPlayerView?.findViewById(R.id.playingTrackTitle)
+    fun setCurrentSong(song: Song) {
+        playList = mutableListOf(song)
+        position = 0
+        play()
+        pause()
     }
 }

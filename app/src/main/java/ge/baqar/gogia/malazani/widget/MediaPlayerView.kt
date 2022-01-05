@@ -59,6 +59,8 @@ class MediaPlayerView @JvmOverloads constructor(
 
         binding.expandedMediaPlayerView.playStopButton.setOnClickListener {
             onStop?.invoke()
+            minimize()
+            hide()
         }
 
         binding.expandedMediaPlayerView.playNextButton.setOnClickListener {

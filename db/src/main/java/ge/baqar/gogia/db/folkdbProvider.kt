@@ -11,7 +11,8 @@ fun provideFolkApiDatabase(context: Context): FolkApiDao? {
         context,
         FolkApiDatabase::class.java,
         "folkapidb"
-    ).build()
+    ).fallbackToDestructiveMigration()
+        .build()
 
     return db.folkApiDao()
 }

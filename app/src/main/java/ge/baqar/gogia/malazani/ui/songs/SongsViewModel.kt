@@ -1,19 +1,24 @@
 package ge.baqar.gogia.malazani.ui.songs
 
+import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
+import ge.baqar.gogia.malazani.utility.toDb
+import ge.baqar.gogia.malazani.utility.toModel
 import ge.baqar.gogia.model.*
 import ge.baqar.gogia.storage.CharConverter
 import ge.baqar.gogia.storage.usecase.FileSaveController
 import ge.baqar.gogia.utils.FileExtensions
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
 class SongsViewModel(
-    private val alazaniRepository: FolkApiRepository,
+    private val folkApiRepository: FolkApiRepository,
     private val folkApiDao: FolkApiDao,
     private val saveController: FileSaveController,
     private val fileExtensions: FileExtensions
@@ -26,18 +31,18 @@ class SongsViewModel(
             ArtistState.IS_LOADING
         }
 
-        alazaniRepository.songs(ensemble.id)
+        folkApiRepository.songs(ensemble.id)
             .collect(object : FlowCollector<ReactiveResult<String, SongsResponse>> {
-                override suspend fun emit(result: ReactiveResult<String, SongsResponse>) {
-                    if (result is SucceedResult) {
+                override suspend fun emit(value: ReactiveResult<String, SongsResponse>) {
+                    if (value is SucceedResult) {
                         val songs = folkApiDao.songsByEnsembleId(ensemble.id)
 
-                        result.value.chants.forEach { song ->
+                        value.value.chants.forEach { song ->
                             song.nameEng = CharConverter.toEng(song.name)
                             song.isFav =
                                 songs.firstOrNull { it.referenceId == song.id } != null
                         }
-                        result.value.songs.forEach { song ->
+                        value.value.songs.forEach { song ->
                             song.nameEng = CharConverter.toEng(song.name)
                             song.isFav =
                                 songs.firstOrNull { it.referenceId == song.id } != null
@@ -45,30 +50,19 @@ class SongsViewModel(
                         emit {
                             state.copy(
                                 isInProgress = false,
-                                songs = result.value.songs,
-                                chants = result.value.chants
+                                songs = value.value.songs,
+                                chants = value.value.chants
                             )
                         }
                     }
-                    if (result is FailedResult) {
+                    if (value is FailedResult) {
                         val cacheSongs = folkApiDao.songsByEnsembleId(ensemble.id)
                         val songs = cacheSongs
                             .filter { it.songType == SongType.Song }
                             .map {
                                 val fileSystemSong =
                                     saveController.getFile(ensemble.nameEng, it.nameEng)
-                                Song(
-                                    it.referenceId,
-                                    it.name,
-                                    it.nameEng,
-                                    it.filePath,
-                                    it.songType,
-                                    it.ensembleId,
-                                    ensemble.name,
-                                    false,
-                                    data = fileExtensions.read(fileSystemSong?.data),
-                                    isFav = true
-                                )
+                                it.toModel(ensemble.name, fileExtensions.read(fileSystemSong?.data))
                             }
                             .toMutableList()
 
@@ -77,18 +71,7 @@ class SongsViewModel(
                             .map {
                                 val fileSystemSong =
                                     saveController.getFile(ensemble.nameEng, it.nameEng)
-                                Song(
-                                    it.referenceId,
-                                    it.name,
-                                    it.nameEng,
-                                    it.filePath,
-                                    it.songType,
-                                    it.ensembleId,
-                                    ensemble.name,
-                                    false,
-                                    data = fileExtensions.read(fileSystemSong?.data),
-                                    isFav = true
-                                )
+                                it.toModel(ensemble.name, fileExtensions.read(fileSystemSong?.data))
                             }
                             .toMutableList()
 
@@ -100,7 +83,7 @@ class SongsViewModel(
                             )
                         }
                         emit {
-                            state.copy(isInProgress = false, error = result.value)
+                            state.copy(isInProgress = false, error = value.value)
                         }
                     }
                 }
@@ -120,6 +103,20 @@ class SongsViewModel(
     }
 
     suspend fun isSongFav(songId: String): Boolean {
-        return  folkApiDao.song(songId) != null
+        return folkApiDao.song(songId) != null
+    }
+
+    fun saveCurrentSong(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            folkApiDao.updateAllSongAsNoCurrent()
+            folkApiDao.saveCurrentSong(song.toDb(true))
+        }
+    }
+
+    fun saveEnsemble(ensemble: Ensemble) {
+        viewModelScope.launch(Dispatchers.IO) {
+            folkApiDao.updateAllEnsembleAsNoCurrent()
+            folkApiDao.saveCurrentEnsemble(ensemble.toDb(true))
+        }
     }
 }

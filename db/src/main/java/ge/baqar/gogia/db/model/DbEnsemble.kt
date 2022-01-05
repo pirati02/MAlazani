@@ -12,5 +12,6 @@ data class DbEnsemble(
     @ColumnInfo(name = "reference_id") @NotNull val referenceId: String,
     val name: String,
     val nameEng: String,
-    var artistType: ArtistType
+    var artistType: ArtistType,
+    @ColumnInfo(name = "is_current") val isCurrent: Boolean
 )

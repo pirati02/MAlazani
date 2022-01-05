@@ -15,7 +15,8 @@ data class DbSong(
     @ColumnInfo(name = "path") val path: String?,
     @ColumnInfo(name = "ensemble_id") val ensembleId: String,
     @ColumnInfo(name = "song_type") val songType: SongType,
-    @ColumnInfo(name = "data") var filePath: String
+    @ColumnInfo(name = "data") var filePath: String,
+    @ColumnInfo(name = "is_current") var isCurrentPlaying: Boolean
 ) {
     override fun equals(other: Any?): Boolean {
         if (other is DbSong) {

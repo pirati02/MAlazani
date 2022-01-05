@@ -4,9 +4,9 @@ import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.db.model.DbEnsemble
 import ge.baqar.gogia.db.model.DbSong
 import ge.baqar.gogia.http.repository.FolkApiRepository
+import ge.baqar.gogia.malazani.utility.toDb
 import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
-import ge.baqar.gogia.model.Song
 import ge.baqar.gogia.model.SucceedResult
 import ge.baqar.gogia.storage.domain.FileStreamContent
 import ge.baqar.gogia.storage.usecase.FileSaveController
@@ -19,7 +19,7 @@ import java.util.*
 
 class AlbumDownloadManager internal constructor(
     private val folkApiDao: FolkApiDao,
-    private val alazaniRepository: FolkApiRepository,
+    private val folkApiRepository: FolkApiRepository,
     private val saveController: FileSaveController
 ) : CoroutineScope {
     override val coroutineContext = Dispatchers.IO + SupervisorJob()
@@ -34,17 +34,7 @@ class AlbumDownloadManager internal constructor(
         _ensemble = ensemble
         songs.clear()
         songs.addAll(downloadSongs.map {
-            val dbSong = DbSong(
-                UUID.randomUUID().toString(),
-                it.id,
-                it.name,
-                it.nameEng,
-                it.link,
-                it.ensembleId,
-                it.songType,
-                ""
-            )
-            dbSong
+            it.toDb()
         })
     }
 
@@ -61,7 +51,8 @@ class AlbumDownloadManager internal constructor(
                     _ensemble.id,
                     _ensemble.name,
                     _ensemble.nameEng,
-                    _ensemble.artistType
+                    _ensemble.artistType,
+                    false
                 )
                 folkApiDao.saveEnsemble(existingEnsemble)
             }
@@ -82,7 +73,7 @@ class AlbumDownloadManager internal constructor(
 
                 val exists = saveController.exists(_ensemble.nameEng, song.nameEng)
                 if (!exists) {
-                    val result = alazaniRepository.downloadSong(song.path!!)
+                    val result = folkApiRepository.downloadSong(song.path!!)
                     if (result is SucceedResult<InputStream>) {
                         saveController.saveDocumentFile(
                             FileStreamContent(
