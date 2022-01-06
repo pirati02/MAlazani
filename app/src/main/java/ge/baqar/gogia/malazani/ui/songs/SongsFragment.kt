@@ -93,9 +93,6 @@ class SongsFragment : Fragment() {
         binding?.toolbarInclude?.tabBackImageView?.setOnClickListener {
             findNavController().navigateUp()
         }
-
-        val offlineEnabled = folkAppPreferences.getOfflineEnabled(_ensemble?.id!!)
-        binding?.toolbarInclude?.enableOfflineMode?.isChecked = offlineEnabled
     }
 
     @SuppressLint("NotifyDataSetChanged")

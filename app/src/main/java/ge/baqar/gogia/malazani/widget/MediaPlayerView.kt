@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewPropertyAnimator
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -19,12 +18,12 @@ class MediaPlayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : LinearLayout(context, attrs) {
 
-    private var _animation: ViewPropertyAnimator? = null
     var state: Int = HIDDEN
     private lateinit var bottomNavigationView: BottomNavigationView
 
     private var seeking: Boolean = false
     var onAutoPlayChanged: (() -> Unit)? = null
+    var onTimerSetRequested: (() -> Unit)? = null
     var onNext: (() -> Unit)? = null
     var onPrev: (() -> Unit)? = null
     var onStop: (() -> Unit)? = null
@@ -99,6 +98,10 @@ class MediaPlayerView @JvmOverloads constructor(
             onAutoPlayChanged?.invoke()
         }
 
+        binding.expandedMediaPlayerView.timerBtn.setOnClickListener {
+            onTimerSetRequested?.invoke()
+        }
+
         binding.expandedMediaPlayerView.playerProgressBar.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -122,17 +125,16 @@ class MediaPlayerView @JvmOverloads constructor(
                 MotionEvent.ACTION_MOVE -> {
                     binding.expandedMediaPlayerViewContainer.translationY += event.rawY - previousY
                     previousY = event.rawY
-                    val s = 9
                 }
                 MotionEvent.ACTION_DOWN -> {
                     previousY = event.rawY
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                     val translationY = binding.expandedMediaPlayerViewContainer.translationY
-                    if (translationY < calculatedHeight / 2) {
-                        maximize()
-                    } else {
+                    if (translationY < calculatedHeight / 1.4) {
                         minimize()
+                    } else {
+                        maximize()
                     }
                 }
             }
@@ -163,7 +165,7 @@ class MediaPlayerView @JvmOverloads constructor(
             onPlayPause?.invoke()
         }
         var initialY = 0f
-        binding.mediaPlayerViewContainer.setOnTouchListener { view, event ->
+        binding.mediaPlayerViewContainer.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_MOVE -> {
                     val calculatedMovingY = calculatedHeight + (event.rawY - initialY)
@@ -174,7 +176,7 @@ class MediaPlayerView @JvmOverloads constructor(
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                     val translationY = binding.expandedMediaPlayerViewContainer.translationY
-                    if (translationY < calculatedHeight / 1.5) {
+                    if (translationY < calculatedHeight / 1.2) {
                         maximize()
                     } else {
                         minimize()
@@ -187,6 +189,14 @@ class MediaPlayerView @JvmOverloads constructor(
 
     fun setTrackTitle(title: String) {
         binding.mediaPlayerView.playingTrackTitle.text = title
+    }
+
+    fun setTimer(isSet: Boolean) {
+        if (isSet) {
+            binding.expandedMediaPlayerView.timerBtn.setImageResource(R.drawable.ic_outline_timer_24_set)
+        } else {
+            binding.expandedMediaPlayerView.timerBtn.setImageResource(R.drawable.ic_outline_timer_24)
+        }
     }
 
     fun setIsFav(isFav: Boolean) {
@@ -300,7 +310,7 @@ class MediaPlayerView @JvmOverloads constructor(
         state = HALF_OPENED
     }
 
-    fun hide() {
+    private fun hide() {
         binding.mediaPlayerViewContainer.animate()
             .setDuration(animationDuration)
             .alpha(0f)

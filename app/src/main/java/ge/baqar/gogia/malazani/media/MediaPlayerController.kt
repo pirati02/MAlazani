@@ -1,10 +1,12 @@
 package ge.baqar.gogia.malazani.media
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
+import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
@@ -21,13 +23,11 @@ import ge.baqar.gogia.malazani.utility.asDownloadable
 import ge.baqar.gogia.model.AutoPlayState
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
-import ge.baqar.gogia.model.events.ArtistChanged
-import ge.baqar.gogia.model.events.OpenArtistFragment
-import ge.baqar.gogia.model.events.SongsMarkedAsFavourite
-import ge.baqar.gogia.model.events.SongsUnmarkedAsFavourite
+import ge.baqar.gogia.model.events.*
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import kotlin.time.ExperimentalTime
+
 
 @ExperimentalTime
 @InternalCoroutinesApi
@@ -43,6 +43,7 @@ class MediaPlayerController(
 
     private var position = 0
     private var autoPlayState = AutoPlayState.OFF
+    private var timerSet = false
 
     fun play() {
         playList?.let {
@@ -103,7 +104,7 @@ class MediaPlayerController(
             }
         }
         audioPlayer.updateTimeHandler { progress, time ->
-            binding?.mediaPlayerView?.setProgress(time, progress.toInt() )
+            binding?.mediaPlayerView?.setProgress(time, progress.toInt())
         }
     }
 
@@ -130,7 +131,7 @@ class MediaPlayerController(
         binding?.mediaPlayerView?.onStop = {
             stop()
         }
-        binding?.mediaPlayerView?.onAutoPlayChanged  = {
+        binding?.mediaPlayerView?.onAutoPlayChanged = {
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
                     autoPlayState = AutoPlayState.REPEAT_ALBUM
@@ -152,6 +153,34 @@ class MediaPlayerController(
         binding?.mediaPlayerView?.openPlayListListener = {
             EventBus.getDefault().post(OpenArtistFragment(ensemble!!))
             binding?.mediaPlayerView?.minimize()
+        }
+
+        timerSet = folkAppPreferences.getTimerSet()
+        binding?.mediaPlayerView?.setTimer(timerSet)
+        binding?.mediaPlayerView?.onTimerSetRequested = {
+            timerSet = !timerSet
+            folkAppPreferences.setTimerSet(timerSet)
+            binding?.mediaPlayerView?.setTimer(timerSet)
+//            val array = arrayOf("unset", "5", "10", "30", "60")
+//            val dialog = AlertDialog.Builder(context)
+//                .setTitle(R.string.app_name_georgian)
+//                .setSingleChoiceItems(array, 0
+//                ) { _, p1 ->
+//                    var item = array[p1]
+//                    Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
+//                }.setPositiveButton("Go"
+//                ) { _, p1 ->
+//                    var item = array[p1]
+//                    Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
+//                }
+//                .create()
+//            dialog.show()
+            val str = arrayOf(
+                "mp3",
+                "Mpeg",
+                "wmv",
+                "3gp"
+            )
         }
         binding?.mediaPlayerView?.setFabButtonClickListener = {
             val currentSong = getCurrentSong()!!

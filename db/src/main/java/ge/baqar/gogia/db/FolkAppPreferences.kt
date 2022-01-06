@@ -11,6 +11,7 @@ class FolkAppPreferences(private val context: Context) {
     private val playerControlsAreVisibleKey = "playerControlsAreVisible"
     private val autoPlayEnabledKey = "autoPlayEnabledKey"
     private val ensembleKey = "ensembleKey_"
+    private val timerSetKey = "timerSetKey"
 
     fun updateAutoPlay(autoPlayEnabled: Int) {
         preferences.edit()
@@ -32,13 +33,13 @@ class FolkAppPreferences(private val context: Context) {
         return preferences.getBoolean(playerControlsAreVisibleKey, true)
     }
 
-    fun setOfflineEnabled(id: String, enabled: Boolean) {
+    fun setTimerSet(enabled: Boolean) {
         preferences.edit()
-            .putBoolean("${ensembleKey}${id}", enabled)
+            .putBoolean(timerSetKey, enabled)
             .apply()
     }
 
-    fun getOfflineEnabled(id: String): Boolean {
-        return preferences.getBoolean("${ensembleKey}${id}", false)
+    fun getTimerSet(): Boolean {
+        return preferences.getBoolean(timerSetKey, false)
     }
 }
