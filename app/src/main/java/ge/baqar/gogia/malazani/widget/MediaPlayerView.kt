@@ -1,8 +1,12 @@
 package ge.baqar.gogia.malazani.widget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewPropertyAnimator
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -10,10 +14,13 @@ import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ViewMediaPlayerContainerBinding
 import ge.baqar.gogia.model.AutoPlayState
 
+
 class MediaPlayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : LinearLayout(context, attrs) {
 
+    private var _animation: ViewPropertyAnimator? = null
+    var state: Int = HIDDEN
     private lateinit var bottomNavigationView: BottomNavigationView
 
     private var seeking: Boolean = false
@@ -43,11 +50,20 @@ class MediaPlayerView @JvmOverloads constructor(
         initMaximizedMediaPlayerListeners()
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        calculatedHeight = h
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        calculatedHeight = MeasureSpec.getSize(heightMeasureSpec)
+        binding.expandedMediaPlayerViewContainer.animate()
+            .translationY(calculatedHeight.toFloat())
+            .setDuration(2)
+            .start()
     }
 
+    override fun setOnClickListener(l: OnClickListener?) {
+        binding.mediaPlayerViewContainer.setOnClickListener(l)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     private fun initMaximizedMediaPlayerListeners() {
         binding.expandedMediaPlayerView.playerViewCloseBtn.setOnClickListener {
             minimize()
@@ -79,6 +95,10 @@ class MediaPlayerView @JvmOverloads constructor(
             setFabButtonClickListener?.invoke()
         }
 
+        binding.expandedMediaPlayerView.playerAutoPlayButton.setOnClickListener {
+            onAutoPlayChanged?.invoke()
+        }
+
         binding.expandedMediaPlayerView.playerProgressBar.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -95,8 +115,32 @@ class MediaPlayerView @JvmOverloads constructor(
             }
 
         })
+
+        var previousY = 0f
+        binding.expandedMediaPlayerViewContainer.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    binding.expandedMediaPlayerViewContainer.translationY += event.rawY - previousY
+                    previousY = event.rawY
+                    val s = 9
+                }
+                MotionEvent.ACTION_DOWN -> {
+                    previousY = event.rawY
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
+                    val translationY = binding.expandedMediaPlayerViewContainer.translationY
+                    if (translationY < calculatedHeight / 2) {
+                        maximize()
+                    } else {
+                        minimize()
+                    }
+                }
+            }
+            false
+        }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initMinimizedMediaPlayerListeners() {
         binding.mediaPlayerView.playerViewCloseBtn.setOnClickListener {
             setOnCloseListener?.invoke()
@@ -117,6 +161,27 @@ class MediaPlayerView @JvmOverloads constructor(
 
         binding.mediaPlayerView.playPauseButton.setOnClickListener {
             onPlayPause?.invoke()
+        }
+        var initialY = 0f
+        binding.mediaPlayerViewContainer.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    val calculatedMovingY = calculatedHeight + (event.rawY - initialY)
+                    binding.expandedMediaPlayerViewContainer.translationY = calculatedMovingY
+                }
+                MotionEvent.ACTION_DOWN -> {
+                    initialY = event.rawY
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
+                    val translationY = binding.expandedMediaPlayerViewContainer.translationY
+                    if (translationY < calculatedHeight / 1.5) {
+                        maximize()
+                    } else {
+                        minimize()
+                    }
+                }
+            }
+            false
         }
     }
 
@@ -141,12 +206,15 @@ class MediaPlayerView @JvmOverloads constructor(
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
                     binding.mediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_off)
+                    binding.expandedMediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_off)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
                     binding.mediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_on)
+                    binding.expandedMediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_24_on)
                 }
                 AutoPlayState.REPEAT_ONE -> {
                     binding.mediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_one_24)
+                    binding.expandedMediaPlayerView.playerAutoPlayButton.setImageResource(R.drawable.ic_baseline_repeat_one_24)
                 }
             }
         }
@@ -182,12 +250,13 @@ class MediaPlayerView @JvmOverloads constructor(
         }
     }
 
-    private fun maximize() {
+    fun maximize() {
         minimized = false
         post {
+            binding.expandedMediaPlayerViewContainer.visibility = View.VISIBLE
             binding.expandedMediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
-                .alpha(1f)
+                .translationY(0F)
                 .start()
             binding.mediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
@@ -198,6 +267,7 @@ class MediaPlayerView @JvmOverloads constructor(
                 .translationY(translate)
                 .start()
         }
+        state = OPENED
     }
 
     fun minimize() {
@@ -205,8 +275,9 @@ class MediaPlayerView @JvmOverloads constructor(
         post {
             binding.expandedMediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
-                .alpha(0f)
+                .translationY(measuredHeight.toFloat())
                 .start()
+
 
             binding.mediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
@@ -218,6 +289,7 @@ class MediaPlayerView @JvmOverloads constructor(
                 .translationY(0F)
                 .start()
         }
+        state = HALF_OPENED
     }
 
     fun show() {
@@ -225,6 +297,7 @@ class MediaPlayerView @JvmOverloads constructor(
             .setDuration(1)
             .alpha(1f)
             .start()
+        state = HALF_OPENED
     }
 
     fun hide() {
@@ -232,9 +305,16 @@ class MediaPlayerView @JvmOverloads constructor(
             .setDuration(animationDuration)
             .alpha(0f)
             .start()
+        state = HIDDEN
     }
 
     fun setupWithBottomNavigation(navView: BottomNavigationView) {
         bottomNavigationView = navView
+    }
+
+    companion object {
+        const val OPENED = 1
+        const val HALF_OPENED = 2
+        const val HIDDEN = 3
     }
 }

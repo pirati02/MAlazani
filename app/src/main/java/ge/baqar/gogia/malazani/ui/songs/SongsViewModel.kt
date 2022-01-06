@@ -1,20 +1,16 @@
 package ge.baqar.gogia.malazani.ui.songs
 
-import androidx.lifecycle.viewModelScope
 import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.http.repository.FolkApiRepository
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
-import ge.baqar.gogia.malazani.utility.toDb
 import ge.baqar.gogia.malazani.utility.toModel
 import ge.baqar.gogia.model.*
 import ge.baqar.gogia.storage.CharConverter
 import ge.baqar.gogia.storage.usecase.FileSaveController
 import ge.baqar.gogia.utils.FileExtensions
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.launch
 
 @InternalCoroutinesApi
 class SongsViewModel(
@@ -104,19 +100,5 @@ class SongsViewModel(
 
     suspend fun isSongFav(songId: String): Boolean {
         return folkApiDao.song(songId) != null
-    }
-
-    fun saveCurrentSong(song: Song) {
-        viewModelScope.launch(Dispatchers.IO) {
-            folkApiDao.updateAllSongAsNoCurrent()
-            folkApiDao.saveCurrentSong(song.toDb(true))
-        }
-    }
-
-    fun saveEnsemble(ensemble: Ensemble) {
-        viewModelScope.launch(Dispatchers.IO) {
-            folkApiDao.updateAllEnsembleAsNoCurrent()
-            folkApiDao.saveCurrentEnsemble(ensemble.toDb(true))
-        }
     }
 }

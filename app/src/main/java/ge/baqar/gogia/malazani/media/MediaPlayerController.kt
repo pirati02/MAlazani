@@ -19,7 +19,6 @@ import ge.baqar.gogia.malazani.storage.DownloadService
 import ge.baqar.gogia.malazani.ui.songs.SongsViewModel
 import ge.baqar.gogia.malazani.utility.asDownloadable
 import ge.baqar.gogia.model.AutoPlayState
-import ge.baqar.gogia.model.DownloadableSong
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
 import ge.baqar.gogia.model.events.ArtistChanged
@@ -52,9 +51,6 @@ class MediaPlayerController(
             viewListeners()
             viewModel.viewModelScope.launch {
                 audioPlayer.play(song.path, song.data) { onPrepareListener() }
-
-                viewModel.saveCurrentSong(song)
-                viewModel.saveEnsemble(ensemble!!)
             }
             binding?.mediaPlayerView?.show()
             checkAutoPlayEnabled()
@@ -100,9 +96,6 @@ class MediaPlayerController(
                     }
                     binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name)
                     binding?.mediaPlayerView?.isPlaying(true)
-
-                    viewModel.saveCurrentSong(song)
-                    viewModel.saveEnsemble(ensemble!!)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
                     next()
@@ -140,12 +133,12 @@ class MediaPlayerController(
         binding?.mediaPlayerView?.onAutoPlayChanged  = {
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
-                    autoPlayState = AutoPlayState.REPEAT_ONE
-                }
-                AutoPlayState.REPEAT_ONE -> {
                     autoPlayState = AutoPlayState.REPEAT_ALBUM
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
+                    autoPlayState = AutoPlayState.REPEAT_ONE
+                }
+                AutoPlayState.REPEAT_ONE -> {
                     autoPlayState = AutoPlayState.OFF
                 }
             }
@@ -233,11 +226,10 @@ class MediaPlayerController(
     }
 
     fun stop() {
+        pause()
         EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
-        audioPlayer.release()
         binding?.mediaPlayerView?.setDuration(null, 0)
         binding?.mediaPlayerView?.setCurrentDuration(null)
-        binding?.mediaPlayerView?.hide()
     }
 
     fun resume() {
@@ -256,8 +248,6 @@ class MediaPlayerController(
             }
             binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
-            viewModel.saveCurrentSong(song)
-            viewModel.saveEnsemble(ensemble!!)
         }
     }
 
@@ -272,8 +262,6 @@ class MediaPlayerController(
             }
             binding?.mediaPlayerView?.setTrackTitle(song.name)
             updateFavouriteMarkFor(song)
-            viewModel.saveCurrentSong(song)
-            viewModel.saveEnsemble(ensemble!!)
         }
     }
 

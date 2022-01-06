@@ -3,36 +3,30 @@ package ge.baqar.gogia.malazani.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import ge.baqar.gogia.db.db.FolkApiDao
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.utility.toModel
+import ge.baqar.gogia.malazani.widget.MediaPlayerView.Companion.OPENED
 import ge.baqar.gogia.model.Ensemble
 import ge.baqar.gogia.model.Song
 import ge.baqar.gogia.model.events.RequestMediaControllerInstance
 import ge.baqar.gogia.model.events.ServiceCreatedEvent
-import ge.baqar.gogia.storage.usecase.FileSaveController
-import ge.baqar.gogia.utils.FileExtensions
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import org.koin.android.ext.android.inject
 import kotlin.time.ExperimentalTime
 
 
@@ -61,10 +55,7 @@ class MenuActivity : AppCompatActivity() {
             }
         }
 
-    private val fileExtensions: FileExtensions by inject()
-    private val saveController: FileSaveController by inject()
-    private val folkApiDao: FolkApiDao by inject()
-    private lateinit var _binding: ActivityMenuBinding
+    private lateinit var binding: ActivityMenuBinding
     private lateinit var navController: NavController
     private var mediaPlayerController: MediaPlayerController? = null
 
@@ -72,8 +63,8 @@ class MenuActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        _binding = ActivityMenuBinding.inflate(layoutInflater)
-        setContentView(_binding.root)
+        binding = ActivityMenuBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportActionBar?.hide()
         navController = findNavController(R.id.nav_host_fragment_activity_menu)
         val appBarConfiguration = AppBarConfiguration(
@@ -85,31 +76,17 @@ class MenuActivity : AppCompatActivity() {
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
-        _binding.navView.setupWithNavController(navController)
-        _binding.mediaPlayerView.setupWithBottomNavigation(_binding.navView)
+        binding.navView.setupWithNavController(navController)
+        binding.mediaPlayerView.setupWithBottomNavigation(binding.navView)
+        binding.mediaPlayerView.setOnClickListener {
+            val state = binding.mediaPlayerView.state
+            if (state != OPENED){
+                binding.mediaPlayerView.maximize()
+            }
+        }
 
         if (MediaPlaybackServiceManager.isRunning)
             doBindService()
-        else {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val currentSong = folkApiDao.getCurrentSong()
-
-                currentSong?.let {
-                    val ensemble = folkApiDao.getCurrentEnsemble()
-                    ensemble?.let {
-                        val fileSystemSong = saveController.getFile(ensemble.nameEng, it.nameEng)
-                        withContext(Dispatchers.Main) {
-                            doBindService()
-                            tempLastPlayedSong = currentSong.toModel(
-                                ensemble.nameEng,
-                                fileExtensions.read(fileSystemSong?.data)
-                            )
-                            mediaPlayerController?.setCurrentSong(tempLastPlayedSong!!)
-                        }
-                    }
-                }
-            }
-        }
     }
 
 
@@ -130,11 +107,19 @@ class MenuActivity : AppCompatActivity() {
         EventBus.getDefault().unregister(this)
     }
 
+    override fun onBackPressed() {
+        val state = binding.mediaPlayerView.state
+        if (state == OPENED) {
+            binding.mediaPlayerView.minimize()
+        } else
+            super.onBackPressed()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     fun onMessageEvent(event: MediaPlayerController) {
         mediaPlayerController = event
-        mediaPlayerController?.binding = _binding
+        mediaPlayerController?.binding = binding
 
         if (tempLastPlayedSong != null) {
             mediaPlayerController?.setCurrentSong(tempLastPlayedSong!!)
@@ -163,6 +148,9 @@ class MenuActivity : AppCompatActivity() {
     }
 
     fun playMediaPlayback(position: Int, songs: MutableList<Song>, ensemble: Ensemble) {
+        (binding.navHostFragmentActivityMenuContainer.layoutParams as ConstraintLayout.LayoutParams).apply {
+            bottomMargin = resources.getDimension(R.dimen.minimized_media_player_height).toInt()
+        }
         if (mediaPlayerController != null) {
             _playMediaPlaybackAction?.invoke(songs, position, ensemble)
         } else {

@@ -34,15 +34,6 @@ interface FolkApiDao {
     @Query("SELECT * FROM Song WHERE reference_id = :songId")
     suspend fun song(songId: String): DbSong?
 
-    @Query("UPDATE Song SET is_current = 1")
-    suspend fun updateAllSongAsNoCurrent()
-
-    @Query("SELECT * FROM Song WHERE is_current = 1")
-    suspend fun getCurrentSong(): DbSong?
-
-    @Query("UPDATE Ensemble SET is_current = 1")
-    fun updateAllEnsembleAsNoCurrent()
-
     @Query("SELECT * FROM Song ORDER By name_eng ASC")
     suspend fun songs(): MutableList<DbSong>
 
@@ -54,7 +45,4 @@ interface FolkApiDao {
 
     @Query("SELECT * FROM Ensemble")
     fun ensembles(): MutableList<DbEnsemble>
-
-    @Query("SELECT * FROM Ensemble WHERE is_current = 1")
-    suspend fun getCurrentEnsemble(): DbEnsemble?
 }

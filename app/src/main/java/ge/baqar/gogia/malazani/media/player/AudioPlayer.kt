@@ -8,14 +8,6 @@ import android.os.PowerManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import android.media.AudioManager
-import androidx.core.content.ContextCompat
-
-import androidx.core.content.ContextCompat.getSystemService
-
-
-
-
 
 class AudioPlayer(private val context: Context) {
     private var updateCallback: ((Long, String?) -> Unit)? = null
@@ -79,7 +71,6 @@ class AudioPlayer(private val context: Context) {
     }
 
     fun updateTimeHandler(callback: (Long, String?) -> Unit) {
-        if (mediaPlayer == null) return
         updateCallback = callback
     }
 
