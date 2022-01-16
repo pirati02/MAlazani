@@ -11,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import ge.baqar.gogia.db.FolkAppPreferences
 import ge.baqar.gogia.malazani.databinding.FragmentArtistBinding
 import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.model.Ensemble
@@ -40,11 +39,9 @@ import kotlin.time.ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 class SongsFragment : Fragment() {
 
-    private var searchedItemId: String? = null
     private var _currentSong: Song? = null
     private var _ensemble: Ensemble? = null
 
-    private val folkAppPreferences: FolkAppPreferences by inject()
     private val viewModel: SongsViewModel by inject()
     private var binding: FragmentArtistBinding? = null
 
@@ -67,7 +64,6 @@ class SongsFragment : Fragment() {
     ): View {
         binding = FragmentArtistBinding.inflate(inflater, container, false)
         _ensemble = arguments?.getParcelable("ensemble")
-        searchedItemId = arguments?.getString("searchedItemId")
         binding?.toolbarInclude?.tabTitleView?.text = _ensemble?.name
 
         val loadSongsAndChantsAction = flowOf(
@@ -144,19 +140,21 @@ class SongsFragment : Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun currentPlayingSong(event: CurrentPlayingSong?) {
         _currentSong = event?.song
-        _currentSong?.let {
-            if (_currentSong?.songType == SongType.Song) {
-                (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
-                    applyNotPlayingState()
-                    dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+        if (viewModel.state.songs.isNotEmpty() || viewModel.state.chants.isNotEmpty()) {
+            _currentSong?.let {
+                if (_currentSong?.songType == SongType.Song) {
+                    (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                        dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    }
+                } else {
+                    (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                        dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    }
                 }
                 (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
-                }
-            } else {
-                (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
-                    applyNotPlayingState()
-                    dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
                 }
                 (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
                     applyNotPlayingState()
@@ -199,6 +197,17 @@ class SongsFragment : Fragment() {
                 play(index, state.songs)
                 currentPlayingSong(CurrentPlayingSong(song))
             }
+            _currentSong?.let {
+                if (_currentSong?.songType == SongType.Song) {
+                    (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                        dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    }
+                    (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                    }
+                }
+            }
 
             binding?.songsListView?.visibility = View.VISIBLE
             binding?.chantsListView?.visibility = View.GONE
@@ -217,6 +226,17 @@ class SongsFragment : Fragment() {
             binding?.chantsListView?.adapter = SongsAdapter(state.chants) { song, index ->
                 play(index, state.chants)
                 currentPlayingSong(CurrentPlayingSong(song))
+            }
+            _currentSong?.let {
+                if (_currentSong?.songType == SongType.Chant) {
+                    (binding?.chantsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                        dataSource.firstOrNull { it.id == _currentSong?.id }?.isPlaying = true
+                    }
+                    (binding?.songsListView?.adapter as? SongsAdapter)?.apply {
+                        applyNotPlayingState()
+                    }
+                }
             }
             binding?.tabViewInclude?.artistChantsTab?.visibility = View.VISIBLE
             binding?.tabViewInclude?.tabSeparator?.visibility = View.VISIBLE

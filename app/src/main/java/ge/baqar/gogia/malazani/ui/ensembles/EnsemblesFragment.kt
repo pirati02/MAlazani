@@ -9,9 +9,12 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import ge.baqar.gogia.malazani.databinding.FragmentArtistsBinding
+import ge.baqar.gogia.model.events.CurrentPlayingSong
 import ge.baqar.gogia.model.events.OpenArtistFragment
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +25,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.koin.android.ext.android.inject
+import org.koin.ext.scope
 import timber.log.Timber
 
 @InternalCoroutinesApi
@@ -66,11 +70,23 @@ class EnsemblesFragment : Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun openArtistFragment(event: OpenArtistFragment) {
-        findNavController().navigate(
+        val navController = findNavController()
+        navController.navigate(
             ge.baqar.gogia.malazani.R.id.navigation_artists_details,
             Bundle().apply {
                 putParcelable("ensemble", event.ensemble)
             })
+        navController.addOnDestinationChangedListener(object: NavController.OnDestinationChangedListener{
+            override fun onDestinationChanged(
+                controller: NavController,
+                destination: NavDestination,
+                arguments: Bundle?
+            ) {
+                EventBus.getDefault()
+                    .post(CurrentPlayingSong(event.playingSong))
+                navController.removeOnDestinationChangedListener(this)
+            }
+        })
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

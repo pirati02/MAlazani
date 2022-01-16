@@ -1,12 +1,10 @@
 package ge.baqar.gogia.malazani.media
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
-import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
@@ -136,7 +134,7 @@ class MediaPlayerController(
             folkAppPreferences.setPlayerState(binding?.mediaPlayerView?.minimized!!)
         }
         binding?.mediaPlayerView?.openPlayListListener = {
-            EventBus.getDefault().post(OpenArtistFragment(ensemble!!))
+            EventBus.getDefault().post(OpenArtistFragment(ensemble!!, getCurrentSong()))
             binding?.mediaPlayerView?.minimize()
         }
 
