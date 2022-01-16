@@ -45,21 +45,6 @@ class MediaPlayerController(
     private var autoPlayState = AutoPlayState.OFF
     private var timerSet = false
 
-    fun play() {
-        playList?.let {
-            val song = playList!![this.position]
-            listenAudioPlayerChanges(song)
-            viewListeners()
-            viewModel.viewModelScope.launch {
-                audioPlayer.play(song.path, song.data) { onPrepareListener() }
-            }
-            binding?.mediaPlayerView?.show()
-            checkAutoPlayEnabled()
-            binding?.mediaPlayerView?.setTrackTitle(song.name)
-            updateFavouriteMarkFor(song)
-        }
-    }
-
     private fun checkAutoPlayEnabled() {
         autoPlayState = folkAppPreferences.getAutoPlay()
         binding?.mediaPlayerView?.setAutoPlayState(autoPlayState)
@@ -247,6 +232,21 @@ class MediaPlayerController(
             it.isFav = !ids.map { it.id }.contains(it.id)
         }
         updateFavouriteMarkFor(getCurrentSong())
+    }
+
+    fun play() {
+        playList?.let {
+            val song = playList!![this.position]
+            listenAudioPlayerChanges(song)
+            viewListeners()
+            viewModel.viewModelScope.launch {
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
+            }
+            binding?.mediaPlayerView?.show()
+            checkAutoPlayEnabled()
+            binding?.mediaPlayerView?.setTrackTitle(song.name)
+            updateFavouriteMarkFor(song)
+        }
     }
 
     fun pause() {

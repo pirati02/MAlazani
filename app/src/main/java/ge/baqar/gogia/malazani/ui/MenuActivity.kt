@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -32,8 +33,9 @@ import kotlin.time.ExperimentalTime
 
 @InternalCoroutinesApi
 @ExperimentalTime
-class MenuActivity : AppCompatActivity() {
+class MenuActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
 
+    var destinationChanged: ((String) -> Unit)? = null
     private var tempLastPlayedSong: Song? = null
     private var tempEnsemble: Ensemble? = null
     private var tempDataSource: MutableList<Song>? = null
@@ -77,6 +79,7 @@ class MenuActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.navView.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener(this)
         binding.mediaPlayerView.setupWithBottomNavigation(binding.navView)
         binding.mediaPlayerView.setOnClickListener {
             val state = binding.mediaPlayerView.state
@@ -100,6 +103,7 @@ class MenuActivity : AppCompatActivity() {
         super.onDestroy()
         if (!MediaPlaybackServiceManager.isRunning)
             doUnbindService()
+        navController.removeOnDestinationChangedListener(this)
     }
 
     override fun onStop() {
@@ -177,5 +181,13 @@ class MenuActivity : AppCompatActivity() {
     private fun doUnbindService() {
         val intent = Intent(this, MediaPlaybackService::class.java)
         stopService(intent)
+    }
+
+    override fun onDestinationChanged(
+        controller: NavController,
+        destination: NavDestination,
+        arguments: Bundle?
+    ) {
+        destinationChanged?.invoke(destination.javaClass.name)
     }
 }

@@ -1,10 +1,12 @@
 package ge.baqar.gogia.malazani.ui.search
 
+import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
@@ -22,12 +24,16 @@ import reactivecircus.flowbinding.android.widget.textChanges
 import timber.log.Timber
 import kotlin.time.ExperimentalTime
 
+
 @ExperimentalTime
 @InternalCoroutinesApi
 @FlowPreview
 class SearchFragment : Fragment() {
     private val viewModel: SearchViewModel by inject()
     private var binding: FragmentSearchBinding? = null
+    private val ime: InputMethodManager by lazy {
+        context?.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
@@ -56,7 +62,27 @@ class SearchFragment : Fragment() {
             binding?.ensemblesSearchResultListView?.visibility = View.GONE
             binding?.songsSearchResultListView?.visibility = View.VISIBLE
         }
+        showKeyBoard()
+        (activity as MenuActivity).destinationChanged = {
+            if (it == javaClass.name) {
+                showKeyBoard()
+            } else {
+                hideKeyBoard()
+            }
+        }
         return binding?.root!!
+    }
+
+    private fun hideKeyBoard() {
+        ime.hideSoftInputFromWindow(view?.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)
+    }
+
+    private fun showKeyBoard() {
+        binding?.searchTermInput?.post {
+            binding?.searchTermInput?.requestFocus()
+            ime.showSoftInput(binding?.searchTermInput, InputMethodManager.SHOW_IMPLICIT)
+            binding?.searchTermInput?.requestFocus()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

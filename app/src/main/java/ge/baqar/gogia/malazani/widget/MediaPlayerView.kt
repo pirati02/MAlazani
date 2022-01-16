@@ -303,6 +303,7 @@ class MediaPlayerView @JvmOverloads constructor(
     }
 
     fun show() {
+        binding.mediaPlayerViewContainer.visibility = View.VISIBLE
         binding.mediaPlayerViewContainer.animate()
             .setDuration(1)
             .alpha(1f)

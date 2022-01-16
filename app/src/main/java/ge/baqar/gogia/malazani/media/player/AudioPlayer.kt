@@ -10,6 +10,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class AudioPlayer(private val context: Context) {
+    private var completionListenerCallback: (() -> Unit)? = null
     private var updateCallback: ((Long, String?) -> Unit)? = null
     private var mediaPlayer: MediaPlayer? = null
     private var timer: CountDownTimer? = null
@@ -48,6 +49,10 @@ class AudioPlayer(private val context: Context) {
             callback.invoke()
             mediaPlayerIsPlayingCallback?.invoke(isPlaying())
         }
+        mediaPlayer?.setOnCompletionListener {
+            completionListenerCallback?.invoke()
+            timer?.cancel()
+        }
     }
 
     private fun getTempSongFile(dataStream: ByteArray): FileInputStream {
@@ -56,8 +61,7 @@ class AudioPlayer(private val context: Context) {
         val fos = FileOutputStream(tempMp3)
         fos.write(dataStream)
         fos.close()
-        val fis = FileInputStream(tempMp3)
-        return fis
+        return FileInputStream(tempMp3)
     }
 
     fun pause() {
@@ -89,10 +93,7 @@ class AudioPlayer(private val context: Context) {
     }
 
     fun completed(callback: () -> Unit) {
-        mediaPlayer?.setOnCompletionListener {
-            callback.invoke()
-            timer?.cancel()
-        }
+        completionListenerCallback = callback
     }
 
     fun getDurationString(): String {
@@ -119,18 +120,9 @@ class AudioPlayer(private val context: Context) {
         return buf.toString()
     }
 
-    fun reset() {
+    private fun reset() {
         mediaPlayer?.reset()
         timer?.cancel()
-        mediaPlayerIsPlayingCallback?.invoke(isPlaying())
-    }
-
-
-    fun release() {
-        mediaPlayer?.release()
-        timer?.cancel()
-        timer = null
-        mediaPlayer = null
         mediaPlayerIsPlayingCallback?.invoke(isPlaying())
     }
 }
