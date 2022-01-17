@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.viewModelScope
 import com.androidisland.ezpermission.EzPermission
 import ge.baqar.gogia.db.FolkAppPreferences
+import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
@@ -16,6 +18,7 @@ import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
 import ge.baqar.gogia.malazani.storage.DownloadService
+import ge.baqar.gogia.malazani.ui.MenuActivity
 import ge.baqar.gogia.malazani.ui.songs.SongsViewModel
 import ge.baqar.gogia.malazani.utility.asDownloadable
 import ge.baqar.gogia.model.AutoPlayState
@@ -33,7 +36,8 @@ class MediaPlayerController(
     private val viewModel: SongsViewModel,
     private val folkAppPreferences: FolkAppPreferences,
     private val audioPlayer: AudioPlayer,
-    private val context: Context
+    private val context: Context,
+    private val activity: MenuActivity
 ) {
     var binding: ActivityMenuBinding? = null
     var ensemble: Ensemble? = null
@@ -78,7 +82,7 @@ class MediaPlayerController(
                         ) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
-                    binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name)
+                    binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name, ensemble?.name)
                     binding?.mediaPlayerView?.isPlaying(true)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
@@ -144,26 +148,27 @@ class MediaPlayerController(
             timerSet = !timerSet
             folkAppPreferences.setTimerSet(timerSet)
             binding?.mediaPlayerView?.setTimer(timerSet)
-//            val array = arrayOf("unset", "5", "10", "30", "60")
-//            val dialog = AlertDialog.Builder(context)
-//                .setTitle(R.string.app_name_georgian)
-//                .setSingleChoiceItems(array, 0
-//                ) { _, p1 ->
-//                    var item = array[p1]
-//                    Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
-//                }.setPositiveButton("Go"
-//                ) { _, p1 ->
-//                    var item = array[p1]
-//                    Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
-//                }
-//                .create()
-//            dialog.show()
-            val str = arrayOf(
-                "mp3",
-                "Mpeg",
-                "wmv",
-                "3gp"
-            )
+
+            val array = arrayOf(context.resources.getString(R.string.unset), "5", "10", "30", "60")
+            var selectedPosition = 0
+            val dialog = AlertDialog.Builder(activity)
+                .setTitle(R.string.app_name_georgian)
+                .setSingleChoiceItems(
+                    array, 0
+                ) { _, position -> selectedPosition = position }
+                .setPositiveButton(
+                    context.resources.getString(R.string.set)
+                ) { _, _ ->
+                    val item = array[selectedPosition]
+                    if (item == context.resources.getString(R.string.unset)) {
+                        EventBus.getDefault().post(UnSetTimerEvent)
+                    } else {
+                        val time = item.toLong()
+                        EventBus.getDefault().post(SetTimerEvent(time))
+                    }
+                }
+                .create()
+            dialog.show()
         }
         binding?.mediaPlayerView?.setFabButtonClickListener = {
             val currentSong = getCurrentSong()!!
@@ -242,7 +247,7 @@ class MediaPlayerController(
             }
             binding?.mediaPlayerView?.show()
             checkAutoPlayEnabled()
-            binding?.mediaPlayerView?.setTrackTitle(song.name)
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
             updateFavouriteMarkFor(song)
         }
     }
@@ -257,6 +262,7 @@ class MediaPlayerController(
         EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
         binding?.mediaPlayerView?.setDuration(null, 0)
         binding?.mediaPlayerView?.setCurrentDuration(null)
+        binding?.mediaPlayerView?.minimize()
     }
 
     fun resume() {
@@ -273,7 +279,7 @@ class MediaPlayerController(
                 audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
-            binding?.mediaPlayerView?.setTrackTitle(song.name)
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
             updateFavouriteMarkFor(song)
         }
     }
@@ -287,7 +293,7 @@ class MediaPlayerController(
                 audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
-            binding?.mediaPlayerView?.setTrackTitle(song.name)
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
             updateFavouriteMarkFor(song)
         }
     }
@@ -319,7 +325,7 @@ class MediaPlayerController(
             it.visibility = View.VISIBLE
         }
         checkAutoPlayEnabled()
-        binding?.mediaPlayerView?.setTrackTitle(song.name)
+        binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
         binding?.mediaPlayerView?.isPlaying(true)
         onPrepareListener()
     }

@@ -12,6 +12,6 @@ import kotlin.time.ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 val mediaModule = module {
     single { AudioPlayer(get()) }
-    single { MediaPlayerController(get(), get(), get(),  get()) }
+    single { MediaPlayerController(get(), get(), get(),  get(), get()) }
 }
 

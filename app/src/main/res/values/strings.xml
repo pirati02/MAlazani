@@ -22,4 +22,6 @@
     <string name="downloading">იწერება</string>
     <string name="no_records">ჩანაწერები არ არის</string>
     <string name="player">player</string>
+    <string name="set">დაყენება</string>
+    <string name="unset">გაუქმება</string>
 </resources>

@@ -4,6 +4,7 @@ import android.app.Application
 import ge.baqar.gogia.malazani.http.networkModule
 import ge.baqar.gogia.malazani.media.mediaModule
 import ge.baqar.gogia.malazani.storage.storageModule
+import ge.baqar.gogia.malazani.ui.activityModule
 import ge.baqar.gogia.malazani.ui.ensembles.ensemblesModule
 import ge.baqar.gogia.malazani.ui.favourites.favouritesModule
 import ge.baqar.gogia.malazani.ui.search.searchModule
@@ -19,18 +20,15 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @InternalCoroutinesApi
 class FolkApplication : Application() {
-    companion object {
-        var instance: Application? = null
-    }
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@FolkApplication)
             modules(
                 mutableListOf(
+                    activityModule,
                     utilityModule,
                     mediaModule,
                     networkModule,

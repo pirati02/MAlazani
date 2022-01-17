@@ -5,6 +5,24 @@
     android:layout_height="match_parent">
 
     <FrameLayout
+        android:id="@+id/mediaPlayerViewContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/bottom_navigation_heght"
+        android:visibility="gone"
+        android:alpha="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <include
+            android:id="@+id/mediaPlayerView"
+            layout="@layout/view_media_player"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/expandedMediaPlayerViewContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -25,24 +43,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/mediaPlayerViewContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/bottom_navigation_heght"
-        android:visibility="gone"
-        android:alpha="0"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <include
-            android:id="@+id/mediaPlayerView"
-            layout="@layout/view_media_player"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

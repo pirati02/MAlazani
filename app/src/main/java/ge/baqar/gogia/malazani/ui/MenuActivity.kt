@@ -3,7 +3,6 @@ package ge.baqar.gogia.malazani.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -28,12 +27,14 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.koin.core.KoinComponent
+import org.koin.dsl.module
 import kotlin.time.ExperimentalTime
 
 
 @InternalCoroutinesApi
 @ExperimentalTime
-class MenuActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
+class MenuActivity : AppCompatActivity(), KoinComponent, NavController.OnDestinationChangedListener {
 
     var destinationChanged: ((String) -> Unit)? = null
     private var tempLastPlayedSong: Song? = null
@@ -83,13 +84,14 @@ class MenuActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         binding.mediaPlayerView.setupWithBottomNavigation(binding.navView)
         binding.mediaPlayerView.setOnClickListener {
             val state = binding.mediaPlayerView.state
-            if (state != OPENED){
+            if (state != OPENED) {
                 binding.mediaPlayerView.maximize()
             }
         }
 
         if (MediaPlaybackServiceManager.isRunning)
             doBindService()
+        instance = this
     }
 
 
@@ -104,6 +106,7 @@ class MenuActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         if (!MediaPlaybackServiceManager.isRunning)
             doUnbindService()
         navController.removeOnDestinationChangedListener(this)
+        instance = null
     }
 
     override fun onStop() {
@@ -190,4 +193,14 @@ class MenuActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     ) {
         destinationChanged?.invoke(destination.javaClass.name)
     }
+
+    companion object{
+        var instance: MenuActivity? = null
+    }
+}
+
+@ExperimentalTime
+@InternalCoroutinesApi
+val activityModule = module {
+    single { MenuActivity.instance }
 }

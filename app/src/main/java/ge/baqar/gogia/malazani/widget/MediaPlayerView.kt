@@ -1,5 +1,6 @@
 package ge.baqar.gogia.malazani.widget
 
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
@@ -187,8 +188,10 @@ class MediaPlayerView @JvmOverloads constructor(
         }
     }
 
-    fun setTrackTitle(title: String) {
+    fun setTrackTitle(title: String, artistName: String?) {
         binding.mediaPlayerView.playingTrackTitle.text = title
+        binding.expandedMediaPlayerView.playingTrackTitle.text = title
+        binding.expandedMediaPlayerView.playingTrackArtist.text = artistName
     }
 
     fun setTimer(isSet: Boolean) {
@@ -271,6 +274,25 @@ class MediaPlayerView @JvmOverloads constructor(
             binding.mediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
                 .alpha(0f)
+                .setListener(object: Animator.AnimatorListener{
+                    override fun onAnimationStart(p0: Animator?) {
+
+                    }
+
+                    override fun onAnimationEnd(p0: Animator?) {
+                        p0?.removeAllListeners()
+
+                    }
+
+                    override fun onAnimationCancel(p0: Animator?) {
+
+                    }
+
+                    override fun onAnimationRepeat(p0: Animator?) {
+
+                    }
+
+                })
                 .start()
             bottomNavigationView.animate()
                 .setDuration(animationDuration)
@@ -283,6 +305,7 @@ class MediaPlayerView @JvmOverloads constructor(
     fun minimize() {
         minimized = true
         post {
+            binding.mediaPlayerViewContainer.visibility = View.VISIBLE
             binding.expandedMediaPlayerViewContainer.animate()
                 .setDuration(animationDuration)
                 .translationY(measuredHeight.toFloat())

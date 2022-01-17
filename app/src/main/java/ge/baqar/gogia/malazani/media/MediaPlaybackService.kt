@@ -63,7 +63,23 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @Subscribe
     fun timerSet(event: SetTimerEvent) {
-        wireUpTimer(event.time)
+        val time = event.time * 60 * 1000
+        timer = object: CountDownTimer(time, 1000L){
+            override fun onTick(p0: Long) {
+
+            }
+
+            override fun onFinish() {
+                handleMediaAction(STOP_MEDIA, true)
+            }
+        }
+        timer?.start()
+    }
+
+    @Subscribe
+    fun timerUnSet(event: UnSetTimerEvent) {
+        timer?.cancel()
+        timer = null
     }
 
     private fun handleMediaAction(action: String?, useMediaController: Boolean = true) {
@@ -111,18 +127,6 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 if (mediaPlayerController.isPlaying()) {
                     showNotification()
                 }
-            }
-        }
-    }
-
-    private fun wireUpTimer(timeToSleep: Long) {
-        timer = object: CountDownTimer(timeToSleep, 1000L){
-            override fun onTick(p0: Long) {
-
-            }
-
-            override fun onFinish() {
-                handleMediaAction(STOP_MEDIA)
             }
         }
     }
