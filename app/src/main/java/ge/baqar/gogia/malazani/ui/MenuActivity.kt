@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
@@ -34,7 +35,8 @@ import kotlin.time.ExperimentalTime
 
 @InternalCoroutinesApi
 @ExperimentalTime
-class MenuActivity : AppCompatActivity(), KoinComponent, NavController.OnDestinationChangedListener {
+class MenuActivity : AppCompatActivity(), KoinComponent,
+    NavController.OnDestinationChangedListener {
 
     var destinationChanged: ((String) -> Unit)? = null
     private var tempLastPlayedSong: Song? = null
@@ -65,7 +67,7 @@ class MenuActivity : AppCompatActivity(), KoinComponent, NavController.OnDestina
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        installSplashScreen()
         binding = ActivityMenuBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
@@ -89,8 +91,10 @@ class MenuActivity : AppCompatActivity(), KoinComponent, NavController.OnDestina
             }
         }
 
-        if (MediaPlaybackServiceManager.isRunning)
+        if (MediaPlaybackServiceManager.isRunning) {
             doBindService()
+            binding.mediaPlayerView.show()
+        }
         instance = this
     }
 
@@ -194,7 +198,7 @@ class MenuActivity : AppCompatActivity(), KoinComponent, NavController.OnDestina
         destinationChanged?.invoke(destination.javaClass.name)
     }
 
-    companion object{
+    companion object {
         var instance: MenuActivity? = null
     }
 }
