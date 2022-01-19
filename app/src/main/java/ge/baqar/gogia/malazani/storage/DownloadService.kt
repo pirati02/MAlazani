@@ -95,7 +95,11 @@ class DownloadService : Service() {
 
         val downloadSongs = songs.joinToString(", \n") { it.name }
         val songsDownloadTitle = "${getString(R.string.downloading)} \n $downloadSongs"
-
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_IMMUTABLE
+        } else {
+            Intent.FILL_IN_ACTION
+        }
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java).apply {
@@ -103,7 +107,7 @@ class DownloadService : Service() {
                 putExtra("ensemble", ensemble)
                 putExtra("songs", downloadSongs)
             },
-            Intent.FILL_IN_ACTION
+            flag
         )
 
         val cancelAction = NotificationCompat.Action(
