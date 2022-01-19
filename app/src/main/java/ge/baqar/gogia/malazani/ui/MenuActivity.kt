@@ -5,27 +5,41 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
+import ge.baqar.gogia.malazani.job.SyncFilesAndDatabaseJob
 import ge.baqar.gogia.malazani.media.MediaPlaybackService
 import ge.baqar.gogia.malazani.media.MediaPlaybackServiceManager
 import ge.baqar.gogia.malazani.media.MediaPlayerController
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
-import ge.baqar.gogia.malazani.poko.events.RequestMediaControllerInstance
-import ge.baqar.gogia.malazani.poko.events.ServiceCreatedEvent
+import ge.baqar.gogia.malazani.widget.MediaPlayerView.Companion.OPENED
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.events.RequestMediaControllerInstance
+import ge.baqar.gogia.model.events.ServiceCreatedEvent
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.koin.core.KoinComponent
+import org.koin.dsl.module
+import kotlin.time.ExperimentalTime
 
 
-class MenuActivity : AppCompatActivity() {
+@InternalCoroutinesApi
+@ExperimentalTime
+class MenuActivity : AppCompatActivity(), KoinComponent,
+    NavController.OnDestinationChangedListener {
 
+    var destinationChanged: ((String) -> Unit)? = null
+    private var tempLastPlayedSong: Song? = null
     private var tempEnsemble: Ensemble? = null
     private var tempDataSource: MutableList<Song>? = null
     private var tempPosition: Int? = null
@@ -34,7 +48,7 @@ class MenuActivity : AppCompatActivity() {
     private var _playMediaPlaybackAction: ((MutableList<Song>, Int, Ensemble) -> Unit)? =
         { songs, position, ensemble ->
             mediaPlayerController?.playList = songs
-            mediaPlayerController?.playListEnsemble = ensemble
+            mediaPlayerController?.ensemble = ensemble
             mediaPlayerController?.setInitialPosition(position)
             val intent = Intent(this, MediaPlaybackService::class.java).apply {
                 action = MediaPlaybackService.PLAY_MEDIA
@@ -45,41 +59,58 @@ class MenuActivity : AppCompatActivity() {
                 startService(intent)
             }
         }
-    private lateinit var _binding: ActivityMenuBinding
+
+    private lateinit var binding: ActivityMenuBinding
     private lateinit var navController: NavController
-    var mediaPlayerController: MediaPlayerController? = null
+    private var mediaPlayerController: MediaPlayerController? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        _binding = ActivityMenuBinding.inflate(layoutInflater)
-        setContentView(_binding.root)
+        installSplashScreen()
+        binding = ActivityMenuBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportActionBar?.hide()
         navController = findNavController(R.id.nav_host_fragment_activity_menu)
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_ensembles,
                 R.id.navigation_oldRecordings,
-                R.id.navigation_search
+                R.id.navigation_search,
+                R.id.navigation_favs
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
-        _binding.navView.setupWithNavController(navController)
+        binding.navView.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener(this)
+        binding.mediaPlayerView.setupWithBottomNavigation(binding.navView)
+        binding.mediaPlayerView.setOnClickListener {
+            val state = binding.mediaPlayerView.state
+            if (state != OPENED) {
+                binding.mediaPlayerView.maximize()
+            }
+        }
 
-        if (MediaPlaybackServiceManager.isRunning)
+        if (MediaPlaybackServiceManager.isRunning) {
             doBindService()
+            binding.mediaPlayerView.show()
+        }
+        instance = this
     }
+
 
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
+        SyncFilesAndDatabaseJob.triggerNow(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (!MediaPlaybackServiceManager.isRunning)
             doUnbindService()
+        navController.removeOnDestinationChangedListener(this)
+        instance = null
     }
 
     override fun onStop() {
@@ -87,12 +118,24 @@ class MenuActivity : AppCompatActivity() {
         EventBus.getDefault().unregister(this)
     }
 
+    override fun onBackPressed() {
+        val state = binding.mediaPlayerView.state
+        if (state == OPENED) {
+            binding.mediaPlayerView.minimize()
+        } else
+            super.onBackPressed()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     fun onMessageEvent(event: MediaPlayerController) {
         mediaPlayerController = event
-        mediaPlayerController?.binding = _binding
+        mediaPlayerController?.binding = binding
 
+        if (tempLastPlayedSong != null) {
+            mediaPlayerController?.setCurrentSong(tempLastPlayedSong!!)
+            tempLastPlayedSong = null
+        }
         if (_playbackRequest) {
             _playMediaPlaybackAction?.invoke(
                 tempDataSource!!,
@@ -116,6 +159,9 @@ class MenuActivity : AppCompatActivity() {
     }
 
     fun playMediaPlayback(position: Int, songs: MutableList<Song>, ensemble: Ensemble) {
+        (binding.navHostFragmentActivityMenuContainer.layoutParams as ConstraintLayout.LayoutParams).apply {
+            bottomMargin = resources.getDimension(R.dimen.minimized_media_player_height).toInt()
+        }
         if (mediaPlayerController != null) {
             _playMediaPlaybackAction?.invoke(songs, position, ensemble)
         } else {
@@ -143,4 +189,22 @@ class MenuActivity : AppCompatActivity() {
         val intent = Intent(this, MediaPlaybackService::class.java)
         stopService(intent)
     }
+
+    override fun onDestinationChanged(
+        controller: NavController,
+        destination: NavDestination,
+        arguments: Bundle?
+    ) {
+        destinationChanged?.invoke(destination.javaClass.name)
+    }
+
+    companion object {
+        var instance: MenuActivity? = null
+    }
+}
+
+@ExperimentalTime
+@InternalCoroutinesApi
+val activityModule = module {
+    single { MenuActivity.instance }
 }

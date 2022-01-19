@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.artists.ArtistsListFragment">
+    tools:context=".ui.ensembles.EnsemblesFragment">
 
-    <include android:id="@+id/include" layout="@layout/view_fragment_artists_toolbar"/>
+    <include
+        android:id="@+id/include"
+        layout="@layout/view_fragment_artists_toolbar" />
 
     <ProgressBar
         android:id="@+id/artistsProgressbar"
@@ -28,4 +30,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/include" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/noRecordsView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/bpg_nino_mtavruli_bold"
+        android:text="@string/no_records"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

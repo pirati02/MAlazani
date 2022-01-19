@@ -1,18 +1,17 @@
 package ge.baqar.gogia.malazani.ui.search
 
 import androidx.lifecycle.viewModelScope
-import ge.baqar.gogia.malazani.arch.FailedResult
 import ge.baqar.gogia.malazani.arch.ReactiveViewModel
-import ge.baqar.gogia.malazani.arch.SucceedResult
-import ge.baqar.gogia.malazani.http.repository.FolkApiRepository
-import ge.baqar.gogia.malazani.poko.Ensemble
-import kotlinx.coroutines.Dispatchers
+import ge.baqar.gogia.http.repository.FolkApiRepository
+import ge.baqar.gogia.model.*
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.launch
 
+@InternalCoroutinesApi
 class SearchViewModel(
-    val alazaniRepository: FolkApiRepository
+    private val folkApiRepository: FolkApiRepository
 ) : ReactiveViewModel<SearchAction, SearchResultState, SearchState>(SearchState.DEFAULT) {
     override fun SearchAction.process(): Flow<() -> SearchResultState> {
         return when (this) {
@@ -35,21 +34,24 @@ class SearchViewModel(
             SearchState.LOADING
         }
 
-        alazaniRepository.search(term).collect { result ->
-            if (result is SucceedResult) {
-                emit {
-                    state.copy(isInProgress = false, result = result.value)
+        folkApiRepository.search(term).collect(object :FlowCollector<ReactiveResult<String, SearchResult>>{
+            override suspend fun emit(result: ReactiveResult<String, SearchResult>) {
+                if (result is SucceedResult) {
+                    emit {
+                        state.copy(isInProgress = false, result = result.value)
+                    }
+                }
+                if (result is FailedResult) {
+                    emit { state.copy(isInProgress = false, error = result.value) }
                 }
             }
-            if (result is FailedResult) {
-                emit { state.copy(isInProgress = false, error = result.value) }
-            }
-        }
+
+        })
     }
 
     fun ensembleById(ensembleId: String, completion: (Ensemble?) -> Unit){
         viewModelScope.launch {
-            val ensemble = alazaniRepository.ensemble(ensembleId)
+            val ensemble = folkApiRepository.ensemble(ensembleId)
             completion(ensemble)
         }
     }

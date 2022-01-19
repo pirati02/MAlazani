@@ -1,249 +1,306 @@
 package ge.baqar.gogia.malazani.media
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.view.View
-import android.widget.SeekBar
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.viewModelScope
+import com.androidisland.ezpermission.EzPermission
+import ge.baqar.gogia.db.FolkAppPreferences
 import ge.baqar.gogia.malazani.R
 import ge.baqar.gogia.malazani.databinding.ActivityMenuBinding
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.NEXT_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PAUSE_OR_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PLAY_MEDIA
 import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.PREV_MEDIA
+import ge.baqar.gogia.malazani.media.MediaPlaybackService.Companion.STOP_MEDIA
 import ge.baqar.gogia.malazani.media.player.AudioPlayer
-import ge.baqar.gogia.malazani.poko.AutoPlayState
-import ge.baqar.gogia.malazani.poko.Ensemble
-import ge.baqar.gogia.malazani.poko.Song
-import ge.baqar.gogia.malazani.poko.events.ArtistChanged
-import ge.baqar.gogia.malazani.poko.events.OpenArtistFragment
-import ge.baqar.gogia.malazani.storage.FolkAppPreferences
-import ge.baqar.gogia.malazani.ui.artist.ArtistViewModel
+import ge.baqar.gogia.malazani.storage.DownloadService
+import ge.baqar.gogia.malazani.ui.MenuActivity
+import ge.baqar.gogia.malazani.ui.songs.SongsViewModel
+import ge.baqar.gogia.malazani.utility.asDownloadable
+import ge.baqar.gogia.model.AutoPlayState
+import ge.baqar.gogia.model.Ensemble
+import ge.baqar.gogia.model.Song
+import ge.baqar.gogia.model.events.*
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
+import kotlin.time.ExperimentalTime
 
+
+@ExperimentalTime
+@InternalCoroutinesApi
 class MediaPlayerController(
-    private val viewModel: ArtistViewModel,
+    private val viewModel: SongsViewModel,
     private val folkAppPreferences: FolkAppPreferences,
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    private val context: Context,
+    private val activity: MenuActivity
 ) {
     var binding: ActivityMenuBinding? = null
-    var playListEnsemble: Ensemble? = null
+    var ensemble: Ensemble? = null
     var playList: MutableList<Song>? = null
 
     private var position = 0
     private var autoPlayState = AutoPlayState.OFF
-    private var playerControlsAreVisible = true
-
-    fun play() {
-        playList?.let {
-            val artist = playList!![this.position]
-
-            initializeViewClickListeners()
-            listenAudioPlayerChanges(artist)
-            binding?.included?.mediaPlayerView?.let {
-                it.visibility = View.VISIBLE
-            }
-            checkAutoPlayEnabled()
-            binding?.included?.playingTrackTitle?.text = artist.name
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-        }
-    }
+    private var timerSet = false
 
     private fun checkAutoPlayEnabled() {
         autoPlayState = folkAppPreferences.getAutoPlay()
-        binding?.included?.playerAutoPlayButton?.post {
-            when (autoPlayState) {
-                AutoPlayState.OFF -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_off)
-                }
-                AutoPlayState.REPEAT_ONE -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_one_24)
-                }
-                AutoPlayState.REPEAT_ALBUM -> {
-                    binding?.included?.playerAutoPlayButton?.setImageResource(R.drawable.ic_baseline_repeat_24_on)
-                }
-            }
-        }
+        binding?.mediaPlayerView?.setAutoPlayState(autoPlayState)
     }
 
     private fun onPrepareListener() {
-        val duration = audioPlayer.getDurationString()
-        binding?.included?.playingTrackDurationTime?.text = duration
-        binding?.included?.playerProgressBar?.max = audioPlayer.getDuration().toInt()
+        val durationString = audioPlayer.getDurationString()
+        val duration = audioPlayer.getDuration().toInt()
+        binding?.mediaPlayerView?.setAutoPlayState(autoPlayState)
+        binding?.mediaPlayerView?.setDuration(durationString, duration)
     }
 
-    private fun listenAudioPlayerChanges(artist: Song) {
+    private fun listenAudioPlayerChanges(song: Song) {
         audioPlayer.listenPlayer {
-            if (it) {
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-            } else {
-                binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            }
-        }
-        viewModel.viewModelScope.launch {
-            audioPlayer.play(artist.path) { onPrepareListener() }
+            binding?.mediaPlayerView?.isPlaying(it)
         }
         audioPlayer.completed {
-            binding?.included?.playingTrackTime?.text = null
-            binding?.included?.playerProgressBar?.progress = 0
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
-            binding?.included?.playingTrackDurationTime?.text = null
+            binding?.mediaPlayerView?.setDuration(null, 0)
+            binding?.mediaPlayerView?.setCurrentDuration(null)
+            binding?.mediaPlayerView?.isPlaying(false)
 
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
+                    stop()
                     return@completed
                 }
                 AutoPlayState.REPEAT_ONE -> {
-                    val nextItem = playList!![position]
+                    val repeatedSong = playList!![position]
                     viewModel.viewModelScope.launch {
-                        audioPlayer.play(nextItem.path) { onPrepareListener() }
+                        audioPlayer.play(
+                            repeatedSong.path,
+                            repeatedSong.data
+                        ) { onPrepareListener() }
                         EventBus.getDefault().post(ArtistChanged(PLAY_MEDIA))
                     }
-                    binding?.included?.playingTrackTitle?.text = nextItem.name
-                    binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+                    binding?.mediaPlayerView?.setTrackTitle(repeatedSong.name, ensemble?.name)
+                    binding?.mediaPlayerView?.isPlaying(true)
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
-                    if ((position + 1) < playList?.size!!) {
-                        ++position
-                        val nextItem = playList!![position]
-                        viewModel.viewModelScope.launch {
-                            audioPlayer.play(nextItem.path) { onPrepareListener() }
-                            EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
-                        }
-                        binding?.included?.playingTrackTitle?.text = nextItem.name
-                        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
-                    }
+                    next()
                 }
             }
         }
         audioPlayer.updateTimeHandler { progress, time ->
-            binding?.included?.playingTrackTime?.text = time
-            binding?.included?.playerProgressBar?.progress = progress?.toInt()!!
+            binding?.mediaPlayerView?.setProgress(time, progress.toInt())
         }
     }
 
-    private fun initializeViewClickListeners() {
-        binding?.included?.playerProgressBar?.setOnSeekBarChangeListener(object :
-            SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-
+    private fun viewListeners() {
+        binding?.mediaPlayerView?.setSeekListener = { progress ->
+            viewModel.viewModelScope.launch {
+                audioPlayer.playOn(progress)
             }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-                viewModel.viewModelScope.launch {
-                    audioPlayer.playOn(p0?.progress)
-                }
-            }
-        })
-
-        binding?.included?.playStopButton?.setOnClickListener {
-            audioPlayer.release()
-            binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
         }
-        binding?.included?.playNextButton?.setOnClickListener {
+
+        binding?.mediaPlayerView?.onNext = {
             next()
         }
-        binding?.included?.playPrevButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onPrev = {
             previous()
         }
-        binding?.included?.playPauseButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onPlayPause = {
             if (audioPlayer.isPlaying()) {
                 pause()
             } else {
                 resume()
             }
         }
-        binding?.included?.playStopButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onStop = {
             stop()
         }
-        binding?.included?.playerAutoPlayButton?.setOnClickListener {
+        binding?.mediaPlayerView?.onAutoPlayChanged = {
             when (autoPlayState) {
                 AutoPlayState.OFF -> {
-                    autoPlayState = AutoPlayState.REPEAT_ONE
-                }
-                AutoPlayState.REPEAT_ONE -> {
                     autoPlayState = AutoPlayState.REPEAT_ALBUM
                 }
                 AutoPlayState.REPEAT_ALBUM -> {
+                    autoPlayState = AutoPlayState.REPEAT_ONE
+                }
+                AutoPlayState.REPEAT_ONE -> {
                     autoPlayState = AutoPlayState.OFF
                 }
             }
             folkAppPreferences.updateAutoPlay(autoPlayState)
             checkAutoPlayEnabled()
         }
-        playerControlsAreVisible = folkAppPreferences.getPlayerState()
-        if (playerControlsAreVisible) {
-            binding?.included?.playerControlsView?.visibility = View.VISIBLE
-            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
-        } else {
-            binding?.included?.playerControlsView?.visibility = View.GONE
-            binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
+
+        binding?.mediaPlayerView?.setOnCloseListener = {
+            folkAppPreferences.setPlayerState(binding?.mediaPlayerView?.minimized!!)
         }
-        binding?.included?.playerViewCloseBtn?.setOnClickListener {
-            playerControlsAreVisible = !playerControlsAreVisible
-            folkAppPreferences.setPlayerState(playerControlsAreVisible)
-            if (playerControlsAreVisible) {
-                binding?.included?.playerControlsView?.visibility = View.VISIBLE
-                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24)
-            } else {
-                binding?.included?.playerControlsView?.visibility = View.GONE
-                binding?.included?.playerViewCloseBtn?.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24)
+        binding?.mediaPlayerView?.openPlayListListener = {
+            EventBus.getDefault().post(OpenArtistFragment(ensemble!!, getCurrentSong()))
+            binding?.mediaPlayerView?.minimize()
+        }
+
+        timerSet = folkAppPreferences.getTimerSet()
+        binding?.mediaPlayerView?.setTimer(timerSet)
+        binding?.mediaPlayerView?.onTimerSetRequested = {
+            timerSet = !timerSet
+            folkAppPreferences.setTimerSet(timerSet)
+            binding?.mediaPlayerView?.setTimer(timerSet)
+
+            val array = arrayOf(context.resources.getString(R.string.unset), "5", "10", "30", "60")
+            var selectedPosition = 0
+            val dialog = AlertDialog.Builder(activity)
+                .setTitle(R.string.app_name_georgian)
+                .setSingleChoiceItems(
+                    array, 0
+                ) { _, position -> selectedPosition = position }
+                .setPositiveButton(
+                    context.resources.getString(R.string.set)
+                ) { _, _ ->
+                    val item = array[selectedPosition]
+                    if (item == context.resources.getString(R.string.unset)) {
+                        EventBus.getDefault().post(UnSetTimerEvent)
+                    } else {
+                        val time = item.toLong()
+                        EventBus.getDefault().post(SetTimerEvent(time))
+                    }
+                }
+                .create()
+            dialog.show()
+        }
+        binding?.mediaPlayerView?.setFabButtonClickListener = {
+            val currentSong = getCurrentSong()!!
+
+            EzPermission.with(context)
+                .permissions(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+                .request { granted, _, _ ->
+                    if (granted.isNotEmpty()) {
+                        viewModel.viewModelScope.launch {
+                            var isFav = viewModel.isSongFav(currentSong.id)
+                            val downloadableSongs = currentSong.asDownloadable()
+                            if (!isFav) {
+                                val intent = Intent(context, DownloadService::class.java).apply {
+                                    action = DownloadService.DOWNLOAD_SONGS
+                                    putExtra("ensemble", ensemble)
+                                    putParcelableArrayListExtra(
+                                        "songs",
+                                        arrayListOf(downloadableSongs)
+                                    )
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.startService(intent)
+                                }
+                            } else {
+                                val intent = Intent(context, DownloadService::class.java).apply {
+                                    action = DownloadService.STOP_DOWNLOADING
+                                    putExtra("ensemble", ensemble)
+                                    putParcelableArrayListExtra(
+                                        "songs",
+                                        arrayListOf(downloadableSongs)
+                                    )
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.startService(intent)
+                                }
+
+                                updateFavouriteMarkFor(currentSong.also {
+                                    isFav = false
+                                })
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    fun songsMarkedAsFavourite(event: SongsMarkedAsFavourite) {
+        val ids = event.songs
+        playList?.filter { event.songs.map { it.id }.contains(it.id) }?.forEach {
+            it.isFav = ids.map { it.id }.contains(it.id)
+        }
+        updateFavouriteMarkFor(getCurrentSong())
+    }
+
+    fun songsUnMarkedAsFavourite(event: SongsUnmarkedAsFavourite) {
+        val ids = event.songs
+        playList?.filter { event.songs.map { it.id }.contains(it.id) }?.forEach {
+            it.isFav = !ids.map { it.id }.contains(it.id)
+        }
+        updateFavouriteMarkFor(getCurrentSong())
+    }
+
+    fun play() {
+        playList?.let {
+            val song = playList!![this.position]
+            listenAudioPlayerChanges(song)
+            viewListeners()
+            viewModel.viewModelScope.launch {
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
             }
-        }
-        binding?.included?.playerPlaylistButton?.setOnClickListener {
-            EventBus.getDefault().post(OpenArtistFragment(playListEnsemble!!))
+            binding?.mediaPlayerView?.show()
+            checkAutoPlayEnabled()
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
+            updateFavouriteMarkFor(song)
         }
     }
 
     fun pause() {
-        audioPlayer.pause()
         EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
+        audioPlayer.pause()
     }
 
     fun stop() {
-        audioPlayer.release()
-        binding?.included?.playingTrackTime?.text = null
-        binding?.included?.playerProgressBar?.progress = 0
-        binding?.included?.playingTrackDurationTime?.text = null
-        binding?.included?.mediaPlayerView?.let {
-            it.visibility = View.GONE
-        }
+        pause()
+        EventBus.getDefault().post(ArtistChanged(STOP_MEDIA))
+        binding?.mediaPlayerView?.setDuration(null, 0)
+        binding?.mediaPlayerView?.setCurrentDuration(null)
+        binding?.mediaPlayerView?.minimize()
     }
 
     fun resume() {
-        audioPlayer.resume()
         EventBus.getDefault().post(ArtistChanged(PAUSE_OR_MEDIA))
+        audioPlayer.resume()
     }
 
     fun next() {
         if ((position + 1) < playList?.size!!) {
             ++position
-            val nextItem = playList!![position]
-            updateUI(nextItem)
+            val song = playList!![position]
+            updateUI(song)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(nextItem.path) { onPrepareListener() }
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(NEXT_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = nextItem.name
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
+            updateFavouriteMarkFor(song)
         }
     }
-
 
     fun previous() {
         if (position > 0) {
             --position
-            val prevItem = playList!![position]
-            updateUI(prevItem)
+            val song = playList!![position]
+            updateUI(song)
             viewModel.viewModelScope.launch {
-                audioPlayer.play(prevItem.path) { onPrepareListener() }
+                audioPlayer.play(song.path, song.data) { onPrepareListener() }
                 EventBus.getDefault().post(ArtistChanged(PREV_MEDIA))
             }
-            binding?.included?.playingTrackTitle?.text = prevItem.name
+            binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
+            updateFavouriteMarkFor(song)
+        }
+    }
+
+    private fun updateFavouriteMarkFor(song: Song?) {
+        song?.let {
+            binding?.mediaPlayerView?.setIsFav(song.isFav)
         }
     }
 
@@ -262,18 +319,25 @@ class MediaPlayerController(
         }
     }
 
-    private fun updateUI(artist: Song) {
-        initializeViewClickListeners()
-        binding?.included?.mediaPlayerView?.let {
+    private fun updateUI(song: Song) {
+        viewListeners()
+        binding?.mediaPlayerView?.let {
             it.visibility = View.VISIBLE
         }
         checkAutoPlayEnabled()
-        binding?.included?.playingTrackTitle?.text = artist.name
-        binding?.included?.playPauseButton?.setImageResource(R.drawable.ic_baseline_pause_circle_outline_24)
+        binding?.mediaPlayerView?.setTrackTitle(song.name, ensemble?.name)
+        binding?.mediaPlayerView?.isPlaying(true)
         onPrepareListener()
     }
 
     fun setInitialPosition(position: Int) {
         this.position = position
+    }
+
+    fun setCurrentSong(song: Song) {
+        playList = mutableListOf(song)
+        position = 0
+        play()
+        pause()
     }
 }

@@ -5,10 +5,13 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.CountDownTimer
 import android.os.PowerManager
-
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class AudioPlayer(private val context: Context) {
-    private var updateCallback: ((Long?, String?) -> Unit)? = null
+    private var completionListenerCallback: (() -> Unit)? = null
+    private var updateCallback: ((Long, String?) -> Unit)? = null
     private var mediaPlayer: MediaPlayer? = null
     private var timer: CountDownTimer? = null
     private var mediaPlayerIsPlayingCallback: ((Boolean) -> Unit)? = null
@@ -21,8 +24,8 @@ class AudioPlayer(private val context: Context) {
         return mediaPlayer?.isPlaying == true
     }
 
-    fun play(audioData: String?, callback: () -> Unit) {
-        if (audioData == null) return
+    fun play(audioData: String?, dataStream: ByteArray?, callback: () -> Unit) {
+        if (audioData.isNullOrEmpty() && dataStream == null) return
         reset()
         if (mediaPlayer == null) mediaPlayer = MediaPlayer()
 
@@ -32,14 +35,33 @@ class AudioPlayer(private val context: Context) {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
-        mediaPlayer?.setDataSource(audioData)
+
+        if (dataStream != null) {
+            val fis = getTempSongFile(dataStream)
+            mediaPlayer?.setDataSource(fis.fd)
+        } else {
+            mediaPlayer?.setDataSource(audioData)
+        }
         mediaPlayer?.prepareAsync()
         mediaPlayer?.setOnPreparedListener {
-            mediaPlayer?.start()
+            it.start()
             startTimer()
             callback.invoke()
             mediaPlayerIsPlayingCallback?.invoke(isPlaying())
         }
+        mediaPlayer?.setOnCompletionListener {
+            completionListenerCallback?.invoke()
+            timer?.cancel()
+        }
+    }
+
+    private fun getTempSongFile(dataStream: ByteArray): FileInputStream {
+        val tempMp3: File = File.createTempFile("temp_song", "mp3", context.cacheDir)
+        tempMp3.deleteOnExit()
+        val fos = FileOutputStream(tempMp3)
+        fos.write(dataStream)
+        fos.close()
+        return FileInputStream(tempMp3)
     }
 
     fun pause() {
@@ -52,16 +74,15 @@ class AudioPlayer(private val context: Context) {
         mediaPlayerIsPlayingCallback?.invoke(isPlaying())
     }
 
-    fun updateTimeHandler(callback: (Long?, String?) -> Unit) {
-        if (mediaPlayer == null) return
+    fun updateTimeHandler(callback: (Long, String?) -> Unit) {
         updateCallback = callback
     }
 
     private fun startTimer() {
         timer = object : CountDownTimer(getDuration(), 1000.toLong()) {
             override fun onTick(p0: Long) {
-                val currentDuration = mediaPlayer?.currentPosition?.toLong()
-                val durationString = getTimeString(currentDuration!!)
+                val currentDuration = mediaPlayer?.currentPosition?.toLong()!!
+                val durationString = getTimeString(currentDuration)
                 updateCallback?.invoke(currentDuration, durationString)
             }
 
@@ -72,10 +93,7 @@ class AudioPlayer(private val context: Context) {
     }
 
     fun completed(callback: () -> Unit) {
-        mediaPlayer?.setOnCompletionListener {
-            callback.invoke()
-            timer?.cancel()
-        }
+        completionListenerCallback = callback
     }
 
     fun getDurationString(): String {
@@ -102,18 +120,9 @@ class AudioPlayer(private val context: Context) {
         return buf.toString()
     }
 
-    fun reset() {
+    private fun reset() {
         mediaPlayer?.reset()
         timer?.cancel()
-        mediaPlayerIsPlayingCallback?.invoke(isPlaying())
-    }
-
-
-    fun release() {
-        mediaPlayer?.release()
-        timer?.cancel()
-        timer = null
-        mediaPlayer = null
         mediaPlayerIsPlayingCallback?.invoke(isPlaying())
     }
 }

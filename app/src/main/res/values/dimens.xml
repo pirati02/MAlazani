@@ -7,4 +7,7 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="song_player_indicator_padding">3dp</dimen>
     <dimen name="song_player_indicator_size">50dp</dimen>
+    <dimen name="peekHeight">200dp</dimen>
+    <dimen name="bottom_navigation_heght">55dp</dimen>
+    <dimen name="minimized_media_player_height">90dp</dimen>
 </resources>

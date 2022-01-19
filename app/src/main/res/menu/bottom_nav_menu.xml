@@ -14,4 +14,8 @@
         android:id="@+id/navigation_search"
         android:icon="@drawable/ic_baseline_search_24"
         android:title="@string/search" />
+    <item
+        android:id="@+id/navigation_favs"
+        android:icon="@drawable/ic_baseline_favorite_24_black"
+        android:title="@string/favourites" />
 </menu>
