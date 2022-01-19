@@ -158,10 +158,16 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
 
     @SuppressLint("RemoteViewLayout", "UnspecifiedImmutableFlag")
     private fun showNotification(showResumeIcon: Boolean = false) {
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_MUTABLE
+        } else {
+            0
+        }
+
         val contentIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MenuActivity::class.java),
-            0
+            flag
         )
         val currentSong = mediaPlayerController.getCurrentSong()
         currentSong?.let {
@@ -184,7 +190,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 contentIntent
             )
 
-            initRemoteViewClicks(notificationLayoutExpanded, contentIntent, showResumeIcon)
+            initRemoteViewClicks(notificationLayoutExpanded, contentIntent, showResumeIcon, flag)
 
             val notificationBuilder: NotificationCompat.Builder
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -216,9 +222,9 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
     private fun initRemoteViewClicks(
         notificationLayoutExpanded: RemoteViews,
         contentIntent: PendingIntent,
-        showResumeIcon: Boolean = false
+        showResumeIcon: Boolean = false,
+        flag: Int
     ) {
-
         notificationLayoutExpanded.setOnClickPendingIntent(
             R.id.notification_view_large,
             contentIntent
@@ -229,7 +235,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 Intent(this, MediaPlaybackService::class.java).apply {
                     action = STOP_MEDIA
                 },
-                0
+                flag
             )
         )
 
@@ -252,7 +258,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 Intent(this, MediaPlaybackService::class.java).apply {
                     action = PAUSE_OR_MEDIA
                 },
-                0
+                flag
             )
         )
         notificationLayoutExpanded.setOnClickPendingIntent(
@@ -261,7 +267,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 Intent(this, MediaPlaybackService::class.java).apply {
                     action = PREV_MEDIA
                 },
-                0
+                flag
             )
         )
         notificationLayoutExpanded.setOnClickPendingIntent(
@@ -270,7 +276,7 @@ class MediaPlaybackService : Service(), MediaPlayer.OnPreparedListener {
                 Intent(this, MediaPlaybackService::class.java).apply {
                     action = NEXT_MEDIA
                 },
-                0
+                flag
             )
         )
     }
