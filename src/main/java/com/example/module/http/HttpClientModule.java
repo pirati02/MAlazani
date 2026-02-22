@@ -1,5 +1,6 @@
-package com.example.module.http;
+package ge.baqar.gogia.http;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -27,7 +28,7 @@ public class HttpClientModule {
                 .build();
 
         this.retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.example.com/")
+                .baseUrl("https://rocky-cliffs-16276.herokuapp.com/")
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
